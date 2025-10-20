@@ -1,0 +1,25 @@
+{
+  "name": "healthcare-web-app",
+  "version": "1.0.0",
+  "description": "Full-stack healthcare web application with React frontend and Node.js backend",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "clean": "lsof -ti:5000 | xargs -r kill -9 && lsof -ti:3000 | xargs -r kill -9",
+    "start-backend": "./start-backend.sh",
+    "start-frontend": "./start-frontend.sh",
+    "start-all": "./start-all.sh",
+    "restart": "npm run clean && sleep 2 && npm run start-all"
+  },
+  "keywords": ["healthcare", "react", "nodejs", "mysql", "sequelize"],
+  "author": "Healthcare Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

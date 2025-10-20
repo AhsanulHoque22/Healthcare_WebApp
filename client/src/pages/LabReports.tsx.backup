@@ -1,0 +1,979 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { processPayment, getSupportedPaymentMethods, validatePaymentAmount, formatCurrency } from '../services/paymentService';
+import { 
+  BeakerIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  EyeIcon,
+  ArrowDownTrayIcon,
+  CreditCardIcon,
+  BanknotesIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
+
+interface LabTest {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  sampleType: string;
+  preparationInstructions: string;
+  reportDeliveryTime: number;
+}
+
+interface LabOrder {
+  id: number;
+  orderNumber: string;
+  totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  status: string;
+  paymentMethod: string;
+  sampleCollectionDate: string;
+  expectedResultDate: string;
+  resultUrl: string;
+  notes: string;
+  createdAt: string;
+  testDetails: LabTest[];
+  payments: Array<{
+    id: number;
+    amount: number;
+    paymentMethod: string;
+    status: string;
+    paidAt: string;
+    transactionId: string;
+  }>;
+  patient: {
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+    };
+  };
+  doctor?: {
+    user: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+}
+
+interface PrescriptionLabTest {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  type: string;
+  prescriptionId: number;
+  appointmentDate: string;
+  doctorName: string;
+  createdAt: string;
+  testReports: Array<{
+    filename: string;
+    originalName: string;
+    path: string;
+    uploadedAt: string;
+  }>;
+}
+
+const LabReports: React.FC = () => {
+  const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedTests, setSelectedTests] = useState<number[]>([]);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [testTypeFilter, setTestTypeFilter] = useState<'all' | 'prescribed' | 'ordered'>('all');
+  const [showPrescriptionPaymentModal, setShowPrescriptionPaymentModal] = useState(false);
+  const [selectedPrescriptionTest, setSelectedPrescriptionTest] = useState<PrescriptionLabTest | null>(null);
+  
+  const queryClient = useQueryClient();
+
+  // Fetch patient's lab orders
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ['lab-orders', statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      const response = await axios.get(`/lab-tests/orders?${params}`);
+      return response.data.data;
+    },
+  });
+
+  // Fetch available lab tests
+  const { data: testsData, isLoading: testsLoading } = useQuery({
+    queryKey: ['lab-tests'],
+    queryFn: async () => {
+      const response = await axios.get('/lab-tests/tests');
+      return response.data.data;
+    },
+  });
+
+  // Fetch prescription lab tests
+  const { data: prescriptionLabTestsData, isLoading: prescriptionTestsLoading } = useQuery({
+    queryKey: ['prescription-lab-tests'],
+    queryFn: async () => {
+      const response = await axios.get('/lab-tests/prescription-tests');
+      return response.data.data;
+    },
+  });
+
+  // Handle prescription test payment
+  const handlePrescriptionTestPayment = (test: PrescriptionLabTest) => {
+    setSelectedPrescriptionTest(test);
+    setShowPrescriptionPaymentModal(true);
+  };
+
+  // Process prescription test payment
+  const processPrescriptionPayment = async (paymentData: any) => {
+    try {
+      // This would integrate with your payment service
+      const result = await processPayment({
+        amount: selectedPrescriptionTest?.price || 0,
+        currency: 'BDT',
+        paymentMethod: paymentData.paymentMethod,
+        description: `Payment for ${selectedPrescriptionTest?.name}`,
+        ...paymentData
+      });
+
+      if (result.success) {
+        toast.success('Payment processed successfully!');
+        setShowPrescriptionPaymentModal(false);
+        setSelectedPrescriptionTest(null);
+        queryClient.invalidateQueries({ queryKey: ['prescription-lab-tests'] });
+      } else {
+        toast.error(result.message || 'Payment failed');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Payment processing failed');
+    }
+  };
+
+  // Helper function to get filtered and combined lab tests
+  const getFilteredLabTests = () => {
+    const allTests: any[] = [];
+    
+    // Add prescription lab tests
+    if (prescriptionLabTestsData?.labTests) {
+      prescriptionLabTestsData.labTests.forEach((test: PrescriptionLabTest) => {
+        allTests.push({
+          ...test,
+          type: 'prescription',
+          orderNumber: `PRES-${test.prescriptionId}`,
+          totalAmount: test.price || 0,
+          paidAmount: test.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0,
+          dueAmount: (test.price || 0) - (test.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0),
+          createdAt: test.createdAt,
+          testDetails: [{ name: test.name, description: test.description, price: test.price || 0 }]
+        });
+      });
+    }
+    
+    // Add regular lab orders
+    if (ordersData?.orders) {
+      ordersData.orders.forEach((order: LabOrder) => {
+        allTests.push({
+          ...order,
+          type: 'ordered',
+          doctorName: 'Self-Ordered',
+          appointmentDate: order.createdAt,
+          prescriptionId: null
+        });
+      });
+    }
+    
+    // Apply filters
+    let filteredTests = allTests;
+    
+    if (testTypeFilter !== 'all') {
+      filteredTests = filteredTests.filter(test => 
+        testTypeFilter === 'prescribed' ? test.type === 'prescription' : test.type === 'ordered'
+      );
+    }
+    
+    if (statusFilter) {
+      filteredTests = filteredTests.filter(test => test.status === statusFilter);
+    }
+    
+    return filteredTests;
+  };
+
+  const filteredTests = getFilteredLabTests();
+
+  // Create lab test order mutation
+  const createOrderMutation = useMutation({
+    mutationFn: async (testIds: number[]) => {
+      const response = await axios.post('/lab-tests/orders', { testIds });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lab-orders'] });
+      toast.success('Lab test order created successfully');
+      setShowTestModal(false);
+      setSelectedTests([]);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create order');
+    },
+  });
+
+  // Payment mutation
+  const paymentMutation = useMutation({
+    mutationFn: async ({ orderId, paymentData }: { orderId: number; paymentData: any }) => {
+      const response = await axios.post(`/lab-tests/orders/${orderId}/payment`, paymentData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lab-orders'] });
+      toast.success('Payment processed successfully');
+      setShowPaymentModal(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Payment failed');
+    },
+  });
+
+  const getStatusBadgeColor = (status: string) => {
+    const colors = {
+      'ordered': 'bg-gray-100 text-gray-800',
+      'verified': 'bg-blue-100 text-blue-800',
+      'payment_pending': 'bg-yellow-100 text-yellow-800',
+      'payment_partial': 'bg-orange-100 text-orange-800',
+      'payment_completed': 'bg-green-100 text-green-800',
+      'sample_collection_scheduled': 'bg-purple-100 text-purple-800',
+      'sample_collected': 'bg-indigo-100 text-indigo-800',
+      'processing': 'bg-blue-100 text-blue-800',
+      'results_ready': 'bg-green-100 text-green-800',
+      'completed': 'bg-green-100 text-green-800',
+      'cancelled': 'bg-red-100 text-red-800'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const handleTestSelection = (testId: number) => {
+    setSelectedTests(prev => 
+      prev.includes(testId) 
+        ? prev.filter(id => id !== testId)
+        : [...prev, testId]
+    );
+  };
+
+  const handleCreateOrder = () => {
+    if (selectedTests.length === 0) {
+      toast.error('Please select at least one test');
+      return;
+    }
+    createOrderMutation.mutate(selectedTests);
+  };
+
+  const handlePayment = async (order: LabOrder, method: 'bkash' | 'bank_transfer') => {
+    // Validate payment amount
+    const validation = validatePaymentAmount(order.dueAmount);
+    if (!validation.valid) {
+      toast.error(validation.message || 'Invalid payment amount');
+      return;
+    }
+
+    // Show loading toast
+    const loadingToast = toast.loading('Processing payment...');
+
+    try {
+      // Process payment through gateway
+      const paymentResult = await processPayment({
+        amount: order.dueAmount,
+        orderId: order.orderNumber,
+        customerInfo: {
+          name: `${order.patient.user.firstName} ${order.patient.user.lastName}`,
+          email: order.patient.user.email,
+          phone: order.patient.user.phone
+        },
+        paymentMethod: method
+      });
+
+      toast.dismiss(loadingToast);
+
+      if (paymentResult.success) {
+        // Submit payment to backend
+        const paymentData = {
+          paymentMethod: method,
+          amount: order.dueAmount,
+          transactionId: paymentResult.transactionId,
+          gatewayResponse: paymentResult.gatewayResponse
+        };
+
+        paymentMutation.mutate({ orderId: order.id, paymentData });
+        toast.success(paymentResult.message);
+      } else {
+        toast.error(paymentResult.message);
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Payment processing failed. Please try again.');
+    }
+  };
+
+  const canPayOnline = (order: LabOrder) => {
+    return ['ordered', 'verified', 'payment_pending', 'payment_partial'].includes(order.status);
+  };
+
+  const canViewResults = (order: LabOrder) => {
+    return order.status === 'results_ready' || order.status === 'completed';
+  };
+
+  if (ordersLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="page-header">Lab Reports</h1>
+          <p className="text-gray-600">
+            Manage your lab test orders, prescription lab tests, payments, and results
+          </p>
+        </div>
+        <button
+          onClick={() => setShowTestModal(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <PlusIcon className="h-5 w-5" />
+          Order Lab Tests
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="card">
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="test-type-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Test Type
+              </label>
+              <select
+                id="test-type-filter"
+                value={testTypeFilter}
+                onChange={(e) => setTestTypeFilter(e.target.value as 'all' | 'prescribed' | 'ordered')}
+                className="input-field w-full"
+              >
+                <option value="all">All Tests</option>
+                <option value="prescribed">Prescribed by Doctor</option>
+                <option value="ordered">Ordered by Patient</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Status
+              </label>
+              <select
+                id="status-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="input-field w-full"
+              >
+                <option value="">All Status</option>
+                <option value="ordered">Ordered</option>
+                <option value="approved">Approved</option>
+                <option value="verified">Verified</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="payment_partial">Payment Partial</option>
+                <option value="payment_completed">Payment Completed</option>
+                <option value="paid">Paid</option>
+                <option value="sample_collected">Sample Collected</option>
+                <option value="processing">Processing</option>
+                <option value="results_ready">Results Ready</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Unified Lab Tests Content */}
+      {filteredTests.length === 0 ? (
+        <div className="card">
+          <div className="p-8 text-center">
+            <BeakerIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Lab Tests Found</h3>
+            <p className="text-gray-600 mb-4">
+              {testTypeFilter !== 'all' || statusFilter ? 'No tests found with the selected filters.' : 'You don\'t have any lab tests yet.'}
+            </p>
+            <button
+              onClick={() => setShowTestModal(true)}
+              className="btn-primary"
+            >
+              Order Lab Tests
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {ordersData.orders.map((order: LabOrder) => (
+            <div key={order.id} className="card">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Order #{order.orderNumber}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(order.createdAt).toLocaleDateString()} • {order.testDetails.length} test(s)
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(order.status)}`}>
+                    {formatStatus(order.status)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <CurrencyDollarIcon className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Amount</p>
+                      <p className="font-semibold">৳{order.totalAmount}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircleIcon className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Paid Amount</p>
+                      <p className="font-semibold text-green-600">৳{order.paidAmount}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ClockIcon className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Due Amount</p>
+                      <p className="font-semibold text-red-600">৳{order.dueAmount}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Tests Ordered:</h4>
+                  <div className="space-y-1 mb-4">
+                    {order.testDetails.map((test, index) => (
+                      <div key={test.id} className="flex justify-between items-center text-sm">
+                        <span className="text-gray-700">{index + 1}. {test.name}</span>
+                        <span className="text-gray-600">৳{test.price}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderModal(true);
+                      }}
+                      className="btn-outline flex items-center gap-2"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                      View Details
+                    </button>
+
+                    {canPayOnline(order) && order.dueAmount > 0 && (
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowPaymentModal(true);
+                        }}
+                        className="btn-primary flex items-center gap-2"
+                      >
+                        <CreditCardIcon className="h-4 w-4" />
+                        Make Payment
+                      </button>
+                    )}
+
+                    {canViewResults(order) && order.resultUrl && (
+                      <a
+                        href={order.resultUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-success flex items-center gap-2"
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        Download Results
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+      ) : (
+        /* Prescription Lab Tests Tab */
+        !prescriptionLabTestsData?.labTests || prescriptionLabTestsData.labTests.length === 0 ? (
+          <div className="card">
+            <div className="p-8 text-center">
+              <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Prescription Lab Tests Found</h3>
+              <p className="text-gray-600">
+                No lab tests have been prescribed in your prescriptions yet.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {prescriptionLabTestsData.labTests.map((test: PrescriptionLabTest) => (
+              <div key={test.id} className="card">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {test.name}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span>Prescribed by: {test.doctorName}</span>
+                        <span>Date: {new Date(test.appointmentDate).toLocaleDateString()}</span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          Prescription
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      test.status === 'prescribed' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {test.status === 'prescribed' ? 'Prescribed' : 'Completed'}
+                    </span>
+                  </div>
+
+                  {test.description && (
+                    <div className="mb-4">
+                      <p className="text-gray-700">{test.description}</p>
+                    </div>
+                  )}
+
+                  <div className="border-t pt-4">
+                    <div className="flex flex-wrap gap-2">
+                      {test.testReports && test.testReports.length > 0 ? (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-gray-900">Test Reports Available:</h4>
+                          {test.testReports.map((report, index) => (
+                            <a
+                              key={index}
+                              href={`/uploads/${report.path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-success flex items-center gap-2"
+                            >
+                              <ArrowDownTrayIcon className="h-4 w-4" />
+                              Download {report.originalName}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-gray-500 text-sm">
+                          No test reports uploaded yet
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {/* Order Lab Tests Modal */}
+      {showTestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Order Lab Tests</h2>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {testsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(testsData?.groupedTests || {}).map(([category, tests]) => (
+                    <div key={category}>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">{category}</h3>
+                      <div className="space-y-2">
+                        {(tests as LabTest[]).map((test) => (
+                          <div key={test.id} className="border rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3 flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTests.includes(test.id)}
+                                  onChange={() => handleTestSelection(test.id)}
+                                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                />
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-900">{test.name}</h4>
+                                  <p className="text-sm text-gray-600 mt-1">{test.description}</p>
+                                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <span>Sample: {test.sampleType}</span>
+                                    <span>Report: {test.reportDeliveryTime}h</span>
+                                  </div>
+                                  {test.preparationInstructions && (
+                                    <p className="text-xs text-blue-600 mt-1">
+                                      📋 {test.preparationInstructions}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-semibold text-gray-900">৳{test.price}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-gray-600">
+                    {selectedTests.length} test(s) selected
+                  </p>
+                  {selectedTests.length > 0 && (
+                    <p className="text-lg font-semibold text-gray-900">
+                      Total: ৳{testsData?.tests.filter((t: LabTest) => selectedTests.includes(t.id)).reduce((sum: number, t: LabTest) => sum + t.price, 0)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowTestModal(false);
+                      setSelectedTests([]);
+                    }}
+                    className="btn-outline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateOrder}
+                    disabled={selectedTests.length === 0 || createOrderMutation.isPending}
+                    className="btn-primary"
+                  >
+                    {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Make Payment</h2>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Order Number:</span>
+                  <span className="font-medium">#{selectedOrder.orderNumber}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Total Amount:</span>
+                  <span className="font-medium">৳{selectedOrder.totalAmount}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Paid Amount:</span>
+                  <span className="font-medium text-green-600">৳{selectedOrder.paidAmount}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Due Amount:</span>
+                  <span className="font-semibold text-red-600 text-lg">৳{selectedOrder.dueAmount}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => handlePayment(selectedOrder, 'bkash')}
+                  disabled={paymentMutation.isPending}
+                  className="w-full flex items-center justify-center gap-3 p-4 border-2 border-pink-300 rounded-lg hover:bg-pink-50 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-pink-600 rounded flex items-center justify-center text-white font-bold">
+                    b
+                  </div>
+                  <span className="font-medium">Pay with bKash</span>
+                </button>
+
+                <button
+                  onClick={() => handlePayment(selectedOrder, 'bank_transfer')}
+                  disabled={paymentMutation.isPending}
+                  className="w-full flex items-center justify-center gap-3 p-4 border-2 border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <BanknotesIcon className="h-8 w-8 text-blue-600" />
+                  <span className="font-medium">Bank Transfer</span>
+                </button>
+
+                <div className="text-center py-2">
+                  <span className="text-gray-500 text-sm">or</span>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BanknotesIcon className="h-5 w-5 text-yellow-600" />
+                    <span className="font-medium text-yellow-800">Offline Payment</span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    You can pay directly at our lab center. Please bring your order number: <strong>#{selectedOrder.orderNumber}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 btn-outline"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Order Details - #{selectedOrder.orderNumber}
+              </h2>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+              <div className="space-y-6">
+                {/* Status and Dates */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Status</label>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${getStatusBadgeColor(selectedOrder.status)}`}>
+                      {formatStatus(selectedOrder.status)}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Order Date</label>
+                    <p className="text-gray-900">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  {selectedOrder.sampleCollectionDate && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Sample Collection Date</label>
+                      <p className="text-gray-900">{new Date(selectedOrder.sampleCollectionDate).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  {selectedOrder.expectedResultDate && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Expected Result Date</label>
+                      <p className="text-gray-900">{new Date(selectedOrder.expectedResultDate).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tests */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Ordered Tests</h3>
+                  <div className="space-y-3">
+                    {selectedOrder.testDetails.map((test, index) => (
+                      <div key={test.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{test.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{test.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                              <span>Sample: {test.sampleType}</span>
+                              <span>Report: {test.reportDeliveryTime}h</span>
+                            </div>
+                          </div>
+                          <p className="text-lg font-semibold text-gray-900">৳{test.price}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Payment Information</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">Total Amount</p>
+                        <p className="text-xl font-semibold text-gray-900">৳{selectedOrder.totalAmount}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">Paid Amount</p>
+                        <p className="text-xl font-semibold text-green-600">৳{selectedOrder.paidAmount}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">Due Amount</p>
+                        <p className="text-xl font-semibold text-red-600">৳{selectedOrder.dueAmount}</p>
+                      </div>
+                    </div>
+                    
+                    {selectedOrder.payments && selectedOrder.payments.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Payment History</h4>
+                        <div className="space-y-2">
+                          {selectedOrder.payments.map((payment) => (
+                            <div key={payment.id} className="flex justify-between items-center text-sm border-t pt-2">
+                              <div>
+                                <span className="font-medium">{payment.paymentMethod.replace('_', ' ').toUpperCase()}</span>
+                                {payment.transactionId && (
+                                  <span className="text-gray-500 ml-2">({payment.transactionId})</span>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold">৳{payment.amount}</p>
+                                <p className="text-gray-500">{new Date(payment.paidAt).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {selectedOrder.notes && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">Notes</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700">{selectedOrder.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowOrderModal(false)}
+                  className="btn-primary"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prescription Test Payment Modal */}
+      {showPrescriptionPaymentModal && selectedPrescriptionTest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Pay for Lab Test</h2>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <h3 className="font-medium text-gray-900 mb-2">{selectedPrescriptionTest.name}</h3>
+                <p className="text-gray-600 text-sm mb-2">{selectedPrescriptionTest.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-900">Amount to Pay:</span>
+                  <span className="text-xl font-bold text-green-600">৳{selectedPrescriptionTest.price || 0}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Method
+                  </label>
+                  <select className="input-field w-full">
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="rocket">Rocket</option>
+                    <option value="bank_card">Bank Card</option>
+                    <option value="cash">Cash Payment</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Transaction ID (if applicable)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter transaction ID"
+                    className="input-field w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Any additional notes..."
+                    className="input-field w-full"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowPrescriptionPaymentModal(false);
+                    setSelectedPrescriptionTest(null);
+                  }}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => processPrescriptionPayment({
+                    paymentMethod: 'bkash',
+                    transactionId: '',
+                    notes: ''
+                  })}
+                  className="btn-primary"
+                >
+                  Process Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LabReports;
