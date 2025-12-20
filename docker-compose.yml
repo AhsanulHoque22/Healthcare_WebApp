@@ -10,14 +10,19 @@ services:
       MYSQL_DATABASE: ${DB_NAME:-healthcare_db}
       MYSQL_USER: ${DB_USER:-healthcare_user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-healthcare123}
-    ports:
-      - "3307:3306"
+    #ports:
+    #  - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
+      #- ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - healthcare-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Backend API
   backend:
@@ -35,11 +40,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-healthcare123}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
       JWT_EXPIRE: 7d
-      CLIENT_URL: http://localhost:3000
+      CLIENT_URL: http://localhost:3001
     ports:
-      - "5001:5000"
+      - "5002:5000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - healthcare-network
     restart: unless-stopped
@@ -64,8 +70,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: healthcare-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
