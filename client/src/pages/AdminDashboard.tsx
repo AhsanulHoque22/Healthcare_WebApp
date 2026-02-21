@@ -433,7 +433,7 @@ const AdminDashboard: React.FC = () => {
               </h3>
             <div className="space-y-3">
               <button
-                onClick={() => window.location.href = '/users'}
+                onClick={() => window.location.href = '/app/users'}
                 className="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-300 border border-blue-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
@@ -445,7 +445,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </button>
               <button
-                onClick={() => window.location.href = '/admin-doctors'}
+                onClick={() => window.location.href = '/app/admin-doctors'}
                 className="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl hover:from-green-100 hover:to-green-200 transition-all duration-300 border border-green-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
@@ -457,7 +457,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </button>
               <button
-                onClick={() => window.location.href = '/admin-patients'}
+                onClick={() => window.location.href = '/app/admin-patients'}
                 className="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-300 border border-purple-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
@@ -469,7 +469,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </button>
               <button
-                onClick={() => window.location.href = '/admin-lab-reports'}
+                onClick={() => window.location.href = '/app/admin-lab-reports'}
                 className="w-full text-left p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl hover:from-indigo-100 hover:to-indigo-200 transition-all duration-300 border border-indigo-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">

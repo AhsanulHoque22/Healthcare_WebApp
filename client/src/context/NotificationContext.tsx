@@ -53,8 +53,23 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         throw error;
       }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
-    retry: 1,
+    // 🔥 Poll slower
+  refetchInterval: 60000, // 1 minute
+
+  // 🔥 Don't refetch when switching tabs
+  refetchOnWindowFocus: false,
+
+  // 🔥 Don't refetch on reconnect
+  refetchOnReconnect: false,
+
+  // 🔥 Keep data fresh for 1 minute
+  staleTime: 60000,
+
+  // 🔥 Prevent unnecessary retries
+  retry: false,
+
+  // 🔥 Only run if token exists
+  enabled: !!localStorage.getItem('token'),
   });
 
   // Log notification state for debugging
