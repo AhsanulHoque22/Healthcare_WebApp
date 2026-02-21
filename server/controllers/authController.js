@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { User, Patient, Doctor } = require('../models');
+const { createNotification } = require('../services/notificationService');
 
 // Generate JWT token
 const generateToken = (userId) => {
