@@ -35,14 +35,15 @@ export const useNotifications = () => {
 
 interface NotificationProviderProps {
   children: ReactNode;
+  userId?: number | null;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children, userId }) => {
   const queryClient = useQueryClient();
 
-  // Fetch notifications
+  // Fetch notifications - query key MUST include user ID so each user has their own cache
   const { data: notificationsData, isLoading, error } = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', userId],
     queryFn: async () => {
       try {
         const response = await axios.get('/notifications');
@@ -68,8 +69,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // 🔥 Prevent unnecessary retries
   retry: false,
 
-  // 🔥 Only run if token exists
-  enabled: !!localStorage.getItem('token'),
+  // Only run when we have an authenticated user (token + user id)
+  enabled: !!(localStorage.getItem('token') && userId),
   });
 
   // Log notification state for debugging
@@ -89,7 +90,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const markAsRead = async (notificationId: number) => {
     try {
       await axios.put(`/notifications/${notificationId}/read`);
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to mark notification as read');
     }
@@ -98,7 +99,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const markAllAsRead = async () => {
     try {
       await axios.put('/notifications/read-all');
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       toast.success('All notifications marked as read');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to mark all notifications as read');
@@ -108,7 +109,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const deleteNotification = async (notificationId: number) => {
     try {
       await axios.delete(`/notifications/${notificationId}`);
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       toast.success('Notification deleted');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete notification');
@@ -116,7 +117,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   };
 
   const refreshNotifications = () => {
-    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
   };
 
   const value: NotificationContextType = {

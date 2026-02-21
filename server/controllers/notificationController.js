@@ -1,6 +1,7 @@
 const { Notification } = require('../models');
 const { Op } = require('sequelize');
 const { createSampleNotifications } = require('../utils/notificationHelper');
+const { createNotification: createNotificationService } = require('../services/notificationService');
 
 // Get all notifications for the authenticated user
 const getAllNotifications = async (req, res, next) => {
@@ -121,14 +122,17 @@ const deleteNotification = async (req, res, next) => {
 // Create a notification (admin only or system)
 const createNotification = async (req, res, next) => {
   try {
-    const { userId, title, message, type = 'info' } = req.body;
+    const { userId, title, message, type = 'info', targetRole, actionType, entityId, entityType } = req.body;
 
-    const notification = await Notification.create({
+    const notification = await createNotificationService({
       userId,
       title,
       message,
       type,
-      isRead: false,
+      targetRole,
+      actionType,
+      entityId,
+      entityType,
     });
 
     res.status(201).json({

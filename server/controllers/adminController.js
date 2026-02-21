@@ -2,6 +2,11 @@ const { User, Patient, Doctor, Appointment, MedicalRecord, DoctorRating } = requ
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { body, validationResult } = require('express-validator');
+const {
+  triggerDoctorVerified,
+  triggerUserDeactivated,
+  triggerNewUserRegistration,
+} = require('../services/notificationTriggers');
 
 // Get all users with pagination and filters
 const getUsers = async (req, res, next) => {
@@ -124,6 +129,12 @@ const updateUserStatus = async (req, res, next) => {
       attributes: { exclude: ['password'] }
     });
 
+    if (isActive === false) {
+      triggerUserDeactivated(updatedUser.get({ plain: true })).catch((err) =>
+        console.error('[adminController] triggerUserDeactivated:', err.message)
+      );
+    }
+
     res.json({
       success: true,
       message: 'User status updated successfully',
@@ -149,6 +160,11 @@ const deleteUser = async (req, res, next) => {
 
     // Soft delete by deactivating
     await user.update({ isActive: false });
+
+    const updatedUser = await User.findByPk(id, { attributes: { exclude: ['password'] } });
+    triggerUserDeactivated(updatedUser.get({ plain: true })).catch((err) =>
+      console.error('[adminController] triggerUserDeactivated:', err.message)
+    );
 
     res.json({
       success: true,
@@ -327,6 +343,10 @@ const verifyDoctor = async (req, res, next) => {
         }
       ]
     });
+
+    triggerDoctorVerified(updatedDoctor.get({ plain: true }), isVerified).catch((err) =>
+      console.error('[adminController] triggerDoctorVerified:', err.message)
+    );
 
     res.json({
       success: true,

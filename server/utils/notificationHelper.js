@@ -1,16 +1,14 @@
-const { Notification } = require('../models');
+const { createNotification: createNotificationService } = require('../services/notificationService');
 
-// Create a notification for a user
+// Create a notification for a user (legacy helper - delegates to notificationService)
 const createNotification = async (userId, title, message, type = 'info') => {
   try {
-    const notification = await Notification.create({
+    return await createNotificationService({
       userId,
       title,
       message,
       type,
-      isRead: false,
     });
-    return notification;
   } catch (error) {
     console.error('Error creating notification:', error);
     throw error;

@@ -1,6 +1,10 @@
 const { DoctorRating, Appointment, Patient, Doctor, User } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
+const {
+  triggerDoctorRatingReceived,
+  triggerDoctorRatingReceivedAdmin,
+} = require('../services/notificationTriggers');
 
 // Create a new doctor rating
 const createRating = async (req, res, next) => {
@@ -77,6 +81,15 @@ const createRating = async (req, res, next) => {
         }
       ]
     });
+
+    const doctor = ratingWithDetails.appointment?.doctor || (await Doctor.findByPk(appointment.doctorId, { include: [{ model: User, as: 'user' }] }));
+    triggerDoctorRatingReceived(
+      ratingWithDetails.get({ plain: true }),
+      doctor
+    ).catch((err) => console.error('[ratingController] triggerDoctorRatingReceived:', err.message));
+    triggerDoctorRatingReceivedAdmin(ratingWithDetails.get({ plain: true })).catch((err) =>
+      console.error('[ratingController] triggerDoctorRatingReceivedAdmin:', err.message)
+    );
 
     res.status(201).json({
       success: true,

@@ -3,7 +3,12 @@ const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { User, Patient, Doctor } = require('../models');
-const { createNotification } = require('../services/notificationService');
+const {
+  triggerNewUserRegistration,
+  triggerWelcomePatient,
+  triggerWelcomeDoctor,
+  triggerDoctorVerificationRequest,
+} = require('../services/notificationTriggers');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -63,6 +68,22 @@ const register = async (req, res, next) => {
     // Remove password from response
     const userResponse = user.toJSON();
     delete userResponse.password;
+
+    triggerNewUserRegistration(userResponse).catch((err) =>
+      console.error('[authController] triggerNewUserRegistration:', err.message)
+    );
+    if (user.role === 'patient') {
+      triggerWelcomePatient(userResponse).catch((err) =>
+        console.error('[authController] triggerWelcomePatient:', err.message)
+      );
+    } else if (user.role === 'doctor') {
+      triggerWelcomeDoctor(userResponse).catch((err) =>
+        console.error('[authController] triggerWelcomeDoctor:', err.message)
+      );
+      triggerDoctorVerificationRequest().catch((err) =>
+        console.error('[authController] triggerDoctorVerificationRequest:', err.message)
+      );
+    }
 
     res.status(201).json({
       success: true,

@@ -3,6 +3,12 @@ const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
+const {
+  triggerLabOrderCreated,
+  triggerLabOrderCreatedAdmin,
+  triggerLabResultsReady,
+  triggerPrescriptionLabResultsReady,
+} = require('../services/notificationTriggers');
 
 // Helper function to automatically determine test status based on payment and completion
 const determineAutomaticStatus = (test) => {
@@ -183,6 +189,14 @@ const createLabTestOrder = async (req, res, next) => {
     
     // Add test details
     orderWithTests.dataValues.testDetails = tests;
+
+    triggerLabOrderCreated(
+      orderWithTests.get({ plain: true }),
+      orderWithTests.patient
+    ).catch((err) => console.error('[labTestController] triggerLabOrderCreated:', err.message));
+    triggerLabOrderCreatedAdmin(orderWithTests.get({ plain: true })).catch((err) =>
+      console.error('[labTestController] triggerLabOrderCreatedAdmin:', err.message)
+    );
     
     res.status(201).json({
       success: true,
@@ -617,6 +631,14 @@ const uploadLabResults = async (req, res, next) => {
           resultUrl: uploadedFiles.length > 0 ? JSON.stringify(uploadedFiles) : order.resultUrl
         });
       }
+
+      const orderWithPatient = await LabTestOrder.findByPk(orderId, {
+        include: [{ association: 'patient', include: [{ association: 'user' }] }]
+      });
+      triggerLabResultsReady(
+        orderWithPatient.get({ plain: true }),
+        orderWithPatient.patient
+      ).catch((err) => console.error('[labTestController] triggerLabResultsReady:', err.message));
       
       res.json({
         success: true,
@@ -2043,6 +2065,14 @@ const confirmLabOrderReports = async (req, res, next) => {
       status: 'confirmed'
     });
 
+    const orderWithPatient = await LabTestOrder.findByPk(orderId, {
+      include: [{ association: 'patient', include: [{ association: 'user' }] }]
+    });
+    triggerLabResultsReady(
+      orderWithPatient.get({ plain: true }),
+      orderWithPatient.patient
+    ).catch((err) => console.error('[labTestController] triggerLabResultsReady:', err.message));
+
     res.json({
       success: true,
       message: 'Reports confirmed and sent to patient',
@@ -2250,6 +2280,15 @@ const confirmPrescriptionLabTestReports = async (req, res, next) => {
     await prescription.update({
       tests: JSON.stringify(tests)
     });
+
+    const patient = prescription.appointment?.patient;
+    if (patient) {
+      triggerPrescriptionLabResultsReady(
+        prescription.get({ plain: true }),
+        patient,
+        test.name
+      ).catch((err) => console.error('[labTestController] triggerPrescriptionLabResultsReady:', err.message));
+    }
 
     res.json({
       success: true,

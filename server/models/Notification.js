@@ -43,6 +43,26 @@ const Notification = sequelize.define('Notification', {
     defaultValue: false,
     field: 'isRead',
   },
+  targetRole: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    field: 'targetRole',
+  },
+  actionType: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    field: 'actionType',
+  },
+  entityId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'entityId',
+  },
+  entityType: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    field: 'entityType',
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -67,6 +87,12 @@ const Notification = sequelize.define('Notification', {
     },
     {
       fields: ['createdAt'],
+    },
+    {
+      fields: ['targetRole'],
+    },
+    {
+      fields: ['actionType'],
     },
   ],
 });

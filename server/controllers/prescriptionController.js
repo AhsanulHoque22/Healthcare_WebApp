@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { triggerPrescriptionCreated } = require('../services/notificationTriggers');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -102,8 +103,8 @@ const createOrUpdatePrescription = async (req, res) => {
     // Check if appointment exists and is completed
     const appointment = await Appointment.findByPk(appointmentId, {
       include: [
-        { model: Patient, as: 'patient' },
-        { model: Doctor, as: 'doctor' }
+        { model: Patient, as: 'patient', include: [{ model: User, as: 'user' }] },
+        { model: Doctor, as: 'doctor', include: [{ model: User, as: 'user' }] }
       ]
     });
 
@@ -165,6 +166,12 @@ const createOrUpdatePrescription = async (req, res) => {
         await extractMedicinesFromPrescription(prescription.id);
       }
     }
+
+    triggerPrescriptionCreated(
+      prescription.get({ plain: true }),
+      appointment.patient,
+      appointment.doctor
+    ).catch((err) => console.error('[prescriptionController] triggerPrescriptionCreated:', err.message));
 
     res.json({
       success: true,

@@ -4,17 +4,27 @@ const createNotification = async ({
   userId,
   title,
   message,
-  type = 'info'
+  type = 'info',
+  targetRole,
+  actionType,
+  entityId,
+  entityType,
 }) => {
   if (!userId) return;
 
-  return await Notification.create({
+  const payload = {
     userId,
     title,
     message,
     type,
-    isRead: false
-  });
+    isRead: false,
+  };
+  if (targetRole != null) payload.targetRole = targetRole;
+  if (actionType != null) payload.actionType = actionType;
+  if (entityId != null) payload.entityId = entityId;
+  if (entityType != null) payload.entityType = entityType;
+
+  return await Notification.create(payload);
 };
 
 module.exports = {

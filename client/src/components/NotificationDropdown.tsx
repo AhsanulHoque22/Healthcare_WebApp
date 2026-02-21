@@ -161,7 +161,7 @@ const NotificationDropdown: React.FC = () => {
                             }`}>
                               {notification.title}
                             </p>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap break-words">
                               {notification.message}
                             </p>
                             <p className="text-xs text-gray-400 mt-2">

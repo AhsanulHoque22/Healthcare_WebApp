@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -32,6 +32,16 @@ import AdminLabReports from './pages/AdminLabReports';
 import AdminLabTests from './pages/AdminLabTests';
 import LandingPage from './pages/LandingPage';
 import NotFound from './pages/NotFound';
+
+// Wrapper to pass userId to NotificationProvider (must be inside AuthProvider)
+function AppWithNotifications() {
+  const { user } = useAuth();
+  return (
+    <NotificationProvider userId={user?.id}>
+      <Layout />
+    </NotificationProvider>
+  );
+}
 
 // Create a client
 const queryClient = new QueryClient({
@@ -63,9 +73,7 @@ function App() {
         {/* Protected routes */}
         <Route path="/app" element={
           <ProtectedRoute>
-            <NotificationProvider>
-              <Layout />
-            </NotificationProvider>
+            <AppWithNotifications />
           </ProtectedRoute>
         }>
                 <Route index element={<RoleBasedRedirect />} />

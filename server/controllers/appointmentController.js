@@ -1,6 +1,15 @@
 const { Appointment, Patient, Doctor, User, Prescription, MedicalRecord } = require('../models');
 const { Op } = require('sequelize');
 const { body, validationResult } = require('express-validator');
+const {
+  triggerAppointmentCreated,
+  triggerAppointmentApproved,
+  triggerAppointmentDeclined,
+  triggerAppointmentCancelled,
+  triggerAppointmentRescheduled,
+  triggerAppointmentStarted,
+  triggerAppointmentCompleted,
+} = require('../services/notificationTriggers');
 
 // Create appointment
 const createAppointment = async (req, res, next) => {
@@ -94,6 +103,12 @@ const createAppointment = async (req, res, next) => {
         }
       ]
     });
+
+    triggerAppointmentCreated(
+      createdAppointment.get({ plain: true }),
+      createdAppointment.patient,
+      createdAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentCreated:', err.message));
 
     res.status(201).json({
       success: true,
@@ -301,6 +316,19 @@ const cancelAppointment = async (req, res, next) => {
       notes: reason ? `${appointment.notes || ''}\nCancellation reason: ${reason}`.trim() : appointment.notes
     });
 
+    const cancelledWithIncludes = await Appointment.findByPk(id, {
+      include: [
+        { association: 'patient', include: [{ association: 'user' }] },
+        { association: 'doctor', include: [{ association: 'user' }] },
+      ],
+    });
+    triggerAppointmentCancelled(
+      cancelledWithIncludes.get({ plain: true }),
+      cancelledWithIncludes.patient,
+      cancelledWithIncludes.doctor,
+      req.user?.role
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentCancelled:', err.message));
+
     res.json({
       success: true,
       message: 'Appointment cancelled successfully'
@@ -389,6 +417,12 @@ const rescheduleAppointment = async (req, res, next) => {
       ]
     });
 
+    triggerAppointmentRescheduled(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentRescheduled:', err.message));
+
     res.json({
       success: true,
       message: 'Appointment rescheduled successfully',
@@ -433,6 +467,12 @@ const approveAppointment = async (req, res, next) => {
         }
       ]
     });
+
+    triggerAppointmentApproved(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentApproved:', err.message));
 
     res.json({
       success: true,
@@ -482,6 +522,12 @@ const declineAppointment = async (req, res, next) => {
         }
       ]
     });
+
+    triggerAppointmentDeclined(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentDeclined:', err.message));
 
     res.json({
       success: true,
@@ -545,6 +591,17 @@ const rescheduleRequestedAppointment = async (req, res, next) => {
       ]
     });
 
+    triggerAppointmentApproved(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentApproved:', err.message));
+    triggerAppointmentRescheduled(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentRescheduled:', err.message));
+
     res.json({
       success: true,
       message: 'Appointment rescheduled and approved successfully',
@@ -595,6 +652,12 @@ const startAppointment = async (req, res, next) => {
         }
       ]
     });
+
+    triggerAppointmentStarted(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentStarted:', err.message));
 
     res.json({
       success: true,
@@ -653,6 +716,12 @@ const completeAppointment = async (req, res, next) => {
 
     // Create basic medical record for completed appointment (if no prescription exists)
     await createBasicMedicalRecord(updatedAppointment);
+
+    triggerAppointmentCompleted(
+      updatedAppointment.get({ plain: true }),
+      updatedAppointment.patient,
+      updatedAppointment.doctor
+    ).catch((err) => console.error('[appointmentController] triggerAppointmentCompleted:', err.message));
 
     res.json({
       success: true,

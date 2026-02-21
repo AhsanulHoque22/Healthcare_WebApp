@@ -110,6 +110,12 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      try {
+        const { startDailyReminderScheduler } = require('./jobs/dailyAppointmentReminder');
+        startDailyReminderScheduler();
+      } catch (err) {
+        console.warn('[Server] Daily reminder scheduler could not start:', err.message);
+      }
     });
 
     // Handle server errors gracefully
