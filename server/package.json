@@ -4,7 +4,7 @@
   "description": "Healthcare web application backend server",
   "main": "index.js",
   "scripts": {
-    "start": "lsof -ti:5000 | xargs kill -9 2>/dev/null; sleep 1; node index.js",
+    "start": "node index.js",
     "start:clean": "node start-server.js",
     "dev": "nodemon index.js",
     "test": "jest",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@types/multer": "^2.0.0",
-    "axios": "^1.12.2",
+    "axios": "^1.13.5",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
