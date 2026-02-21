@@ -10,11 +10,7 @@
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
-    "clean": "lsof -ti:5000 | xargs -r kill -9 && lsof -ti:3000 | xargs -r kill -9",
-    "start-backend": "./start-backend.sh",
-    "start-frontend": "./start-frontend.sh",
-    "start-all": "./start-all.sh",
-    "restart": "npm run clean && sleep 2 && npm run start-all"
+    "clean": "lsof -ti:5000 | xargs -r kill -9 && lsof -ti:3000 | xargs -r kill -9"
   },
   "keywords": ["healthcare", "react", "nodejs", "mysql", "sequelize"],
   "author": "Healthcare Development Team",

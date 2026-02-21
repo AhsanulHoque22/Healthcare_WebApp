@@ -4,7 +4,7 @@
   "description": "Healthcare web application backend server",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "lsof -ti:5000 | xargs kill -9 2>/dev/null; sleep 1; node index.js",
     "start:clean": "node start-server.js",
     "dev": "nodemon index.js",
     "test": "jest",

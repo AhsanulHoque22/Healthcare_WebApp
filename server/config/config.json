@@ -3,7 +3,7 @@
     "username": "root",
     "password": "healthcare123",
     "database": "healthcare_db",
-    "host": "127.0.0.1",
+    "host": "localhost",
     "port": 3307,
     "dialect": "mysql"
   },
@@ -11,16 +11,18 @@
     "username": "root",
     "password": "healthcare123",
     "database": "healthcare_db_test",
-    "host": "127.0.0.1",
+    "host": "localhost",
     "port": 3307,
     "dialect": "mysql"
   },
   "production": {
-    "username": "healthcare_user",
+    "username": "root",
     "password": "healthcare123",
     "database": "healthcare_db",
     "host": "mysql",
     "port": 3306,
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "logging": false
   }
 }
+      

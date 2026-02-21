@@ -46,11 +46,15 @@ interface RegisterData {
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// API base URL - use relative path for Docker compatibility
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
+
+// Log the API base URL for debugging
+console.log('[AuthContext] Initialized with API_BASE_URL:', API_BASE_URL);
+console.log('[AuthContext] REACT_APP_API_URL env var:', process.env.REACT_APP_API_URL);
 
 // Add cache-busting headers to prevent browser caching
 axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
@@ -152,7 +156,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Register function
   const register = async (userData: RegisterData) => {
     try {
+      console.log('AuthContext: Attempting registration with:', { ...userData, password: '***' });
+      console.log('AuthContext: API base URL:', axios.defaults.baseURL);
+      console.log('AuthContext: Making POST request to:', '/auth/register');
+      
       const response = await axios.post('/auth/register', userData);
+      console.log('AuthContext: Registration response:', response.data);
+      
       const { user: newUser, token: newToken } = response.data.data;
       
       setUser(newUser);
@@ -161,6 +171,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       toast.success('Registration successful!');
     } catch (error: any) {
+      console.error('AuthContext: Registration error:', error);
+      console.error('AuthContext: Error response:', error.response?.data);
+      console.error('AuthContext: Error status:', error.response?.status);
+      console.error('AuthContext: Error config:', error.config);
       const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);
       throw new Error(message);
