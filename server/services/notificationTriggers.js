@@ -283,6 +283,25 @@ const triggerPrescriptionCreated = async (prescription, patient, doctor) => {
 
 // ============== LAB TEST TRIGGERS ==============
 
+// ============== MEDICINE REMINDER TRIGGERS ==============
+
+/** Patient: medicine reminder - take your medicine */
+const triggerMedicineReminder = async (patientUserId, medicineName, dosage, reminderTime) => {
+  if (!patientUserId) return;
+  const timeStr = reminderTime ? String(reminderTime).slice(0, 5) : '';
+  await notifyUsers({
+    userIds: patientUserId,
+    title: 'Medicine Reminder',
+    message: `Time to take ${medicineName}${dosage ? ` (${dosage})` : ''}${timeStr ? ` at ${timeStr}` : ''}.`,
+    type: 'info',
+    targetRole: 'patient',
+    actionType: 'medicine_reminder',
+    entityType: 'medicine',
+  });
+};
+
+// ============== LAB TEST TRIGGERS ==============
+
 /** Patient: lab test order created */
 const triggerLabOrderCreated = async (order, patient) => {
   await notifyUsers({
@@ -567,4 +586,5 @@ module.exports = {
   triggerWelcomePatient,
   triggerWelcomeDoctor,
   triggerDailyAppointmentReminders,
+  triggerMedicineReminder,
 };

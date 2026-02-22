@@ -497,118 +497,54 @@ const extractMedicinesFromPrescription = async (prescriptionId) => {
 const createRemindersFromSchedule = (schedule, medicineId, patientId) => {
   const reminders = [];
   const scheduleLower = schedule.toLowerCase();
+  const daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
 
-  // Parse schedule and create appropriate reminders
   if (scheduleLower.includes('daily') || scheduleLower.includes('once a day') || scheduleLower.includes('1 time')) {
     reminders.push({
       medicineId,
       patientId,
-      time: '08:00',
-      dayOfWeek: 'all',
+      reminderTime: '08:00:00',
+      daysOfWeek,
       isActive: true,
-      nextReminderAt: calculateNextReminder('08:00', 'all')
+      nextTrigger: calculateNextReminder('08:00', 'all'),
     });
   }
-  
+
   if (scheduleLower.includes('twice') || scheduleLower.includes('2 times') || scheduleLower.includes('bid')) {
     reminders.push(
-      {
-        medicineId,
-        patientId,
-        time: '08:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('08:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '20:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('20:00', 'all')
-      }
-    );
-  }
-  
-  if (scheduleLower.includes('three times') || scheduleLower.includes('3 times') || scheduleLower.includes('tid')) {
-    reminders.push(
-      {
-        medicineId,
-        patientId,
-        time: '08:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('08:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '14:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('14:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '20:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('20:00', 'all')
-      }
-    );
-  }
-  
-  if (scheduleLower.includes('four times') || scheduleLower.includes('4 times') || scheduleLower.includes('qid')) {
-    reminders.push(
-      {
-        medicineId,
-        patientId,
-        time: '06:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('06:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '12:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('12:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '18:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('18:00', 'all')
-      },
-      {
-        medicineId,
-        patientId,
-        time: '22:00',
-        dayOfWeek: 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder('22:00', 'all')
-      }
+      { medicineId, patientId, reminderTime: '08:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('08:00', 'all') },
+      { medicineId, patientId, reminderTime: '20:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('20:00', 'all') }
     );
   }
 
-  // Default reminder if no pattern matches
+  if (scheduleLower.includes('three times') || scheduleLower.includes('3 times') || scheduleLower.includes('tid')) {
+    reminders.push(
+      { medicineId, patientId, reminderTime: '08:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('08:00', 'all') },
+      { medicineId, patientId, reminderTime: '14:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('14:00', 'all') },
+      { medicineId, patientId, reminderTime: '20:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('20:00', 'all') }
+    );
+  }
+
+  if (scheduleLower.includes('four times') || scheduleLower.includes('4 times') || scheduleLower.includes('qid')) {
+    reminders.push(
+      { medicineId, patientId, reminderTime: '06:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('06:00', 'all') },
+      { medicineId, patientId, reminderTime: '12:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('12:00', 'all') },
+      { medicineId, patientId, reminderTime: '18:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('18:00', 'all') },
+      { medicineId, patientId, reminderTime: '22:00:00', daysOfWeek, isActive: true, nextTrigger: calculateNextReminder('22:00', 'all') }
+    );
+  }
+
   if (reminders.length === 0) {
     reminders.push({
       medicineId,
       patientId,
-      time: '08:00',
-      dayOfWeek: 'all',
+      reminderTime: '08:00:00',
+      daysOfWeek,
       isActive: true,
-      nextReminderAt: calculateNextReminder('08:00', 'all')
+      nextTrigger: calculateNextReminder('08:00', 'all'),
     });
   }
-  
+
   return reminders;
 };
 

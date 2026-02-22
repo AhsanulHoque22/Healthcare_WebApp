@@ -250,15 +250,19 @@ const addManualMedicine = async (req, res) => {
 
     // Create reminders if frequency is provided
     if (medicineData.frequency && medicineData.reminderTimes) {
-      const reminders = medicineData.reminderTimes.map(time => ({
-        medicineId: medicine.id,
-        patientId: parseInt(patientId),
-        time: time.time,
-        dayOfWeek: time.dayOfWeek || 'all',
-        isActive: true,
-        nextReminderAt: calculateNextReminder(time.time, time.dayOfWeek || 'all')
-      }));
-
+      const daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+      const reminders = medicineData.reminderTimes.map((time) => {
+        const t = (time.time || '08:00').toString().slice(0, 5);
+        const rt = t.length === 5 ? `${t}:00` : '08:00:00';
+        return {
+          medicineId: medicine.id,
+          patientId: parseInt(patientId),
+          reminderTime: rt,
+          daysOfWeek: Array.isArray(time.daysOfWeek) ? time.daysOfWeek : daysOfWeek,
+          isActive: true,
+          nextTrigger: calculateNextReminder(time.time || '08:00', time.dayOfWeek || 'all'),
+        };
+      });
       await MedicineReminder.bulkCreate(reminders);
     }
 
@@ -440,11 +444,10 @@ const updateReminder = async (req, res) => {
     }
 
     // Recalculate next reminder if time or day changed
-    if (updateData.time || updateData.dayOfWeek) {
-      updateData.nextReminderAt = calculateNextReminder(
-        updateData.time || reminder.time,
-        updateData.dayOfWeek || reminder.dayOfWeek
-      );
+    if (updateData.reminderTime || updateData.daysOfWeek) {
+      const rt = (updateData.reminderTime || reminder.reminderTime || '08:00').toString().slice(0, 5);
+      const days = updateData.daysOfWeek || reminder.daysOfWeek;
+      updateData.nextTrigger = calculateNextReminder(rt, Array.isArray(days) ? 'all' : days);
     }
 
     await reminder.update(updateData);
@@ -641,69 +644,69 @@ const calculateEndDate = (duration) => {
 
 const createRemindersFromFrequency = (frequency, medicineId, patientId) => {
   const reminders = [];
-  
-  // Parse frequency and create appropriate reminders
+  const daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+
   if (frequency.includes('daily') || frequency.includes('once a day')) {
     reminders.push({
       medicineId,
       patientId: parseInt(patientId),
-      time: '08:00',
-      dayOfWeek: 'all',
+      reminderTime: '08:00:00',
+      daysOfWeek,
       isActive: true,
-      nextReminderAt: calculateNextReminder('08:00', 'all')
+      nextTrigger: calculateNextReminder('08:00', 'all'),
     });
   }
-  
+
   if (frequency.includes('twice') || frequency.includes('2 times')) {
     reminders.push(
       {
         medicineId,
         patientId: parseInt(patientId),
-        time: '08:00',
-        dayOfWeek: 'all',
+        reminderTime: '08:00:00',
+        daysOfWeek,
         isActive: true,
-        nextReminderAt: calculateNextReminder('08:00', 'all')
+        nextTrigger: calculateNextReminder('08:00', 'all'),
       },
       {
         medicineId,
         patientId: parseInt(patientId),
-        time: '20:00',
-        dayOfWeek: 'all',
+        reminderTime: '20:00:00',
+        daysOfWeek,
         isActive: true,
-        nextReminderAt: calculateNextReminder('20:00', 'all')
+        nextTrigger: calculateNextReminder('20:00', 'all'),
       }
     );
   }
-  
+
   if (frequency.includes('three times') || frequency.includes('3 times')) {
     reminders.push(
       {
         medicineId,
         patientId: parseInt(patientId),
-        time: '08:00',
-        dayOfWeek: 'all',
+        reminderTime: '08:00:00',
+        daysOfWeek,
         isActive: true,
-        nextReminderAt: calculateNextReminder('08:00', 'all')
+        nextTrigger: calculateNextReminder('08:00', 'all'),
       },
       {
         medicineId,
         patientId: parseInt(patientId),
-        time: '14:00',
-        dayOfWeek: 'all',
+        reminderTime: '14:00:00',
+        daysOfWeek,
         isActive: true,
-        nextReminderAt: calculateNextReminder('14:00', 'all')
+        nextTrigger: calculateNextReminder('14:00', 'all'),
       },
       {
         medicineId,
         patientId: parseInt(patientId),
-        time: '20:00',
-        dayOfWeek: 'all',
+        reminderTime: '20:00:00',
+        daysOfWeek,
         isActive: true,
-        nextReminderAt: calculateNextReminder('20:00', 'all')
+        nextTrigger: calculateNextReminder('20:00', 'all'),
       }
     );
   }
-  
+
   return reminders;
 };
 
@@ -1469,25 +1472,30 @@ const saveReminderSettings = async (req, res) => {
 const testReminderNotification = async (req, res) => {
   try {
     const { patientId } = req.params;
-    
-    console.log('Test notification requested for patient:', patientId);
-    
-    // In a real app, you would:
-    // 1. Send a browser notification
-    // 2. Send a push notification
-    // 3. Send an email/SMS
-    // 4. Log the test notification
-    
+
+    const patient = await Patient.findByPk(patientId);
+    if (!patient || !patient.userId) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    const { triggerMedicineReminder } = require('../services/notificationTriggers');
+    await triggerMedicineReminder(
+      patient.userId,
+      'Test Medicine',
+      '1 tablet',
+      new Date().toTimeString().slice(0, 5)
+    );
+
     res.json({
       success: true,
-      message: 'Test notification sent successfully'
+      message: 'Test notification sent successfully',
     });
   } catch (error) {
     console.error('Error sending test notification:', error);
     res.status(500).json({
       success: false,
       message: 'Error sending test notification',
-      error: error.message
+      error: error.message,
     });
   }
 };
