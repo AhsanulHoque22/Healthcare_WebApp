@@ -427,9 +427,9 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
           }
         `}
       </style>
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 max-w-md mx-auto">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 p-6 md:p-8 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto transform transition-all duration-500 ease-out animate-fade-in-up mt-4 sm:mt-0 pb-12 sm:pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 sticky top-0 bg-white/95 backdrop-blur-xl z-10 pb-2 pt-2 border-b border-gray-100">
         <div className="flex items-center">
           <BellIcon className="h-6 w-6 text-blue-600 mr-2" />
           <h3 className="text-lg font-semibold text-gray-900">Medicine Reminders</h3>
@@ -485,7 +485,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
                 type="time"
                 value={settings.morningTime}
                 onChange={(e) => handleTimeChange('morningTime', e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
                 min="00:00"
                 max="23:59"
                 step="300"
@@ -505,7 +505,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
                 type="time"
                 value={settings.lunchTime}
                 onChange={(e) => handleTimeChange('lunchTime', e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
                 min="00:00"
                 max="23:59"
                 step="300"
@@ -525,7 +525,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
                 type="time"
                 value={settings.dinnerTime}
                 onChange={(e) => handleTimeChange('dinnerTime', e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
                 min="00:00"
                 max="23:59"
                 step="300"
@@ -577,7 +577,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
                     reminderMinutesBefore: parseInt(e.target.value)
                   }));
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
               >
                 <option value={5}>5 minutes before</option>
                 <option value={10}>10 minutes before</option>
@@ -593,8 +593,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
             <div className="mb-6">
               <button
                 onClick={handleTestNotification}
-                disabled={testNotificationMutation.isPending}
-                className="w-full flex items-center justify-center px-4 py-2 border border-blue-300 text-blue-700 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center px-4 py-3 border-2 border-blue-100 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 font-medium tracking-wide disabled:opacity-50"
               >
                 <BellIcon className="h-4 w-4 mr-2" />
                 {testNotificationMutation.isPending ? 'Sending...' : 'Send Test Notification'}
@@ -609,7 +608,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         <button
           onClick={handleSave}
           disabled={saveSettingsMutation.isPending}
-          className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saveSettingsMutation.isPending ? (
             <>
@@ -626,7 +625,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-gray-200 bg-white text-gray-700 rounded-xl shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 font-medium"
           >
             Cancel
           </button>

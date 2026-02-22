@@ -609,7 +609,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
       {/* Reminder Settings Modal */}
       {showReminderSettings && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity duration-300"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               console.log('🔍 DEBUG: Reminder settings modal closed by clicking outside');

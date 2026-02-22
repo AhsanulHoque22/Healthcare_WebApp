@@ -940,6 +940,14 @@ const getTodayMedicineSchedule = async (req, res) => {
     // Auto-complete expired medicines first
     await autoCompleteExpiredMedicines();
     
+    // Fetch patient reminder settings
+    const reminderSettings = await PatientReminderSettings.findOne({
+      where: { patientId: parseInt(patientId), enabled: true }
+    });
+    const morningTime = reminderSettings && reminderSettings.morningTime ? reminderSettings.morningTime : '08:00';
+    const lunchTime = reminderSettings && reminderSettings.lunchTime ? reminderSettings.lunchTime : '12:00';
+    const dinnerTime = reminderSettings && reminderSettings.dinnerTime ? reminderSettings.dinnerTime : '19:00';
+    
     // Get today's date
     const today = new Date();
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -1042,13 +1050,13 @@ const getTodayMedicineSchedule = async (req, res) => {
       const expectedTimes = [];
       
       if (frequency.includes('morning') || frequency.includes('breakfast')) {
-        expectedTimes.push({ time: '08:00', label: 'Morning', taken: false });
+        expectedTimes.push({ time: morningTime, label: 'Morning', taken: false });
       }
       if (frequency.includes('lunch')) {
-        expectedTimes.push({ time: '12:00', label: 'Lunch', taken: false });
+        expectedTimes.push({ time: lunchTime, label: 'Lunch', taken: false });
       }
       if (frequency.includes('dinner') || frequency.includes('evening') || frequency.includes('night') || frequency.includes('bedtime')) {
-        expectedTimes.push({ time: '19:00', label: 'Dinner', taken: false });
+        expectedTimes.push({ time: dinnerTime, label: 'Dinner', taken: false });
       }
       
       // Check which dosages were taken today
@@ -1121,6 +1129,14 @@ const getMedicineScheduleRange = async (req, res) => {
     
     // Auto-complete expired medicines first
     await autoCompleteExpiredMedicines();
+    
+    // Fetch patient reminder settings
+    const reminderSettings = await PatientReminderSettings.findOne({
+      where: { patientId: parseInt(patientId), enabled: true }
+    });
+    const morningTime = reminderSettings && reminderSettings.morningTime ? reminderSettings.morningTime : '08:00';
+    const lunchTime = reminderSettings && reminderSettings.lunchTime ? reminderSettings.lunchTime : '12:00';
+    const dinnerTime = reminderSettings && reminderSettings.dinnerTime ? reminderSettings.dinnerTime : '19:00';
     
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -1225,13 +1241,13 @@ const getMedicineScheduleRange = async (req, res) => {
       const expectedTimes = [];
       
       if (frequency.includes('morning') || frequency.includes('breakfast')) {
-        expectedTimes.push({ time: '08:00', label: 'Morning' });
+        expectedTimes.push({ time: morningTime, label: 'Morning' });
       }
       if (frequency.includes('lunch')) {
-        expectedTimes.push({ time: '12:00', label: 'Lunch' });
+        expectedTimes.push({ time: lunchTime, label: 'Lunch' });
       }
       if (frequency.includes('dinner') || frequency.includes('evening') || frequency.includes('night') || frequency.includes('bedtime')) {
-        expectedTimes.push({ time: '19:00', label: 'Dinner' });
+        expectedTimes.push({ time: dinnerTime, label: 'Dinner' });
       }
       
       return {
@@ -1259,13 +1275,13 @@ const getMedicineScheduleRange = async (req, res) => {
       const expectedTimes = [];
       
       if (frequency.includes('morning') || frequency.includes('breakfast')) {
-        expectedTimes.push({ time: '08:00', label: 'Morning' });
+        expectedTimes.push({ time: morningTime, label: 'Morning' });
       }
       if (frequency.includes('lunch')) {
-        expectedTimes.push({ time: '12:00', label: 'Lunch' });
+        expectedTimes.push({ time: lunchTime, label: 'Lunch' });
       }
       if (frequency.includes('dinner') || frequency.includes('evening') || frequency.includes('night') || frequency.includes('bedtime')) {
-        expectedTimes.push({ time: '19:00', label: 'Dinner' });
+        expectedTimes.push({ time: dinnerTime, label: 'Dinner' });
       }
       
       const hasScheduled = hasScheduledFrequency(medicine.frequency);

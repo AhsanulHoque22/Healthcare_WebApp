@@ -401,7 +401,7 @@ const MedicineTracker: React.FC<MedicineTrackerProps> = ({ patientId }) => {
 
       {/* Reminder Settings Modal */}
       {showReminderSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity duration-300">
           <MedicineReminderSettings
             patientId={patientId}
             onClose={() => setShowReminderSettings(false)}
