@@ -183,7 +183,7 @@ const Doctors: React.FC = () => {
                   <div className="flex-shrink-0">
                     {doctor.profileImage ? (
                       <img
-                        src={`http://localhost:5000${doctor.profileImage}`}
+                        src={doctor.profileImage}
                         alt={`Dr. ${doctor.user.firstName} ${doctor.user.lastName}`}
                         className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-300"
                       />
@@ -294,7 +294,7 @@ const Doctors: React.FC = () => {
                 <div className="text-center">
                   {selectedDoctor.profileImage ? (
                     <img
-                      src={`http://localhost:5000${selectedDoctor.profileImage}`}
+                      src={selectedDoctor.profileImage}
                       alt={`Dr. ${selectedDoctor.user.firstName} ${selectedDoctor.user.lastName}`}
                       className="h-32 w-32 rounded-full object-cover mx-auto mb-4"
                     />

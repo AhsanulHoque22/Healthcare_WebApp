@@ -785,7 +785,7 @@ const LabReports: React.FC = () => {
                               {test.testReports.map((report: any, index: number) => (
                                 <a
                                   key={index}
-                                  href={`http://localhost:5000/${report.path}`}
+                                href={`/${report.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"
@@ -814,7 +814,7 @@ const LabReports: React.FC = () => {
                                 test.testReports.map((report: any, index: number) => (
                                   <a
                                     key={index}
-                                    href={`http://localhost:5000/${report.path}`}
+                                    href={`/${report.path}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"
@@ -826,7 +826,7 @@ const LabReports: React.FC = () => {
                                 ))
                               ) : test.resultUrl && (
                                 <a
-                                  href={`http://localhost:5000${test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`}`}
+                                  href={test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"

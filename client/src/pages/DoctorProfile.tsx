@@ -394,7 +394,7 @@ const DoctorProfile: React.FC = () => {
                 {profileData.profileImage ? (
                   <div className="relative inline-block">
                     <img
-                      src={`http://localhost:5000${profileData.profileImage}`}
+                      src={profileData.profileImage}
                       alt="Profile"
                       className="h-40 w-40 rounded-2xl object-cover mx-auto mb-6 shadow-lg border-4 border-white"
                     />

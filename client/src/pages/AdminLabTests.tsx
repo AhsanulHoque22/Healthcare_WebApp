@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../services/paymentService';
@@ -39,6 +39,7 @@ interface LabTest {
 
 const AdminLabTests: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -50,6 +51,14 @@ const AdminLabTests: React.FC = () => {
 
   const queryClient = useQueryClient();
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Page load animation
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -60,18 +69,19 @@ const AdminLabTests: React.FC = () => {
 
   // Fetch lab tests
   const { data: testsData, isLoading: testsLoading } = useQuery({
-    queryKey: ['admin-lab-tests', searchTerm, categoryFilter, statusFilter, page],
+    queryKey: ['admin-lab-tests', debouncedSearchTerm, categoryFilter, statusFilter, page],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        ...(searchTerm && { search: searchTerm }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
         ...(categoryFilter && { category: categoryFilter }),
         ...(statusFilter && { isActive: statusFilter }),
       });
       const response = await axios.get(`/admin/lab-tests?${params}`);
       return response.data.data;
     },
+    placeholderData: keepPreviousData,
   });
 
   // Create lab test mutation
@@ -365,7 +375,10 @@ const AdminLabTests: React.FC = () => {
                     <input
                       type="text"
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                      }}
                       placeholder="Search by name or description"
                       className="w-full pl-10 pr-4 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 font-medium"
                     />
@@ -378,7 +391,10 @@ const AdminLabTests: React.FC = () => {
                   </label>
                   <select
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    onChange={(e) => {
+                      setCategoryFilter(e.target.value);
+                      setPage(1);
+                    }}
                     className="w-full px-3 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 font-medium"
                   >
                     <option value="">All Categories</option>
@@ -396,7 +412,10 @@ const AdminLabTests: React.FC = () => {
                   </label>
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setPage(1);
+                    }}
                     className="w-full px-3 py-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 font-medium"
                   >
                     <option value="">All Status</option>

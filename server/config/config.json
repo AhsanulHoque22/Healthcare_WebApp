@@ -17,7 +17,7 @@
   },
   "production": {
     "username": "root",
-    "password": "7878",
+    "password": "rootpassword",
     "database": "healthcare_db",
     "host": "mysql",
     "port": 3306,

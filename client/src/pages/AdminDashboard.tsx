@@ -545,7 +545,7 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-xs text-yellow-600">{verificationRequests.length} doctors waiting for approval</p>
                   </div>
                   <button
-                    onClick={() => window.location.href = '/admin-doctors'}
+                    onClick={() => window.location.href = '/app/admin-doctors'}
                     className="text-xs text-yellow-700 hover:text-yellow-900 font-medium hover:scale-110 transition-transform duration-300 flex items-center gap-1"
                   >
                     Review <ArrowRightIcon className="h-3 w-3" />

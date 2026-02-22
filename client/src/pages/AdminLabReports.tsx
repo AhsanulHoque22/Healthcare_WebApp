@@ -1915,7 +1915,7 @@ const AdminLabReports: React.FC = () => {
                             .map((report: any, reportIndex: number) => (
                             <div key={reportIndex} className="flex items-center gap-2">
                               <a
-                                href={`http://localhost:5000/${report.path}`}
+                                href={`/${report.path}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn-outline flex items-center gap-2 text-sm"

@@ -412,7 +412,7 @@ const AdminDoctors: React.FC = () => {
                             <div className="flex-shrink-0">
                               {doctor.profileImage ? (
                                 <img
-                                  src={`http://localhost:5000${doctor.profileImage}`}
+                                  src={doctor.profileImage}
                                   alt={`Dr. ${doctor.user.firstName} ${doctor.user.lastName}`}
                                   className="h-14 w-14 rounded-full object-cover ring-2 ring-purple-200 shadow-lg"
                                 />
@@ -536,7 +536,7 @@ const AdminDoctors: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       {doctor.profileImage ? (
                         <img
-                          src={`http://localhost:5000${doctor.profileImage}`}
+                          src={doctor.profileImage}
                           alt={`Dr. ${doctor.user.firstName} ${doctor.user.lastName}`}
                           className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-100"
                         />
@@ -707,7 +707,7 @@ const AdminDoctors: React.FC = () => {
                   <div className="flex items-center space-x-6">
                     {selectedDoctor.profileImage ? (
                       <img
-                        src={`http://localhost:5000${selectedDoctor.profileImage}`}
+                        src={selectedDoctor.profileImage}
                         alt={`Dr. ${selectedDoctor.user.firstName} ${selectedDoctor.user.lastName}`}
                         className="h-20 w-20 rounded-full object-cover ring-4 ring-white/30 shadow-lg"
                       />

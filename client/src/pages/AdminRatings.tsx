@@ -38,28 +38,6 @@ const AdminRatingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Transparent Navigation Header */}
-      <header className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-7xl rounded-2xl transition-all duration-300 ${scrolled ? 'bg-white/20 backdrop-blur-md shadow-lg' : 'bg-white/10 backdrop-blur-sm'}`}>
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="p-2 bg-white/20 rounded-md backdrop-blur-sm">
-                <HeartIcon className="h-6 w-6 text-pink-500" />
-              </div>
-              <SparklesIcon className="h-3 w-3 text-yellow-300 absolute -top-1 -right-1 animate-pulse" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-gray-800">Healthcare</div>
-              <div className="text-xs text-gray-600">Admin Panel</div>
-            </div>
-          </div>
-          <nav className="flex items-center gap-3">
-            <button className="px-3 py-2 rounded-lg text-sm bg-white/20 hover:bg-white/30 transition-colors">Dashboard</button>
-            <button className="px-3 py-2 rounded-lg text-sm bg-white/20 hover:bg-white/30 transition-colors">Lab Tests</button>
-            <button className="px-3 py-2 rounded-lg text-sm bg-white/20 hover:bg-white/30 transition-colors">Ratings</button>
-          </nav>
-        </div>
-      </header>
 
       <div className="relative z-10 p-6 pt-28">
         <div className="max-w-7xl mx-auto space-y-8">

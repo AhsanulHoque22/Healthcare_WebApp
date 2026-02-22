@@ -155,7 +155,7 @@ const Layout: React.FC = () => {
               <div className="flex-shrink-0">
                 {user?.profileImage ? (
                   <img
-                    src={`http://localhost:5000${user.profileImage}`}
+                    src={user.profileImage}
                     alt={`${user.firstName} ${user.lastName}`}
                     className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                   />
@@ -255,7 +255,7 @@ const Layout: React.FC = () => {
                   <div className="flex-shrink-0">
                     {user?.profileImage ? (
                       <img
-                        src={`http://localhost:5000${user.profileImage}`}
+                        src={user.profileImage}
                         alt={`${user.firstName} ${user.lastName}`}
                         className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                       />
@@ -287,7 +287,7 @@ const Layout: React.FC = () => {
                 <div className="flex-shrink-0">
                   {user?.profileImage ? (
                     <img
-                      src={`http://localhost:5000${user.profileImage}`}
+                      src={user.profileImage}
                       alt={`${user.firstName} ${user.lastName}`}
                       className="h-8 w-8 rounded-full object-cover ring-2 ring-white shadow-sm"
                     />
@@ -359,9 +359,9 @@ const Layout: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     {user?.profileImage ? (
                       <img
-                        src={`http://localhost:5000${user.profileImage}`}
+                        src={user.profileImage}
                         alt={`${user.firstName} ${user.lastName}`}
-                        className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-200"
+                        className="h-8 w-8 rounded-full object-cover ring-2 ring-ring-gray-200"
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">

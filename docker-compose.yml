@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   mysql:
@@ -34,6 +32,8 @@ services:
       DB_PORT: 3306
       REDIS_HOST: redis
       NODE_ENV: production
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       - mysql
       - redis
@@ -54,6 +54,7 @@ services:
 
 volumes:
   mysql_data:
+  uploads_data:
 
 networks:
   healthcare-network:
