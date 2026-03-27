@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { triggerPrescriptionCreated } = require('../services/notificationTriggers');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -248,13 +249,29 @@ const uploadTestReports = async (req, res) => {
       });
     }
 
-    const uploadedFiles = files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      path: file.path,
-      size: file.size,
-      uploadedAt: new Date()
-    }));
+    const uploadedFiles = [];
+    for (const file of files) {
+      try {
+        const result = await uploadToCloudinary(file.path, 'prescription_reports');
+        uploadedFiles.push({
+          filename: file.filename,
+          originalName: file.originalname,
+          path: result.secure_url, // Store the Cloudinary URL
+          publicId: result.public_id,
+          size: file.size,
+          uploadedAt: new Date()
+        });
+      } catch (uploadError) {
+        console.error(`Failed to upload ${file.originalname} to Cloudinary:`, uploadError);
+      }
+    }
+
+    if (uploadedFiles.length === 0 && files.length > 0) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload files to cloud storage'
+      });
+    }
 
     // Update prescription with test reports
     const existingReports = prescription.testReports ? JSON.parse(prescription.testReports) : [];

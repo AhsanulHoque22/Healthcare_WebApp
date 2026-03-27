@@ -2,6 +2,7 @@ const { Doctor, User, Appointment, Patient, MedicalRecord, DoctorRating } = requ
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const path = require('path');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Get all doctors (public endpoint)
 const getAllDoctors = async (req, res, next) => {
@@ -504,8 +505,18 @@ const uploadProfileImage = async (req, res, next) => {
       });
     }
 
-    // Generate the image URL (relative to the server)
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Upload to Cloudinary
+    let imageUrl = '';
+    try {
+      const result = await uploadToCloudinary(req.file.path, 'doctor_profiles');
+      imageUrl = result.secure_url;
+    } catch (uploadError) {
+      console.error('Cloudinary upload failure:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload image to cloud storage'
+      });
+    }
     
     // Update the doctor's profile image
     await doctor.update({

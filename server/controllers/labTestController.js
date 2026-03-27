@@ -9,6 +9,7 @@ const {
   triggerLabResultsReady,
   triggerPrescriptionLabResultsReady,
 } = require('../services/notificationTriggers');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Helper function to automatically determine test status based on payment and completion
 const determineAutomaticStatus = (test) => {
@@ -593,20 +594,43 @@ const uploadLabResults = async (req, res, next) => {
       if (req.files && req.files.length > 0) {
         // Multiple files uploaded
         for (const file of req.files) {
-          uploadedFiles.push({
-            filename: file.filename,
-            originalName: file.originalname,
-            path: file.path,
-            uploadedAt: new Date().toISOString()
-          });
+          try {
+            const result = await uploadToCloudinary(file.path, 'lab_results');
+            uploadedFiles.push({
+              filename: file.filename,
+              originalName: file.originalname,
+              path: result.secure_url, // Store the Cloudinary URL
+              publicId: result.public_id,
+              uploadedAt: new Date().toISOString()
+            });
+          } catch (uploadError) {
+            console.error(`Failed to upload ${file.originalname} to Cloudinary:`, uploadError);
+          }
         }
       } else if (req.file) {
         // Single file uploaded
-        uploadedFiles.push({
-          filename: req.file.filename,
-          originalName: req.file.originalname,
-          path: req.file.path,
-          uploadedAt: new Date().toISOString()
+        try {
+          const result = await uploadToCloudinary(req.file.path, 'lab_results');
+          uploadedFiles.push({
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            path: result.secure_url, // Store the Cloudinary URL
+            publicId: result.public_id,
+            uploadedAt: new Date().toISOString()
+          });
+        } catch (uploadError) {
+          console.error(`Failed to upload ${req.file.originalname} to Cloudinary:`, uploadError);
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to upload result file to cloud storage'
+          });
+        }
+      }
+      
+      if (uploadedFiles.length === 0 && (req.files?.length > 0 || req.file)) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload any files to cloud storage'
         });
       }
       
@@ -622,7 +646,7 @@ const uploadLabResults = async (req, res, next) => {
         await order.update({
           ...updateData,
           testReports: uploadedFiles,
-          resultUrl: uploadedFiles.length > 0 ? `/uploads/lab-results/${uploadedFiles[0].filename}` : order.resultUrl
+          resultUrl: uploadedFiles.length > 0 ? uploadedFiles[0].path : order.resultUrl
         });
       } catch (dbError) {
         // Fallback to resultUrl only if testReports field doesn't exist
@@ -1664,12 +1688,18 @@ const uploadPrescriptionLabResults = async (req, res, next) => {
         // Process uploaded files
         const uploadedFiles = [];
         for (const file of req.files) {
-          uploadedFiles.push({
-            filename: file.filename,
-            originalName: file.originalname,
-            path: file.path,
-            uploadedAt: new Date().toISOString()
-          });
+          try {
+            const result = await uploadToCloudinary(file.path, 'prescription_lab_results');
+            uploadedFiles.push({
+              filename: file.filename,
+              originalName: file.originalname,
+              path: result.secure_url, // Store the Cloudinary URL
+              publicId: result.public_id,
+              uploadedAt: new Date().toISOString()
+            });
+          } catch (uploadError) {
+            console.error(`Failed to upload ${file.originalname} to Cloudinary:`, uploadError);
+          }
         }
         
         // Update test with reports
