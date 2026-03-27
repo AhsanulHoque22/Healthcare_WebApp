@@ -137,9 +137,11 @@ const startServer = async () => {
     
     // Never auto-sync schema in production.
     // Use Sequelize migrations instead.
-    if (process.env.NODE_ENV !== 'production') {
+    // Sync database models
+    // Automatically sync in dev, or in production if DB_SYNC is true
+    if (process.env.NODE_ENV !== 'production' || process.env.DB_SYNC === 'true') {
       await sequelize.sync({ force: false, alter: false });
-      console.log('Database bootstrap complete.');
+      console.log('Database synchronization complete.');
     }
     
     const server = app.listen(PORT, () => {

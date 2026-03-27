@@ -26,6 +26,7 @@ Go to the **Variables** tab of your **backend service** and add:
 | `CLOUDINARY_CLOUD_NAME` | `Healthcare` |
 | `CLOUDINARY_API_KEY` | `475256397831856` |
 | `CLOUDINARY_API_SECRET` | `utmJZxwNsIL_BpgQq9FqIi8b87c` |
+| `DB_SYNC` | `true` (Set to true only for the first run to create tables) |
 
 *Note: DB variables like `MYSQLHOST`, `MYSQLUSER`, etc., are automatically linked by Railway.*
 
