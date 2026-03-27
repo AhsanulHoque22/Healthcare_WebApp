@@ -1,7 +1,5 @@
 const { Sequelize } = require('sequelize');
 
-const { Sequelize } = require('sequelize');
-
 // Debug logging for production connectivity
 if (process.env.NODE_ENV === 'production') {
   console.log('[Database] Checking connection variables...');
