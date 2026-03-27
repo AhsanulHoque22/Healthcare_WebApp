@@ -50,7 +50,7 @@ fi
 
 echo "📦 Starting frontend client..."
 echo "   - Port: $PORT"
-echo "   - API Base URL: http://localhost:5000/api"
+echo "   - API Base URL: http://localhost:5001/api"
 echo ""
 
 # Start React dev server

@@ -2,11 +2,11 @@ module.exports = {
   // bKash Sandbox Configuration
   sandbox: {
     baseURL: 'https://tokenized.sandbox.bka.sh/v1.2.0-beta',
-    username: 'sandboxTokenizedUser02',
-    password: 'sandboxTokenizedUser02@12345',
-    appKey: '4f6o0cjiki2rfm34kfdadl1eqq',
-    appSecret: '2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b',
-    callbackURL: process.env.BKASH_CALLBACK_URL || 'http://localhost:3000/payment/callback'
+    username: process.env.BKASH_SANDBOX_USERNAME || process.env.BKASH_USERNAME,
+    password: process.env.BKASH_SANDBOX_PASSWORD || process.env.BKASH_PASSWORD,
+    appKey: process.env.BKASH_SANDBOX_APP_KEY || process.env.BKASH_APP_KEY,
+    appSecret: process.env.BKASH_SANDBOX_APP_SECRET || process.env.BKASH_APP_SECRET,
+    callbackURL: process.env.BKASH_CALLBACK_URL
   },
   
   // bKash Production Configuration

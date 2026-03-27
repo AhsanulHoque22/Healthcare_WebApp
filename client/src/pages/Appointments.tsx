@@ -1067,6 +1067,7 @@ const Appointments: React.FC = () => {
           appointmentId={selectedAppointment.id}
           doctorName={`Dr. ${selectedAppointment.doctor.user.firstName} ${selectedAppointment.doctor.user.lastName}`}
           patientName={`${selectedAppointment.patient.user.firstName} ${selectedAppointment.patient.user.lastName}`}
+          userEmail={user?.email || ''}
           userRole="patient"
         />
       )}

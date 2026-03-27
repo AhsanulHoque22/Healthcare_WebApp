@@ -4,11 +4,11 @@ class BkashService {
   constructor() {
     // bKash API Configuration
     this.baseURL = process.env.BKASH_BASE_URL || 'https://tokenized.sandbox.bka.sh/v1.2.0-beta';
-    this.username = process.env.BKASH_USERNAME || 'sandboxTokenizedUser02';
-    this.password = process.env.BKASH_PASSWORD || 'sandboxTokenizedUser02@12345';
-    this.appKey = process.env.BKASH_APP_KEY || '4f6o0cjiki2rfm34kfdadl1eqq';
-    this.appSecret = process.env.BKASH_APP_SECRET || '2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b';
-    this.callbackURL = process.env.BKASH_CALLBACK_URL || 'http://localhost:3000/payment/callback';
+    this.username = process.env.BKASH_USERNAME || '';
+    this.password = process.env.BKASH_PASSWORD || '';
+    this.appKey = process.env.BKASH_APP_KEY || '';
+    this.appSecret = process.env.BKASH_APP_SECRET || '';
+    this.callbackURL = process.env.BKASH_CALLBACK_URL || '';
     this.accessToken = null;
     this.tokenExpiry = null;
   }

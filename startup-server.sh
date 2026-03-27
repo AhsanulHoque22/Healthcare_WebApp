@@ -2,16 +2,16 @@
 
 # ============================================================
 # Healthcare Web App - Backend Server Startup Script
-# Port: 5000 (Single Point of Truth)
+# Port: 5001 (Single Point of Truth)
 # ============================================================
 
-PORT=5000
+PORT=5001
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "🚀 Healthcare Backend Server Startup"
 echo "=================================="
 
-# Kill any process on port 5000 -AGGRESSIVE CLEANUP
+# Kill any process on port 5001 -AGGRESSIVE CLEANUP
 echo "🔧 Aggressively clearing port $PORT..."
 
 # Method 1: lsof

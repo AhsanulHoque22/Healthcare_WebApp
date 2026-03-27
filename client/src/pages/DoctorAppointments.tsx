@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { JitsiMeeting } from '@jitsi/react-sdk';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { 
@@ -1233,11 +1234,37 @@ Do you want to proceed?`;
                             </div>
                             {/* Embedded Video Consultation */}
                             <div className="bg-gray-900 rounded-xl overflow-hidden flex-1 min-h-0" style={{ minHeight: '500px', maxHeight: '600px' }}>
-                              <iframe
-                                src={`https://meet.jit.si/HealthcareApp${selectedAppointmentForPrescription.id}?skipPrejoin=true&displayName=${encodeURIComponent(`Dr. ${user?.firstName} ${user?.lastName}`)}`}
-                                className="w-full h-full border-0"
-                                allow="camera; microphone; fullscreen; display-capture; autoplay"
-                                title="Video Consultation"
+                              <JitsiMeeting
+                                domain="meet.jit.si"
+                                roomName={`HealthcareApp${selectedAppointmentForPrescription.id}`}
+                                configOverwrite={{
+                                  startWithAudioMuted: false,
+                                  disableModeratorIndicator: true,
+                                  startScreenSharing: false,
+                                  enableEmailInStats: false,
+                                  prejoinPageEnabled: false,
+                                  requireDisplayName: false,
+                                  enableLobby: false,
+                                  enableWelcomePage: false,
+                                  enableClosePage: false
+                                }}
+                                interfaceConfigOverwrite={{
+                                  DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+                                  SHOW_JITSI_WATERMARK: false,
+                                  HIDE_DEEP_LINKING_LOGO: true,
+                                  MOBILE_APP_PROMO: false
+                                }}
+                                userInfo={{
+                                  displayName: `Dr. ${user?.firstName} ${user?.lastName}`,
+                                  email: user?.email || ''
+                                }}
+                                onApiReady={(externalApi: any) => {
+                                  console.log('Doctor Jitsi Meet API is ready');
+                                }}
+                                getIFrameRef={(iframeRef: any) => {
+                                  iframeRef.style.height = '100%';
+                                  iframeRef.style.width = '100%';
+                                }}
                               />
                             </div>
                           </div>

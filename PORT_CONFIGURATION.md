@@ -6,7 +6,7 @@ This document defines the DEFINITIVE port configuration for this project. **No e
 
 ### Standard Ports
 - **Frontend Client**: Port **3000**
-- **Backend Server**: Port **5000**
+- **Backend Server**: Port **5001**
 - **MySQL Database**: Port **3306**
 
 ### Configuration Files (Do NOT Change)
@@ -15,14 +15,14 @@ All ports are configured in these files:
 #### Server (Backend)
 - **File**: `server/.env`
   ```
-  PORT=5000
+  PORT=5001
   CLIENT_URL=http://localhost:3000
   ```
 
 #### Client (Frontend)
 - **File**: `client/.env`
   ```
-  REACT_APP_API_URL=http://localhost:5000/api
+  REACT_APP_API_URL=http://localhost:5001/api
   ```
 
 #### NPM Scripts
@@ -30,7 +30,7 @@ Both `package.json` files include automatic port cleanup:
 
 **Server** (`server/package.json`):
 ```json
-"start": "lsof -ti:5000 | xargs kill -9 2>/dev/null; sleep 1; node index.js"
+"start": "lsof -ti:5001 | xargs kill -9 2>/dev/null; sleep 1; node index.js"
 ```
 
 **Client** (`client/package.json`):
@@ -56,7 +56,7 @@ cd /path/to/healthcare-web-app
 cd server
 npm start
 # Or directly:
-cd /path/to/healthcare-web-app/server && PORT=5000 node index.js
+cd /path/to/healthcare-web-app/server && PORT=5001 node index.js
 ```
 
 **Terminal 2 - Frontend Client:**
@@ -81,13 +81,13 @@ cd client && npm start
 
 ### Issue: Port Already in Use
 
-**For Port 5000:**
+**For Port 5001:**
 ```bash
 # Option 1: Kill using lsof
-lsof -ti:5000 | xargs kill -9
+lsof -ti:5001 | xargs kill -9
 
 # Option 2: Kill using fuser
-sudo fuser -k 5000/tcp
+sudo fuser -k 5001/tcp
 
 # Option 3: Kill using PID
 ps aux | grep node
@@ -113,8 +113,8 @@ pkill -9 -f node
 
 ### Check if Services are Running
 ```bash
-# Check port 5000 (Backend)
-curl http://localhost:5000/api/health
+# Check port 5001 (Backend)
+curl http://localhost:5001/api/health
 
 # Check port 3000 (Frontend)
 curl http://localhost:3000/
@@ -124,7 +124,7 @@ curl http://localhost:3000/
 ```bash
 # Check specific ports
 lsof -i :3000
-lsof -i :5000
+lsof -i :5001
 lsof -i :3306
 
 # View all listening ports
@@ -139,8 +139,8 @@ ss -tuln
 
 All startup scripts are configured to automatically clean ports before starting:
 
-1. **`startup-server.sh`** - Start backend server on port 5000
-   - Kills any existing process on port 5000
+1. **`startup-server.sh`** - Start backend server on port 5001
+   - Kills any existing process on port 5001
    - Starts Node.js server
    - Verifies .env configuration
 
@@ -150,7 +150,7 @@ All startup scripts are configured to automatically clean ports before starting:
    - Verifies .env configuration
 
 3. **`startup-complete.sh`** - Start both services
-   - Cleans both ports 3000 and 5000
+   - Cleans both ports 3000 and 5001
    - Starts backend server
    - Starts frontend client
    - Shows unified status
@@ -194,6 +194,6 @@ DB_PASSWORD=7878
 
 Once all services are running:
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000/api
-- **Health Check**: http://localhost:5000/api/health
+- **Backend API**: http://localhost:5001/api
+- **Health Check**: http://localhost:5001/api/health
 - **Database**: localhost:3306 (MySQL)

@@ -20,7 +20,6 @@ const bkashRoutes = require('./routes/bkash');
 const medicineRoutes = require('./routes/medicine');
 const notificationRoutes = require('./routes/notifications');
 const errorHandler = require('./middleware/errorHandler');
-const { startMedicineReminderJob } = require('./jobs/medicineReminderJob');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,8 +40,19 @@ const limiter = rateLimit({
 
 
 // CORS configuration
+const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow same-origin server-to-server and health checks with no origin header.
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.length === 0) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS origin not allowed'));
+  },
   credentials: true
 }));
 
@@ -112,7 +122,6 @@ const connectWithRetry = async () => {
   }
 
   console.error('Unable to connect to database after multiple attempts.');
-  process.exit(1);
 };
 
 // Database connection and server start
@@ -126,10 +135,12 @@ const startServer = async () => {
     //   console.log("Development DB sync complete.");
     // }
     
-    // Create missing tables without mutating existing schema.
-    // Use migrations for schema changes in production.
-    await sequelize.sync({ force: false, alter: false });
-    console.log('Database bootstrap complete.');
+    // Never auto-sync schema in production.
+    // Use Sequelize migrations instead.
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ force: false, alter: false });
+      console.log('Database bootstrap complete.');
+    }
     
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -152,11 +163,7 @@ const startServer = async () => {
     // Handle server errors gracefully
     server.on('error', (error) => {
       if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use. Please stop the existing process or use a different port.`);
-        console.error('To fix this, run: lsof -ti:5000 | xargs kill -9');
-        process.exit(1);
-      } else {
-        console.error('Server error:', error);
+        console.error(`Port ${PORT} is already in use...`);
         process.exit(1);
       }
     });
@@ -166,6 +173,7 @@ const startServer = async () => {
   }
 };
 
+console.log("🚀 startServer called");
 startServer();
 
 module.exports = app;

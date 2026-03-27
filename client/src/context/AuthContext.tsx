@@ -46,15 +46,8 @@ interface RegisterData {
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// API base URL - use relative path for Docker compatibility
-const API_BASE_URL = '/api';
-
-// Configure axios defaults
-axios.defaults.baseURL = '/api';
-
-// Log the API base URL for debugging
-console.log('[AuthContext] Initialized with API_BASE_URL:', API_BASE_URL);
-// console.log('[AuthContext] REACT_APP_API_URL env var:', process.env.REACT_APP_API_URL);
+// Log the API base URL for debugging (now initialized in index.tsx)
+console.log('[AuthContext] Initialized. process.env.REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
 // Add cache-busting headers to prevent browser caching
 axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';

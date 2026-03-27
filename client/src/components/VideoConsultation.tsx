@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { JitsiMeeting } from '@jitsi/react-sdk';
 
 interface VideoConsultationProps {
   isOpen: boolean;
@@ -6,6 +7,7 @@ interface VideoConsultationProps {
   appointmentId: number;
   doctorName: string;
   patientName: string;
+  userEmail: string;
   userRole: 'doctor' | 'patient';
 }
 
@@ -15,6 +17,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
   appointmentId,
   doctorName,
   patientName,
+  userEmail,
   userRole
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,9 +25,6 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
   // Generate consistent room name for both doctor and patient
   const roomName = `HealthcareApp${appointmentId}`;
   
-  // Create the Jitsi Meet URL with parameters to bypass authentication
-  const jitsiUrl = `https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&config.requireDisplayName=false&config.enableLobby=false&config.enableWelcomePage=false&config.enableClosePage=false&userInfo.displayName=${encodeURIComponent(userRole === 'doctor' ? `Dr. ${doctorName}` : patientName)}`;
-
   useEffect(() => {
     if (isOpen) {
       // Simulate loading time
@@ -91,12 +91,40 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
           )}
           
           {!isLoading && (
-            <iframe
-              src={jitsiUrl}
-              className="w-full h-full border-0"
-              allow="camera; microphone; fullscreen; display-capture; autoplay"
-              title="Video Consultation"
-            />
+            <div className="w-full h-full">
+              <JitsiMeeting
+                domain="meet.jit.si"
+                roomName={roomName}
+                configOverwrite={{
+                  startWithAudioMuted: false,
+                  disableModeratorIndicator: true,
+                  startScreenSharing: false,
+                  enableEmailInStats: false,
+                  prejoinPageEnabled: false,
+                  requireDisplayName: false,
+                  enableLobby: false,
+                  enableWelcomePage: false,
+                  enableClosePage: false
+                }}
+                interfaceConfigOverwrite={{
+                  DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+                  SHOW_JITSI_WATERMARK: false,
+                  HIDE_DEEP_LINKING_LOGO: true,
+                  MOBILE_APP_PROMO: false
+                }}
+                userInfo={{
+                  displayName: userRole === 'doctor' ? `Dr. ${doctorName}` : patientName,
+                  email: userEmail
+                }}
+                onApiReady={(externalApi) => {
+                  console.log('Jitsi Meet API is ready');
+                }}
+                getIFrameRef={(iframeRef: any) => {
+                  iframeRef.style.height = '100%';
+                  iframeRef.style.width = '100%';
+                }}
+              />
+            </div>
           )}
         </div>
       </div>

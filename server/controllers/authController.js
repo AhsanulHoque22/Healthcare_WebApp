@@ -12,7 +12,11 @@ const {
 
 // Generate JWT token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 };
@@ -349,8 +353,16 @@ const forgotPassword = async (req, res, next) => {
       resetPasswordExpires: resetTokenExpires
     });
 
-    // Create reset URL
-    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    // Create dynamic reset URL based on where the request came from
+    let clientUrl = req.headers.origin || req.headers.referer;
+    if (clientUrl) {
+      clientUrl = clientUrl.replace(/\/$/, ''); // Remove trailing slash if exists
+    } else {
+      // Fallback: Use the second URL (LAN IP) if multiple exist, else the first
+      const clientUrls = (process.env.CLIENT_URL || 'https://your-netlify-site.netlify.app').split(',');
+      clientUrl = clientUrls.length > 1 ? clientUrls[1].trim() : clientUrls[0].trim();
+    }
+    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
 
     // Email content
     const message = `
