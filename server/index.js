@@ -47,11 +47,23 @@ const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Log the incoming origin for debugging
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`[CORS] Incoming origin: ${origin || 'no-origin'}`);
+      console.log(`[CORS] Allowed origins: ${allowedOrigins.join(', ') || 'none (allowing all)'}`);
+    }
+
     // Allow same-origin server-to-server and health checks with no origin header.
     if (!origin) return callback(null, true);
     if (allowedOrigins.length === 0) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS origin not allowed'));
+    if (allowedOrigins.includes(origin)) {
+      if (process.env.NODE_ENV === 'production') console.log(`[CORS] SUCCESS: Origin ${origin} allowed.`);
+      return callback(null, true);
+    }
+    
+    const corsError = new Error(`CORS origin ${origin} not allowed`);
+    if (process.env.NODE_ENV === 'production') console.error(`[CORS] ERROR: ${corsError.message}`);
+    return callback(corsError);
   },
   credentials: true
 }));

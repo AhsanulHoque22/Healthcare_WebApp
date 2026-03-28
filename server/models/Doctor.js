@@ -105,11 +105,6 @@ const Doctor = sequelize.define('Doctor', {
     defaultValue: {},
     comment: 'Available chamber times for each day'
   },
-  consultationFee: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: true,
-    comment: 'Consultation fee in BDT'
-  },
   languages: {
     type: DataTypes.JSON,
     allowNull: true,

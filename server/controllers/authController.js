@@ -34,10 +34,13 @@ const register = async (req, res, next) => {
     }
 
     const { email, password, firstName, lastName, phone, dateOfBirth, gender, address, role, bmdcRegistrationNumber, department, experience } = req.body;
+    
+    console.log(`[Registration] Attempting to register user: ${email} with role: ${role || 'patient'}`);
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
+      console.log(`[Registration] User already exists: ${email}`);
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email'
@@ -45,6 +48,7 @@ const register = async (req, res, next) => {
     }
 
     // Create user
+    console.log('[Registration] Creating User record...');
     const user = await User.create({
       email,
       password,
@@ -56,23 +60,29 @@ const register = async (req, res, next) => {
       address,
       role: role || 'patient'
     });
+    console.log(`[Registration] User record created with ID: ${user.id}`);
 
     // Create role-specific profile
     if (user.role === 'patient') {
+      console.log('[Registration] Creating Patient profile...');
       await Patient.create({ userId: user.id });
+      console.log('[Registration] Patient profile created.');
     } else if (user.role === 'doctor') {
+      console.log('[Registration] Creating Doctor profile...');
       await Doctor.create({ 
         userId: user.id,
         bmdcRegistrationNumber,
         department,
         experience: experience ? parseInt(experience) : null
       });
+      console.log('[Registration] Doctor profile created.');
     }
 
     // Remove password from response
     const userResponse = user.toJSON();
     delete userResponse.password;
 
+    console.log('[Registration] Triggering post-registration hooks...');
     triggerNewUserRegistration(userResponse).catch((err) =>
       console.error('[authController] triggerNewUserRegistration:', err.message)
     );
@@ -89,6 +99,7 @@ const register = async (req, res, next) => {
       );
     }
 
+    console.log('[Registration] Registration successful, sending response.');
     res.status(201).json({
       success: true,
       message: 'User registered successfully. Please login to continue.',
@@ -97,6 +108,8 @@ const register = async (req, res, next) => {
       }
     });
   } catch (error) {
+    console.error(`[Registration] ERROR: ${error.message}`);
+    if (error.stack) console.error(error.stack);
     next(error);
   }
 };

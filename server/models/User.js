@@ -41,8 +41,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(20),
     allowNull: true,
     validate: {
-      len: [10, 15],
-      isNumeric: true
+      len: [7, 20]
     }
   },
   dateOfBirth: {
