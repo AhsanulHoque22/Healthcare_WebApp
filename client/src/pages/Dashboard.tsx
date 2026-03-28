@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import DashboardMedicineTracker from '../components/DashboardMedicineTracker';
 import MedicineMatrix from '../components/MedicineMatrix';
 import {
@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
   const { data: patientProfile } = useQuery({
     queryKey: ['patient-profile'],
     queryFn: async () => {
-      const response = await axios.get('/patients/profile');
+      const response = await API.get('/patients/profile');
       return response.data.data.patient;
     },
     enabled: user?.role === 'patient',
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const response = await axios.get('/admin/stats', {
+      const response = await API.get('/admin/stats', {
         params: { _t: Date.now() } // Cache-busting parameter
       });
       return response.data.data.stats;
@@ -78,11 +78,11 @@ const Dashboard: React.FC = () => {
     queryFn: async () => {
       try {
         // First get the patient profile to get the patient ID
-        const patientResponse = await axios.get('/patients/profile');
+        const patientResponse = await API.get('/patients/profile');
         const patientId = patientResponse.data.data.patient.id;
         
         // Then get the dashboard stats using the patient ID
-        const response = await axios.get(`/patients/${patientId}/dashboard/stats`, {
+        const response = await API.get(`/patients/${patientId}/dashboard/stats`, {
           params: { _t: Date.now() } // Cache-busting parameter
         });
         return response.data.data.stats;
@@ -112,11 +112,11 @@ const Dashboard: React.FC = () => {
     queryKey: ['doctor-dashboard-stats', user?.id],
     queryFn: async () => {
       // First get the doctor profile to get the doctor ID
-      const doctorResponse = await axios.get('/doctors/profile');
+      const doctorResponse = await API.get('/doctors/profile');
       const doctorId = doctorResponse.data.data.doctor.id;
       
       // Then get the dashboard stats using the doctor ID
-      const response = await axios.get(`/doctors/${doctorId}/dashboard/stats`, {
+      const response = await API.get(`/doctors/${doctorId}/dashboard/stats`, {
         params: { _t: Date.now() } // Cache-busting parameter
       });
       return response.data.data.stats;
@@ -134,21 +134,21 @@ const Dashboard: React.FC = () => {
     queryKey: ['recent-appointments', user?.id],
     queryFn: async () => {
       if (user?.role === 'patient') {
-        const patientResponse = await axios.get('/patients/profile');
+        const patientResponse = await API.get('/patients/profile');
         const patientId = patientResponse.data.data.patient.id;
-        const response = await axios.get(`/patients/${patientId}/appointments`, {
+        const response = await API.get(`/patients/${patientId}/appointments`, {
           params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
         });
         return response.data.data.appointments;
       } else if (user?.role === 'doctor') {
-        const doctorResponse = await axios.get('/doctors/profile');
+        const doctorResponse = await API.get('/doctors/profile');
         const doctorId = doctorResponse.data.data.doctor.id;
-        const response = await axios.get(`/doctors/${doctorId}/appointments`, {
+        const response = await API.get(`/doctors/${doctorId}/appointments`, {
           params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
         });
         return response.data.data.appointments;
       } else if (user?.role === 'admin') {
-        const response = await axios.get('/appointments', {
+        const response = await API.get('/appointments', {
           params: { limit: 5, sortBy: 'appointmentDate', sortOrder: 'DESC', _t: Date.now() }
         });
         return response.data.data.appointments;

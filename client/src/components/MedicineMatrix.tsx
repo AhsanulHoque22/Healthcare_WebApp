@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   CheckCircleIcon,
   ClockIcon,
@@ -125,7 +125,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
       console.log('🔍 DEBUG: MedicineMatrix fetching reminder settings for patient:', patientId);
-      const response = await axios.get(`/medicines/patients/${patientId}/reminder-settings`, {
+      const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
         params: { _t: Date.now() } // Cache-busting parameter
       });
       console.log('🔍 DEBUG: MedicineMatrix reminder settings response:', response.data.data);
@@ -151,7 +151,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
       const endDate = dates[6].toISOString().split('T')[0];
       
       console.log('🔍 DEBUG: MedicineMatrix fetching medicines for patient:', patientId, 'from', startDate, 'to', endDate);
-      const response = await axios.get(`/medicines/patients/${patientId}/schedule/range`, {
+      const response = await API.get(`/medicines/patients/${patientId}/schedule/range`, {
         params: { startDate, endDate, _t: Date.now() } // Cache-busting parameter
       });
       console.log('🔍 DEBUG: MedicineMatrix medicines response:', response.data.data);
@@ -170,7 +170,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
       date: string; 
       timeSlot: string; 
     }) => {
-      const response = await axios.post(`/medicines/dosage/${medicineId}`, {
+      const response = await API.post(`/medicines/dosage/${medicineId}`, {
         quantity: 1,
         notes: `Taken at ${timeSlot} on ${date}`,
         takenAt: new Date(`${date}T${timeSlot.split(':')[0]}:${timeSlot.split(':')[1]}:00`).toISOString()
@@ -335,7 +335,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
   // Helper function to discontinue expired medicines
   const discontinueExpiredMedicine = async (medicineId: number) => {
     try {
-      await axios.put(`/medicines/${medicineId}`, {
+      await API.put(`/medicines/${medicineId}`, {
         isActive: false,
         endDate: new Date().toISOString().split('T')[0],
         instructions: 'Medicine discontinued due to exceeding maximum duration limit (90 days)'

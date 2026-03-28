@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   BeakerIcon,
   CalendarIcon,
@@ -62,7 +62,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
   const { data: medicineStats, isLoading } = useQuery<MedicineStats>({
     queryKey: ['medicine-stats', patientId],
     queryFn: async () => {
-      const response = await axios.get(`/medicines/patients/${patientId}/stats`);
+      const response = await API.get(`/medicines/patients/${patientId}/stats`);
       return response.data.data;
     },
     enabled: !!patientId,

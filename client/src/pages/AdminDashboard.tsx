@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import {
   UsersIcon,
@@ -60,7 +60,7 @@ const AdminDashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await axios.get('/admin/stats');
+      const response = await API.get('/admin/stats');
       return response.data.data.stats;
     },
   });
@@ -69,7 +69,7 @@ const AdminDashboard: React.FC = () => {
   const { data: analytics, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
     queryKey: ['admin-analytics'],
     queryFn: async () => {
-      const response = await axios.get('/admin/analytics/appointments?period=7');
+      const response = await API.get('/admin/analytics/appointments?period=7');
       return response.data.data.analytics;
     },
   });
@@ -78,7 +78,7 @@ const AdminDashboard: React.FC = () => {
   const { data: verificationRequests } = useQuery<DoctorVerificationRequest[]>({
     queryKey: ['doctor-verifications'],
     queryFn: async () => {
-      const response = await axios.get('/admin/doctor-verifications');
+      const response = await API.get('/admin/doctor-verifications');
       return response.data.data.doctors;
     },
   });

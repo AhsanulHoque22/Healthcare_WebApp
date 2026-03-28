@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { JitsiMeeting } from '@jitsi/react-sdk';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { 
   ClockIcon, 
@@ -96,11 +96,11 @@ const DoctorAppointments: React.FC = () => {
     try {
       setIsLoading(true);
       // First get the doctor profile to get the doctor ID
-      const doctorProfileResponse = await axios.get('/doctors/profile');
+      const doctorProfileResponse = await API.get('/doctors/profile');
       const doctorId = doctorProfileResponse.data.data.doctor.id;
       
       // Then fetch appointments for this specific doctor (get all appointments, not just first page)
-      const response = await axios.get(`/doctors/${doctorId}/appointments`, {
+      const response = await API.get(`/doctors/${doctorId}/appointments`, {
         params: { limit: 1000 } // Get all appointments, not just first 10
       });
       const appointments = response.data.data.appointments || [];
@@ -201,7 +201,7 @@ const DoctorAppointments: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('Attempting to approve appointment:', appointmentId);
-      const response = await axios.put(`/appointments/${appointmentId}/approve`);
+      const response = await API.put(`/appointments/${appointmentId}/approve`);
       console.log('Approve response:', response.data);
       toast.success('Appointment approved successfully!');
       await fetchAppointments();
@@ -224,7 +224,7 @@ const DoctorAppointments: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${appointmentId}/decline`, { reason });
+      await API.put(`/appointments/${appointmentId}/decline`, { reason });
       toast.success('Appointment declined');
       await fetchAppointments();
     } catch (error: any) {
@@ -242,7 +242,7 @@ const DoctorAppointments: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${appointmentId}/start`);
+      await API.put(`/appointments/${appointmentId}/start`);
       toast.success('Appointment started - now in progress');
       await fetchAppointments();
       
@@ -276,7 +276,7 @@ Do you want to proceed?`;
 
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${appointmentId}/complete`);
+      await API.put(`/appointments/${appointmentId}/complete`);
       toast.success('Appointment marked as completed');
       await fetchAppointments();
     } catch (error: any) {
@@ -311,7 +311,7 @@ Do you want to proceed?`;
 
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${appointmentId}/complete`);
+      await API.put(`/appointments/${appointmentId}/complete`);
       toast.success('Appointment marked as completed');
       setShowPrescriptionModal(false);
       setSelectedAppointmentForPrescription(null);
@@ -334,7 +334,7 @@ Do you want to proceed?`;
 
     setIsLoading(true);
     try {
-      await axios.put(`/appointments/${selectedAppointment.id}/reschedule-requested`, rescheduleForm);
+      await API.put(`/appointments/${selectedAppointment.id}/reschedule-requested`, rescheduleForm);
       toast.success('Appointment rescheduled and approved!');
       setShowRescheduleModal(false);
       setSelectedAppointment(null);

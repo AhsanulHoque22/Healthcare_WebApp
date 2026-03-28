@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 
 // Types
@@ -49,10 +49,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Log the API base URL for debugging (now initialized in index.tsx)
 console.log('[AuthContext] Initialized. process.env.REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
-// Add cache-busting headers to prevent browser caching
-axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-axios.defaults.headers.common['Pragma'] = 'no-cache';
-axios.defaults.headers.common['Expires'] = '0';
+// API instance handles base configuration
 
 // Auth provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -60,12 +57,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // Set up axios interceptor for token
+  // Set up API interceptor for token
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
-      delete axios.defaults.headers.common['Authorization'];
+      delete API.defaults.headers.common['Authorization'];
     }
   }, [token]);
 
@@ -74,7 +71,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadUser = async () => {
       if (token) {
         try {
-          const response = await axios.get('/auth/profile');
+          const response = await API.get('/auth/profile');
           setUser(response.data.data.user);
         } catch (error: any) {
           console.error('Failed to load user:', error);
@@ -94,9 +91,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser();
   }, [token]);
 
-  // Add axios interceptor for automatic token refresh
+  // Add API interceptor for automatic token refresh
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    const interceptor = API.interceptors.response.use(
       (response) => response,
       async (error: any) => {
         if (error.response?.status === 401 && token) {
@@ -111,7 +108,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 
     return () => {
-      axios.interceptors.response.eject(interceptor);
+      API.interceptors.response.eject(interceptor);
     };
   }, [token]);
 
@@ -119,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (emailOrPhone: string, password: string) => {
     try {
       console.log('AuthContext: Attempting login with:', { emailOrPhone, password: '***' });
-      console.log('AuthContext: API base URL:', axios.defaults.baseURL);
+      console.log('AuthContext: API base URL:', API.defaults.baseURL);
       
       // Determine if the input is email or phone
       const isEmail = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(emailOrPhone);
@@ -127,7 +124,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ? { email: emailOrPhone, password }
         : { phone: emailOrPhone, password };
       
-      const response = await axios.post('/auth/login', loginData);
+      const response = await API.post('/auth/login', loginData);
       console.log('AuthContext: Login response:', response.data);
       
       const { user: userData, token: newToken } = response.data.data;
@@ -150,10 +147,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (userData: RegisterData) => {
     try {
       console.log('AuthContext: Attempting registration with:', { ...userData, password: '***' });
-      console.log('AuthContext: API base URL:', axios.defaults.baseURL);
+      console.log('AuthContext: API base URL:', API.defaults.baseURL);
       console.log('AuthContext: Making POST request to:', '/auth/register');
       
-      const response = await axios.post('/auth/register', userData);
+      const response = await API.post('/auth/register', userData);
       console.log('AuthContext: Registration response:', response.data);
       
       const { user: newUser, token: newToken } = response.data.data;
@@ -185,7 +182,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Update profile function
   const updateProfile = async (userData: Partial<User>) => {
     try {
-      const response = await axios.put('/auth/profile', userData);
+      const response = await API.put('/auth/profile', userData);
       setUser(response.data.data.user);
       toast.success('Profile updated successfully');
     } catch (error: any) {

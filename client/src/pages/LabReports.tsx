@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../services/paymentService';
 import { 
@@ -143,7 +143,7 @@ const LabReports: React.FC = () => {
   const { data: ordersData, isLoading: ordersLoading } = useQuery<any>({
     queryKey: ['lab-orders'],
     queryFn: async () => {
-      const response = await axios.get('/lab-tests/orders?limit=100', {
+      const response = await API.get('/lab-tests/orders?limit=100', {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -160,7 +160,7 @@ const LabReports: React.FC = () => {
   const { data: prescriptionLabTestsData, isLoading: prescriptionLoading } = useQuery<any>({
     queryKey: ['prescription-lab-tests'],
     queryFn: async () => {
-      const response = await axios.get('/lab-tests/prescription-tests?limit=100', {
+      const response = await API.get('/lab-tests/prescription-tests?limit=100', {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -176,7 +176,7 @@ const LabReports: React.FC = () => {
   // Payment mutation for regular lab orders
   const paymentMutation = useMutation({
     mutationFn: async (paymentData: { orderId: number; amount: number; paymentMethod: string; transactionId?: string; notes?: string }) => {
-      const response = await axios.post(`/lab-tests/orders/${paymentData.orderId}/payment`, paymentData);
+      const response = await API.post(`/lab-tests/orders/${paymentData.orderId}/payment`, paymentData);
       return response.data;
     },
     onSuccess: () => {
@@ -194,7 +194,7 @@ const LabReports: React.FC = () => {
   // Payment mutation for prescription lab tests
   const prescriptionPaymentMutation = useMutation({
     mutationFn: async (paymentData: { testId: string; amount: number; paymentMethod: string; transactionId?: string; notes?: string }) => {
-      const response = await axios.post(`/lab-tests/prescription-tests/${paymentData.testId}/payment`, paymentData);
+      const response = await API.post(`/lab-tests/prescription-tests/${paymentData.testId}/payment`, paymentData);
       return response.data;
     },
     onSuccess: () => {

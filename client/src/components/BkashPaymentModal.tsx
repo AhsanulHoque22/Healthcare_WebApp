@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import API from '../api/api';
 
 interface BkashPaymentModalProps {
   isOpen: boolean;
@@ -46,7 +46,7 @@ const BkashPaymentModal: React.FC<BkashPaymentModalProps> = ({
 
     try {
       // Create bKash payment
-      const response = await axios.post('/bkash/create', {
+      const response = await API.post('/bkash/create', {
         amount: parseFloat(paymentAmount),
         orderType: 'prescription',
         orderId: test?.prescriptionId,

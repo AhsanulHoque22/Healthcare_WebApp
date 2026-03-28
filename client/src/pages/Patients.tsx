@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   UserGroupIcon, 
   EyeIcon, 
@@ -117,7 +117,7 @@ const Patients: React.FC = () => {
   const { data: doctorProfile } = useQuery({
     queryKey: ['doctor-profile'],
     queryFn: async () => {
-      const response = await axios.get('/doctors/profile');
+      const response = await API.get('/doctors/profile');
       return response.data.data.doctor;
     },
     enabled: user?.role === 'doctor',
@@ -126,7 +126,7 @@ const Patients: React.FC = () => {
   const { data: patients, isLoading, error } = useQuery<Patient[]>({
     queryKey: ['doctor-patients', doctorProfile?.id],
     queryFn: async () => {
-      const response = await axios.get(`/doctors/${doctorProfile?.id}/patients`);
+      const response = await API.get(`/doctors/${doctorProfile?.id}/patients`);
       return response.data.data.patients;
     },
     enabled: !!doctorProfile?.id,
@@ -157,7 +157,7 @@ const Patients: React.FC = () => {
   const { data: medicalRecords, isLoading: recordsLoading } = useQuery<AppointmentMedicalRecord[]>({
     queryKey: ['patient-appointments', selectedPatient?.id],
     queryFn: async () => {
-      const response = await axios.get(`/patients/${selectedPatient?.id}/appointments`);
+      const response = await API.get(`/patients/${selectedPatient?.id}/appointments`);
       // Filter only completed appointments
       const completedAppointments = response.data.data.appointments.filter((apt: any) => 
         apt.status === 'completed'
@@ -183,7 +183,7 @@ const Patients: React.FC = () => {
     
     // Fetch prescription data if available
     try {
-      const response = await axios.get(`/prescriptions/appointment/${appointment.id}`);
+      const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
       setPrescriptionData(response.data.data.prescription);
     } catch (error) {
       console.log('No prescription found for this appointment');

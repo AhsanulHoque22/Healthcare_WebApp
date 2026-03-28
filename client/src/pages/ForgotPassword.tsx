@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
   ArrowLeftIcon,
@@ -53,7 +53,7 @@ const ForgotPassword: React.FC = () => {
     setErrorMessage(''); // Clear previous errors
 
     try {
-      await axios.post('/auth/forgot-password', { email: data.email });
+      await API.post('/auth/forgot-password', { email: data.email });
       setEmailSent(true);
       toast.success('Password reset instructions sent to your email');
     } catch (error: any) {

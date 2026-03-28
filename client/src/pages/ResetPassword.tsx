@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
   EyeIcon,
@@ -67,7 +67,7 @@ const ResetPassword: React.FC = () => {
     // Verify token validity
     const verifyToken = async () => {
       try {
-        await axios.get(`/auth/verify-reset-token?token=${token}`);
+        await API.get(`/auth/verify-reset-token?token=${token}`);
         setTokenValid(true);
       } catch (error) {
         setTokenValid(false);
@@ -81,7 +81,7 @@ const ResetPassword: React.FC = () => {
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsLoading(true);
     try {
-      await axios.post('/auth/reset-password', {
+      await API.post('/auth/reset-password', {
         token,
         password: data.password
       });

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StarIcon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { getDepartmentLabel } from '../utils/departments';
 
@@ -45,7 +45,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await axios.post('/ratings', {
+      await API.post('/ratings', {
         appointmentId: appointment.id,
         rating,
         review: review.trim() || null,

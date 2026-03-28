@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
   MagnifyingGlassIcon,
@@ -102,7 +102,7 @@ const AdminPatients: React.FC = () => {
         ...(searchTerm && { search: searchTerm }),
         ...(statusFilter && { isActive: statusFilter }),
       });
-      const response = await axios.get(`/admin/patients?${params}`);
+      const response = await API.get(`/admin/patients?${params}`);
       return response.data.data;
     },
   });
@@ -110,7 +110,7 @@ const AdminPatients: React.FC = () => {
   // Update patient status mutation
   const updatePatientStatusMutation = useMutation({
     mutationFn: async ({ patientId, isActive }: { patientId: number; isActive: boolean }) => {
-      const response = await axios.put(`/admin/patients/${patientId}/status`, { isActive });
+      const response = await API.put(`/admin/patients/${patientId}/status`, { isActive });
       return response.data;
     },
     onSuccess: () => {

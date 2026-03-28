@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
   MagnifyingGlassIcon,
@@ -75,7 +75,7 @@ const Users: React.FC = () => {
         ...(searchTerm && { search: searchTerm }),
         ...(roleFilter && { role: roleFilter }),
       });
-      const response = await axios.get(`/admin/users?${params}`);
+      const response = await API.get(`/admin/users?${params}`);
       return response.data.data;
     },
   });
@@ -83,7 +83,7 @@ const Users: React.FC = () => {
   // Update user status mutation
   const updateUserStatusMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
-      const response = await axios.put(`/admin/users/${userId}/status`, { isActive });
+      const response = await API.put(`/admin/users/${userId}/status`, { isActive });
       return response.data;
     },
     onSuccess: () => {
@@ -98,7 +98,7 @@ const Users: React.FC = () => {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await axios.delete(`/admin/users/${userId}`);
+      const response = await API.delete(`/admin/users/${userId}`);
       return response.data;
     },
     onSuccess: () => {

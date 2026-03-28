@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import {
@@ -95,7 +95,7 @@ const AdminDoctors: React.FC = () => {
         ...(verificationFilter && { isVerified: verificationFilter }),
         ...(departmentFilter && { department: departmentFilter }),
       });
-      const response = await axios.get(`/admin/doctors?${params}`);
+      const response = await API.get(`/admin/doctors?${params}`);
       return response.data.data;
     },
   });
@@ -103,7 +103,7 @@ const AdminDoctors: React.FC = () => {
   // Verify doctor mutation
   const verifyDoctorMutation = useMutation({
     mutationFn: async ({ doctorId, isVerified }: { doctorId: number; isVerified: boolean }) => {
-      const response = await axios.put(`/admin/doctors/${doctorId}/verify`, { isVerified });
+      const response = await API.put(`/admin/doctors/${doctorId}/verify`, { isVerified });
       return response.data;
     },
     onSuccess: () => {

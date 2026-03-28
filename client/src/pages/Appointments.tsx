@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { 
   CalendarIcon, 
@@ -57,7 +57,7 @@ const Appointments: React.FC = () => {
   const { data: appointmentsData, refetch: refetchAppointments } = useQuery({
     queryKey: ['patient-appointments', user?.id],
     queryFn: async () => {
-      const response = await axios.get('/appointments');
+      const response = await API.get('/appointments');
       return response.data.data.appointments || [];
     },
     enabled: !!user?.id,
@@ -68,7 +68,7 @@ const Appointments: React.FC = () => {
   const { data: patientRatingsData } = useQuery({
     queryKey: ['patient-ratings', user?.id],
     queryFn: async () => {
-      const response = await axios.get('/ratings/my-ratings');
+      const response = await API.get('/ratings/my-ratings');
       return response.data.data.ratings || [];
     },
     enabled: !!user?.id,
@@ -208,7 +208,7 @@ const Appointments: React.FC = () => {
   // Fetch doctors for booking
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get('/doctors');
+      const response = await API.get('/doctors');
       // Filter doctors who have chamber times set
       const doctorsWithChamberTimes = response.data.data.doctors.filter((doctor: any) => 
         doctor.chamberTimes && Object.keys(doctor.chamberTimes).length > 0
@@ -222,7 +222,7 @@ const Appointments: React.FC = () => {
   // Get patient ID for the current user
   const getPatientId = async () => {
     try {
-      const response = await axios.get('/patients/profile');
+      const response = await API.get('/patients/profile');
       return response.data.data.patient.id;
     } catch (error) {
       console.error('Failed to get patient ID:', error);
@@ -247,7 +247,7 @@ const Appointments: React.FC = () => {
         duration: 180 // 3 hours for chamber blocks
       };
 
-      await axios.post('/appointments', appointmentData);
+      await API.post('/appointments', appointmentData);
       toast.success('Appointment request sent successfully! Waiting for doctor approval.');
       setShowBookingModal(false);
       // Reset form
@@ -277,7 +277,7 @@ const Appointments: React.FC = () => {
     // Fetch prescription data if appointment is completed or in progress
     if (appointment.status === 'completed' || appointment.status === 'in_progress') {
       try {
-        const response = await axios.get(`/prescriptions/appointment/${appointment.id}`);
+        const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
         setPrescriptionData(response.data.data.prescription);
       } catch (error) {
         console.log('No prescription found for this appointment');
@@ -304,7 +304,7 @@ const Appointments: React.FC = () => {
   const handleCancelAppointment = async (appointmentId: number) => {
     if (window.confirm('Are you sure you want to cancel this appointment?')) {
       try {
-        await axios.put(`/appointments/${appointmentId}/cancel`);
+        await API.put(`/appointments/${appointmentId}/cancel`);
         toast.success('Appointment cancelled successfully!');
         // Refresh appointments list and dashboard stats
         await refetchAppointments();

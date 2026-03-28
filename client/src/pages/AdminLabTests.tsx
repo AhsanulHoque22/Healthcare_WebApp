@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../services/paymentService';
 import {
@@ -78,7 +78,7 @@ const AdminLabTests: React.FC = () => {
         ...(categoryFilter && { category: categoryFilter }),
         ...(statusFilter && { isActive: statusFilter }),
       });
-      const response = await axios.get(`/admin/lab-tests?${params}`);
+      const response = await API.get(`/admin/lab-tests?${params}`);
       return response.data.data;
     },
     placeholderData: keepPreviousData,
@@ -87,7 +87,7 @@ const AdminLabTests: React.FC = () => {
   // Create lab test mutation
   const createTestMutation = useMutation({
     mutationFn: async (testData: Partial<LabTest>) => {
-      const response = await axios.post('/admin/lab-tests', testData);
+      const response = await API.post('/admin/lab-tests', testData);
       return response.data;
     },
     onSuccess: () => {
@@ -104,7 +104,7 @@ const AdminLabTests: React.FC = () => {
   // Update lab test mutation
   const updateTestMutation = useMutation({
     mutationFn: async ({ testId, testData }: { testId: number; testData: Partial<LabTest> }) => {
-      const response = await axios.put(`/admin/lab-tests/${testId}`, testData);
+      const response = await API.put(`/admin/lab-tests/${testId}`, testData);
       return response.data;
     },
     onSuccess: () => {
@@ -122,7 +122,7 @@ const AdminLabTests: React.FC = () => {
   // Delete lab test mutation
   const deleteTestMutation = useMutation({
     mutationFn: async (testId: number) => {
-      const response = await axios.delete(`/admin/lab-tests/${testId}`);
+      const response = await API.delete(`/admin/lab-tests/${testId}`);
       return response.data;
     },
     onSuccess: () => {

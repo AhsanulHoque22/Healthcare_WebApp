@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
   StarIcon,
@@ -74,7 +74,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
       if (ratingFilter !== 'all') params.append('rating', ratingFilter);
       params.append('page', currentPage.toString());
 
-      const response = await axios.get(`/ratings/admin/all?${params}`);
+      const response = await API.get(`/ratings/admin/all?${params}`);
       return response.data.data;
     },
   });
@@ -82,7 +82,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
   const { data: statsData } = useQuery({
     queryKey: ['rating-stats'],
     queryFn: async () => {
-      const response = await axios.get('/ratings/admin/stats');
+      const response = await API.get('/ratings/admin/stats');
       return response.data.data;
     },
   });
@@ -93,7 +93,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
 
   const handleStatusUpdate = async (ratingId: number, status: string) => {
     try {
-      await axios.put(`/ratings/admin/${ratingId}/status`, { status });
+      await API.put(`/ratings/admin/${ratingId}/status`, { status });
       toast.success(`Rating ${status} successfully`);
       queryClient.invalidateQueries({ queryKey: ['admin-ratings'] });
       queryClient.invalidateQueries({ queryKey: ['rating-stats'] });

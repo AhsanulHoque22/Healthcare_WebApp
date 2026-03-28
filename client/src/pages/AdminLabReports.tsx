@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'react-router-dom';
 import { formatCurrency } from '../services/paymentService';
@@ -175,7 +175,7 @@ const AdminLabReports: React.FC = () => {
         ...(dateFrom && { dateFrom }),
         ...(dateTo && { dateTo }),
       });
-      const response = await axios.get(`/admin/lab-orders?${params}`);
+      const response = await API.get(`/admin/lab-orders?${params}`);
       console.log('📊 Admin lab orders response:', response.data);
       return response.data;
     },
@@ -193,7 +193,7 @@ const AdminLabReports: React.FC = () => {
         ...(dateFrom && { dateFrom }),
         ...(dateTo && { dateTo }),
       });
-      const response = await axios.get(`/admin/prescription-lab-tests?${params}`);
+      const response = await API.get(`/admin/prescription-lab-tests?${params}`);
       console.log('📊 Admin prescription lab tests response:', response.data);
       return response.data;
     },
@@ -203,7 +203,7 @@ const AdminLabReports: React.FC = () => {
   // Update order status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status, notes, sampleCollectionDate, expectedResultDate }: any) => {
-      const response = await axios.put(`/admin/lab-orders/${orderId}/status`, {
+      const response = await API.put(`/admin/lab-orders/${orderId}/status`, {
         status,
         notes,
         sampleCollectionDate,
@@ -238,7 +238,7 @@ const AdminLabReports: React.FC = () => {
       
       if (notes) formData.append('notes', notes);
       
-      const response = await axios.post(`/admin/lab-orders/${orderId}/upload-results`, formData, {
+      const response = await API.post(`/admin/lab-orders/${orderId}/upload-results`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
@@ -256,7 +256,7 @@ const AdminLabReports: React.FC = () => {
   // Prescription lab test mutations
   const updatePrescriptionStatusMutation = useMutation({
     mutationFn: async ({ testId, status }: { testId: string; status: string }) => {
-      const response = await axios.put(`/admin/prescription-lab-tests/${testId}/status`, { status });
+      const response = await API.put(`/admin/prescription-lab-tests/${testId}/status`, { status });
       return response.data;
     },
     onSuccess: () => {
@@ -273,7 +273,7 @@ const AdminLabReports: React.FC = () => {
 
   const processPrescriptionPaymentMutation = useMutation({
     mutationFn: async ({ testId, paymentData }: { testId: string; paymentData: any }) => {
-      const response = await axios.post(`/admin/prescription-lab-tests/${testId}/payment`, paymentData);
+      const response = await API.post(`/admin/prescription-lab-tests/${testId}/payment`, paymentData);
       return response.data;
     },
     onSuccess: () => {
@@ -300,7 +300,7 @@ const AdminLabReports: React.FC = () => {
         }
       }
       
-      const response = await axios.post(`/admin/prescription-lab-tests/${testId}/upload-results`, formData, {
+      const response = await API.post(`/admin/prescription-lab-tests/${testId}/upload-results`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
@@ -324,7 +324,7 @@ const AdminLabReports: React.FC = () => {
     mutationFn: async (orderId: string) => {
       console.log('🚀 confirmLabOrderMutation called with orderId:', orderId);
       console.log('🚀 Making API call to:', `/admin/lab-orders/${orderId}/confirm-reports`);
-      const response = await axios.post(`/admin/lab-orders/${orderId}/confirm-reports`);
+      const response = await API.post(`/admin/lab-orders/${orderId}/confirm-reports`);
       console.log('✅ confirmLabOrderMutation API response:', response.data);
       return response.data;
     },
@@ -384,7 +384,7 @@ const AdminLabReports: React.FC = () => {
       console.log('🚀 Making API call to:', `/admin/prescription-lab-tests/${testId}/confirm-reports`);
       
       try {
-        const response = await axios.post(`/admin/prescription-lab-tests/${testId}/confirm-reports`, {}, {
+        const response = await API.post(`/admin/prescription-lab-tests/${testId}/confirm-reports`, {}, {
           timeout: 10000 // 10 second timeout
         });
         console.log('✅ confirmPrescriptionMutation API response:', response.data);
@@ -446,7 +446,7 @@ const AdminLabReports: React.FC = () => {
   // Revert lab order reports mutation
   const revertLabOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      const response = await axios.post(`/admin/lab-orders/${orderId}/revert-reports`);
+      const response = await API.post(`/admin/lab-orders/${orderId}/revert-reports`);
       return response.data;
     },
     onSuccess: () => {
@@ -465,7 +465,7 @@ const AdminLabReports: React.FC = () => {
   // Revert prescription lab test reports mutation
   const revertPrescriptionMutation = useMutation({
     mutationFn: async (testId: string) => {
-      const response = await axios.post(`/admin/prescription-lab-tests/${testId}/revert-reports`);
+      const response = await API.post(`/admin/prescription-lab-tests/${testId}/revert-reports`);
       return response.data;
     },
     onSuccess: () => {
@@ -484,7 +484,7 @@ const AdminLabReports: React.FC = () => {
   // Payment processing mutation (new system)
   const processNewPaymentMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await axios.post('/admin/process-payment', data);
+      const response = await API.post('/admin/process-payment', data);
       return response.data;
     },
     onSuccess: () => {
@@ -502,7 +502,7 @@ const AdminLabReports: React.FC = () => {
   // Update to sample processing mutation
   const updateToSampleProcessingMutation = useMutation({
     mutationFn: async (testId: string) => {
-      const response = await axios.put(`/admin/tests/${testId}/sample-processing`);
+      const response = await API.put(`/admin/tests/${testId}/sample-processing`);
       return response.data;
     },
     onSuccess: () => {
@@ -518,7 +518,7 @@ const AdminLabReports: React.FC = () => {
   // Update to sample taken mutation
   const updateToSampleTakenMutation = useMutation({
     mutationFn: async (testId: string) => {
-      const response = await axios.put(`/admin/tests/${testId}/sample-taken`);
+      const response = await API.put(`/admin/tests/${testId}/sample-taken`);
       return response.data;
     },
     onSuccess: () => {
@@ -534,7 +534,7 @@ const AdminLabReports: React.FC = () => {
   // Approve test mutation
   const approveTestMutation = useMutation({
     mutationFn: async (testId: string) => {
-      const response = await axios.post(`/admin/prescription-lab-tests/${testId}/approve`);
+      const response = await API.post(`/admin/prescription-lab-tests/${testId}/approve`);
       return response.data;
     },
     onSuccess: () => {
@@ -1019,7 +1019,7 @@ const AdminLabReports: React.FC = () => {
     console.log('🚀 Test prescriptionId:', test.prescriptionId);
     console.log('🚀 Test testReports:', test.testReports);
     console.log('🚀 Auth token present:', !!localStorage.getItem('token'));
-    console.log('🚀 Axios default headers:', axios.defaults.headers.common);
+    console.log('🚀 API default headers:', API.defaults.headers.common);
     
     // Check if this is a prescription test by looking for sampleId pattern
     const isPrescriptionTest = test.sampleId && test.sampleId.startsWith('SMP-');
@@ -1124,7 +1124,7 @@ const AdminLabReports: React.FC = () => {
     (window as any).testConfirmEndpoint = async (testId: string) => {
       console.log('🧪 Testing confirm endpoint with testId:', testId);
       try {
-        const response = await axios.post(`/admin/prescription-lab-tests/${testId}/confirm-reports`, {}, {
+        const response = await API.post(`/admin/prescription-lab-tests/${testId}/confirm-reports`, {}, {
           timeout: 5000
         });
         console.log('✅ Test endpoint success:', response.data);
@@ -1165,7 +1165,7 @@ const AdminLabReports: React.FC = () => {
     (window as any).testServer = async () => {
       console.log('🧪 Testing server connection...');
       try {
-        const response = await axios.get('/admin/stats', { timeout: 3000 });
+        const response = await API.get('/admin/stats', { timeout: 3000 });
         console.log('✅ Server is responding:', response.status);
         return response.data;
       } catch (error) {
@@ -1249,14 +1249,14 @@ const AdminLabReports: React.FC = () => {
       if (testId.startsWith('order-')) {
         // Regular lab order
         const orderId = testId.replace('order-', '');
-        return axios.post('/admin/lab-orders/cash-payment', {
+        return API.post('/admin/lab-orders/cash-payment', {
           orderId,
           amount,
           notes
         });
       } else {
         // Prescription lab test
-        return axios.post('/admin/prescription-tests/cash-payment', {
+        return API.post('/admin/prescription-tests/cash-payment', {
           testId,
           amount,
           notes
@@ -1330,7 +1330,7 @@ const AdminLabReports: React.FC = () => {
         const testIdParts = testId.split('-');
         const prescriptionId = testIdParts[1];
         
-        const response = await axios.delete(`/admin/prescription-lab-tests/${testId}/reports/${reportIndex}`);
+        const response = await API.delete(`/admin/prescription-lab-tests/${testId}/reports/${reportIndex}`);
         
         if (response.data.success) {
           toast.success('Report removed successfully');
@@ -1342,7 +1342,7 @@ const AdminLabReports: React.FC = () => {
         }
       } else {
         // For regular lab orders
-        const response = await axios.delete(`/admin/lab-orders/${testId}/reports/${reportIndex}`);
+        const response = await API.delete(`/admin/lab-orders/${testId}/reports/${reportIndex}`);
         
         if (response.data.success) {
           toast.success('Report removed successfully');

@@ -1,12 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import axios from 'axios';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// Initialize Axios globally before any components render
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Axios is now configured in src/api/api.ts
+// axios.defaults.baseURL is not used globally to avoid mixed content issues
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

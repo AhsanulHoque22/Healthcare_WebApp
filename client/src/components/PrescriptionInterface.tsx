@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '../services/paymentService';
@@ -160,7 +160,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         params.append('search', testSearchTerm);
       }
       console.log('Fetching lab tests with params:', params.toString());
-      const response = await axios.get(`/lab-tests/tests?${params}`);
+      const response = await API.get(`/lab-tests/tests?${params}`);
       console.log('Lab tests API response:', response.data);
       // The API returns data in nested structure: data.tests and data.groupedTests
       const tests = response.data.data?.tests || [];
@@ -174,7 +174,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   const { data: appointmentData } = useQuery({
     queryKey: ['appointment-patient-data', appointmentId],
     queryFn: async () => {
-      const response = await axios.get(`/appointments/${appointmentId}`);
+      const response = await API.get(`/appointments/${appointmentId}`);
       return response.data.data.appointment;
     },
     enabled: !!appointmentId,
@@ -188,7 +188,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       console.log('Fetching lab reports for patient:', currentPatientId);
       try {
         // Use the same endpoint as patient lab reports page - get all orders, no status filter
-        const response = await axios.get(`/lab-tests/patients/${currentPatientId}/lab-reports`, {
+        const response = await API.get(`/lab-tests/patients/${currentPatientId}/lab-reports`, {
           params: {
             limit: 100
             // Removed status: 'reported' filter to show all orders like patient lab reports page
@@ -219,7 +219,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       console.log('Fetching prescription lab tests for patient:', currentPatientId);
       try {
         // Use the same endpoint as patient lab reports page - get all tests, no status filter
-        const response = await axios.get(`/lab-tests/patients/${currentPatientId}/prescription-lab-tests`, {
+        const response = await API.get(`/lab-tests/patients/${currentPatientId}/prescription-lab-tests`, {
           params: {
             limit: 100
             // Removed status: 'reported' filter to show all tests like patient lab reports page
@@ -250,7 +250,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   useEffect(() => {
     const loadPrescription = async () => {
       try {
-        const response = await axios.get(`/prescriptions/appointment/${appointmentId}`);
+        const response = await API.get(`/prescriptions/appointment/${appointmentId}`);
         const prescription = response.data.data.prescription;
         
         if (prescription) {
@@ -292,7 +292,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     const loadExistingMedicines = async () => {
       if (patientId && userRole === 'doctor') {
         try {
-          const response = await axios.get(`/medicines/doctors/patients/${patientId}/medicines?status=active`);
+          const response = await API.get(`/medicines/doctors/patients/${patientId}/medicines?status=active`);
           setExistingMedicines(response.data.data || []);
         } catch (error) {
           console.log('No existing medicines found');
@@ -309,11 +309,11 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       if (patientId && userRole === 'doctor') {
         try {
           // Fetch prescription lab tests using doctor endpoint
-          const prescriptionResponse = await axios.get(`/lab-tests/patients/${patientId}/prescription-lab-tests`);
+          const prescriptionResponse = await API.get(`/lab-tests/patients/${patientId}/prescription-lab-tests`);
           const prescriptionTests = prescriptionResponse.data.data.prescriptions || [];
           
           // Fetch regular lab orders using doctor endpoint
-          const labOrdersResponse = await axios.get(`/lab-tests/patients/${patientId}/lab-reports`);
+          const labOrdersResponse = await API.get(`/lab-tests/patients/${patientId}/lab-reports`);
           const labOrders = labOrdersResponse.data.data.orders || [];
           
           // Combine and extract reports
@@ -391,7 +391,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     }
 
     try {
-      await axios.post(`/medicines/medicines/${medicineId}/discontinue`, {
+      await API.post(`/medicines/medicines/${medicineId}/discontinue`, {
         reason: 'Doctor discontinued during appointment',
         notes: 'Discontinued during prescription review'
       });
@@ -400,7 +400,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       
       // Refresh existing medicines list
       if (patientId) {
-        const response = await axios.get(`/medicines/doctors/patients/${patientId}/medicines?status=active`);
+        const response = await API.get(`/medicines/doctors/patients/${patientId}/medicines?status=active`);
         setExistingMedicines(response.data.data || []);
       }
     } catch (error) {
@@ -411,7 +411,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
 
   const downloadReport = async (report: TestReport) => {
     try {
-      const response = await axios.get(`/admin/test-reports/${report.id}/download`, {
+      const response = await API.get(`/admin/test-reports/${report.id}/download`, {
         responseType: 'blob'
       });
       
@@ -542,7 +542,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         testReports: data.reports
       };
 
-      await axios.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
+      await API.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
       toast.success('Prescription saved successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to save prescription');
@@ -570,10 +570,10 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         testReports: formData.reports
       };
 
-      await axios.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
+      await API.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
       
       // Complete the prescription
-      await axios.put(`/prescriptions/appointment/${appointmentId}/complete`);
+      await API.put(`/prescriptions/appointment/${appointmentId}/complete`);
       
       toast.success('Appointment completed successfully!');
       onComplete();

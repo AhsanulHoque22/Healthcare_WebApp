@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { 
   ChevronDownIcon, 
@@ -84,7 +84,7 @@ const PatientProfile: React.FC = () => {
   // Fetch patient data on component mount
   const fetchPatientData = async () => {
     try {
-      const response = await axios.get('/patients/profile');
+      const response = await API.get('/patients/profile');
       const data = response.data.data.patient;
       setPatientData({
         bloodType: data.bloodType || '',
@@ -173,7 +173,7 @@ const PatientProfile: React.FC = () => {
   const onSubmitProfile = async (data: any) => {
     setIsLoading(true);
     try {
-      await axios.put('/auth/profile', data);
+      await API.put('/auth/profile', data);
       toast.success('Profile updated successfully!');
       setIsEditingProfile(false);
       // The user context should refresh automatically
@@ -193,7 +193,7 @@ const PatientProfile: React.FC = () => {
         allergies: selectedAllergies.length > 0 ? selectedAllergies.join(', ') : ''
       };
       
-      await axios.put('/patients/profile', medicalData);
+      await API.put('/patients/profile', medicalData);
       toast.success('Medical information updated successfully!');
       setIsEditingMedical(false);
       

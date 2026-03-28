@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   StarIcon, 
   UserIcon, 
@@ -48,7 +48,7 @@ const DoctorRatings: React.FC<DoctorRatingsProps> = ({ doctorId, showAll = false
     queryKey: ['doctor-ratings', doctorId, showAllReviews ? 'all' : 'approved'],
     queryFn: async () => {
       const status = showAll ? 'all' : 'approved';
-      const response = await axios.get(`/ratings/doctor/${doctorId}?status=${status}&limit=${showAllReviews ? 50 : 5}`);
+      const response = await API.get(`/ratings/doctor/${doctorId}?status=${status}&limit=${showAllReviews ? 50 : 5}`);
       return response.data.data;
     },
     enabled: !!doctorId,

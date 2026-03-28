@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   DocumentTextIcon, 
@@ -99,7 +99,7 @@ const MedicalRecords: React.FC = () => {
   const { data: patientProfile } = useQuery({
     queryKey: ['patient-profile'],
     queryFn: async () => {
-      const response = await axios.get('/patients/profile');
+      const response = await API.get('/patients/profile');
       return response.data.data.patient;
     },
     enabled: user?.role === 'patient',
@@ -109,7 +109,7 @@ const MedicalRecords: React.FC = () => {
   const { data: appointments, isLoading } = useQuery<AppointmentMedicalRecord[]>({
     queryKey: ['patient-appointments', patientProfile?.id],
     queryFn: async () => {
-      const response = await axios.get('/appointments');
+      const response = await API.get('/appointments');
       // Filter only completed appointments
       const completedAppointments = response.data.data.appointments.filter((apt: any) => 
         apt.status === 'completed'
@@ -151,7 +151,7 @@ const MedicalRecords: React.FC = () => {
     
     // Fetch prescription data if available
     try {
-      const response = await axios.get(`/prescriptions/appointment/${appointment.id}`);
+      const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
       setPrescriptionData(response.data.data.prescription);
     } catch (error) {
       console.log('No prescription found for this appointment');

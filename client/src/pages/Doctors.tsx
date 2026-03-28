@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { formatCurrency } from '../services/paymentService';
 import { 
   UserGroupIcon, 
@@ -69,7 +69,7 @@ const Doctors: React.FC = () => {
       if (departmentFilter) {
         params.append('department', departmentFilter);
       }
-      const response = await axios.get(`/doctors?${params}`);
+      const response = await API.get(`/doctors?${params}`);
       return response.data.data.doctors;
     },
   });

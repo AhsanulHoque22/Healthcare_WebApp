@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 
 export interface Notification {
@@ -46,7 +46,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     queryKey: ['notifications', userId],
     queryFn: async () => {
       try {
-        const response = await axios.get('/notifications');
+        const response = await API.get('/notifications');
         console.log('📬 Notifications fetched:', response.data);
         return response.data.data;
       } catch (error: any) {
@@ -89,7 +89,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const markAsRead = async (notificationId: number) => {
     try {
-      await axios.put(`/notifications/${notificationId}/read`);
+      await API.put(`/notifications/${notificationId}/read`);
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to mark notification as read');
@@ -98,7 +98,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const markAllAsRead = async () => {
     try {
-      await axios.put('/notifications/read-all');
+      await API.put('/notifications/read-all');
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       toast.success('All notifications marked as read');
     } catch (error: any) {
@@ -108,7 +108,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const deleteNotification = async (notificationId: number) => {
     try {
-      await axios.delete(`/notifications/${notificationId}`);
+      await API.delete(`/notifications/${notificationId}`);
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       toast.success('Notification deleted');
     } catch (error: any) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   BellIcon,
@@ -51,13 +51,13 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
       console.log('🔍 DEBUG: Fetching reminder settings for patient:', patientId);
-      console.log('🔍 DEBUG: API base URL:', axios.defaults.baseURL);
+      console.log('🔍 DEBUG: API base URL:', API.defaults.baseURL);
       console.log('🔍 DEBUG: Auth token present:', !!localStorage.getItem('token'));
       console.log('🔍 DEBUG: User role:', user?.role);
       console.log('🔍 DEBUG: User ID:', user?.id);
       
       try {
-        const response = await axios.get(`/medicines/patients/${patientId}/reminder-settings`, {
+        const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
           params: { _t: Date.now() } // Cache-busting parameter
         });
         console.log('🔍 DEBUG: Reminder settings response:', response.data);
@@ -140,7 +140,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
       console.log('🔍 DEBUG: Reminder settings:', reminderSettings);
       console.log('🔍 DEBUG: Auth token present:', !!localStorage.getItem('token'));
       console.log('🔍 DEBUG: Auth token value:', localStorage.getItem('token')?.substring(0, 20) + '...');
-      console.log('🔍 DEBUG: Axios default headers:', axios.defaults.headers.common);
+      console.log('🔍 DEBUG: Axios default headers:', API.defaults.headers.common);
       console.log('🔍 DEBUG: API URL:', `/medicines/patients/${patientId}/reminder-settings`);
       
       // Validate patient ID
@@ -150,7 +150,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
       
       try {
         console.log('🔍 DEBUG: Making API request...');
-        const response = await axios.post(`/medicines/patients/${patientId}/reminder-settings`, reminderSettings);
+        const response = await API.post(`/medicines/patients/${patientId}/reminder-settings`, reminderSettings);
         console.log('🔍 DEBUG: Save reminder settings response:', response.data);
         return response.data;
       } catch (error: any) {
@@ -223,7 +223,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   // Test notification mutation
   const testNotificationMutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.post(`/medicines/patients/${patientId}/test-reminder`);
+      const response = await API.post(`/medicines/patients/${patientId}/test-reminder`);
       return response.data;
     },
     onSuccess: () => {
@@ -267,7 +267,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
     console.log('🔍 DEBUG: Auth token value:', localStorage.getItem('token')?.substring(0, 20) + '...');
     console.log('🔍 DEBUG: Patient ID:', patientId);
     console.log('🔍 DEBUG: Settings to save:', settings);
-    console.log('🔍 DEBUG: Axios default headers:', axios.defaults.headers.common);
+    console.log('🔍 DEBUG: Axios default headers:', API.defaults.headers.common);
     
     saveSettingsMutation.mutate(settings);
   };

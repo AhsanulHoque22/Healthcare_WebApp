@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   CalendarIcon, 
   UserGroupIcon, 
@@ -58,7 +58,7 @@ const DoctorDashboard: React.FC = () => {
   const { data: doctorProfile } = useQuery({
     queryKey: ['doctor-profile'],
     queryFn: async () => {
-      const response = await axios.get('/doctors/profile');
+      const response = await API.get('/doctors/profile');
       return response.data.data.doctor;
     },
     enabled: user?.role === 'doctor',
@@ -68,7 +68,7 @@ const DoctorDashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['doctor-dashboard-stats', doctorProfile?.id],
     queryFn: async () => {
-      const response = await axios.get(`/doctors/${doctorProfile?.id}/dashboard/stats`);
+      const response = await API.get(`/doctors/${doctorProfile?.id}/dashboard/stats`);
       return response.data.data.stats;
     },
     enabled: !!doctorProfile?.id,
@@ -82,7 +82,7 @@ const DoctorDashboard: React.FC = () => {
       
       // Fetch appointments for today for this specific doctor
       const today = new Date().toISOString().split('T')[0];
-      const response = await axios.get(`/doctors/${doctorProfile.id}/appointments`, {
+      const response = await API.get(`/doctors/${doctorProfile.id}/appointments`, {
         params: { date: today }
       });
       
@@ -98,7 +98,7 @@ const DoctorDashboard: React.FC = () => {
   const { data: ratingData } = useQuery({
     queryKey: ['doctor-ratings', doctorProfile?.id],
     queryFn: async () => {
-      const response = await axios.get(`/ratings/doctor/${doctorProfile?.id}`);
+      const response = await API.get(`/ratings/doctor/${doctorProfile?.id}`);
       return response.data.data;
     },
     enabled: !!doctorProfile?.id,

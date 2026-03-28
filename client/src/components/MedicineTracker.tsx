@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import API from '../api/api';
 import { 
   CheckCircleIcon,
   ClockIcon,
@@ -56,7 +56,7 @@ const MedicineTracker: React.FC<MedicineTrackerProps> = ({ patientId }) => {
     queryKey: ['medicine-schedule', patientId, selectedDate],
     queryFn: async () => {
       console.log('🔍 DEBUG: MedicineTracker fetching schedule for patient:', patientId);
-      const response = await axios.get(`/medicines/patients/${patientId}/schedule/today`);
+      const response = await API.get(`/medicines/patients/${patientId}/schedule/today`);
       console.log('🔍 DEBUG: MedicineTracker schedule response:', response.data.data);
       return response.data.data;
     },
@@ -66,7 +66,7 @@ const MedicineTracker: React.FC<MedicineTrackerProps> = ({ patientId }) => {
   // Mutation for recording medicine dosage
   const recordDosageMutation = useMutation({
     mutationFn: async ({ medicineId, timeSlot }: { medicineId: number; timeSlot: string }) => {
-      const response = await axios.post(`/medicines/${medicineId}/take-dose`, {
+      const response = await API.post(`/medicines/${medicineId}/take-dose`, {
         quantity: 1,
         notes: `Taken at ${timeSlot}`,
         takenAt: new Date().toISOString()

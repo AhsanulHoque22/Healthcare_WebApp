@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import API from '../api/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../services/paymentService';
@@ -101,7 +101,7 @@ const DoctorProfile: React.FC = () => {
   // Fetch doctor profile data
   const fetchProfileData = async () => {
     try {
-      const response = await axios.get('/doctors/profile');
+      const response = await API.get('/doctors/profile');
       const data = response.data.data.doctor;
       setProfileData({
         profileImage: data.profileImage || '',
@@ -162,7 +162,7 @@ const DoctorProfile: React.FC = () => {
         profileImage: profileData.profileImage
       };
 
-      await axios.put('/doctors/profile', updateData);
+      await API.put('/doctors/profile', updateData);
       toast.success('Profile updated successfully!');
       setIsEditing(false);
       await fetchProfileData();
@@ -296,7 +296,7 @@ const DoctorProfile: React.FC = () => {
       formData.append('profileImage', file);
 
       // Upload file to server
-      const response = await axios.post('/doctors/upload-image', formData, {
+      const response = await API.post('/doctors/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -312,7 +312,7 @@ const DoctorProfile: React.FC = () => {
         // Update user context with the new profile image
         if (response.data.data.imageUrl) {
           // Refresh user data to get updated profile image
-          const userResponse = await axios.get('/auth/profile');
+          const userResponse = await API.get('/auth/profile');
           if (userResponse.data.success) {
             // Update the user context
             window.location.reload(); // Simple refresh to update user context
