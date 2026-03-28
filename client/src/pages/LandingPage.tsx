@@ -40,7 +40,7 @@ const LandingPage: React.FC = () => {
     {
       name: "Sarah Johnson",
       role: "Patient",
-      content: "HealthCare Pro has revolutionized how I manage my health. The appointment booking is seamless and I love having all my records in one place.",
+      content: "Livora has revolutionized how I manage my health. The appointment booking is seamless and I love having all my records in one place.",
       rating: 5,
       avatar: "SJ",
       color: "from-blue-500 to-indigo-600"
@@ -166,12 +166,12 @@ const LandingPage: React.FC = () => {
             <div className="flex items-center group">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110 animate-pulse">
-                  <HeartIcon className="h-6 w-6 text-white" />
+                <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                  <img src="/Print.svg" className="h-6 w-6 text-white filter brightness-0 invert" alt="Livora Logo" />
                   <SparklesIcon className="h-3 w-3 text-white/70 absolute -top-1 -right-1 animate-pulse" />
                 </div>
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">HealthCare Pro</span>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <button
@@ -239,7 +239,7 @@ const LandingPage: React.FC = () => {
             <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
               <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full text-sm font-medium text-indigo-700 mb-6 animate-pulse">
                 <SparklesIcon className="h-4 w-4 mr-2" />
-                Trusted by 10,000+ Healthcare Professionals
+                Trusted by 10,000+ Professionals
               </div>
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
                 Your Health,
@@ -573,10 +573,10 @@ const LandingPage: React.FC = () => {
                 About Our Platform
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                About HealthCare Pro
+                About Livora
               </h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Founded in 2024, HealthCare Pro is a comprehensive digital healthcare platform 
+                Founded in 2024, Livora is a comprehensive digital healthcare platform 
                 designed to bridge the gap between patients and healthcare providers. We believe 
                 that quality healthcare should be accessible, efficient, and personalized for everyone.
               </p>
@@ -816,7 +816,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Email Support</h3>
-                  <p className="text-white/80">support@healthcarepro.com</p>
+                  <p className="text-white/80">support@livora.com</p>
                 </div>
               </div>
               
@@ -826,7 +826,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Office Location</h3>
-                  <p className="text-white/80">123 Healthcare Ave, Medical City</p>
+                  <p className="text-white/80">123 Livora Ave, Medical City</p>
                 </div>
               </div>
             </div>
@@ -894,7 +894,7 @@ const LandingPage: React.FC = () => {
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
                   <HeartIcon className="h-7 w-7 text-white" />
                 </div>
-                <span className="ml-3 text-2xl font-bold group-hover:text-indigo-400 transition-colors">HealthCare Pro</span>
+                <span className="ml-3 text-2xl font-bold group-hover:text-indigo-400 transition-colors">Livora</span>
               </div>
               <p className="text-gray-300 mb-6 leading-relaxed max-w-md">
                 Your trusted partner in healthcare management. We're committed to making 
@@ -961,7 +961,7 @@ const LandingPage: React.FC = () => {
           <div className="border-t border-gray-700/50 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-gray-400 mb-4 md:mb-0">
-                <p>&copy; 2024 HealthCare Pro. All rights reserved.</p>
+                <p>&copy; 2024 Livora. All rights reserved.</p>
                 </div>
               <div className="flex items-center space-x-6 text-gray-400">
                 <a href="#" className="hover:text-indigo-400 transition-colors duration-200">Privacy Policy</a>
