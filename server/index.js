@@ -42,7 +42,14 @@ const limiter = rateLimit({
 // CORS configuration
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
   .split(',')
-  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .map((origin) => {
+    const trimmed = origin.trim();
+    const cleaned = trimmed.replace(/\/+$/, '');
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`[CORS-PREP] Original: "${trimmed}", Cleaned: "${cleaned}"`);
+    }
+    return cleaned;
+  })
   .filter(Boolean);
 
 app.use(cors({
@@ -50,18 +57,23 @@ app.use(cors({
     // Log the incoming origin for debugging
     if (process.env.NODE_ENV === 'production') {
       console.log(`[CORS] Incoming origin: ${origin || 'no-origin'}`);
-      console.log(`[CORS] Allowed origins: ${allowedOrigins.join(', ') || 'none (allowing all)'}`);
+      console.log(`[CORS] Allowed origins: [${allowedOrigins.join(', ')}]`);
     }
 
     // Allow same-origin server-to-server and health checks with no origin header.
     if (!origin) return callback(null, true);
     if (allowedOrigins.length === 0) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+
+    // Normalize both incoming origin and allowed origins for comparison
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+    const isAllowed = allowedOrigins.some(allowed => allowed === normalizedOrigin);
+
+    if (isAllowed) {
       if (process.env.NODE_ENV === 'production') console.log(`[CORS] SUCCESS: Origin ${origin} allowed.`);
       return callback(null, true);
     }
     
-    const corsError = new Error(`CORS origin ${origin} not allowed`);
+    const corsError = new Error(`CORS origin ${origin} not allowed. Please check your Railway CLIENT_URL variable.`);
     if (process.env.NODE_ENV === 'production') console.error(`[CORS] ERROR: ${corsError.message}`);
     return callback(corsError);
   },
