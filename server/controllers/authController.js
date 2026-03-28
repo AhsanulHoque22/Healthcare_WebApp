@@ -297,13 +297,18 @@ const changePassword = async (req, res, next) => {
 
 // Email transporter configuration
 const createTransporter = () => {
+  const port = parseInt(process.env.SMTP_PORT) || 587;
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: false,
+    port: port,
+    secure: port === 465, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
+    },
+    tls: {
+      // Do not fail on invalid certs (helpful for some environments)
+      rejectUnauthorized: false
     }
   });
 };
@@ -381,12 +386,14 @@ const forgotPassword = async (req, res, next) => {
     const message = `
       <h2>Password Reset Request</h2>
       <p>Hello ${user.firstName},</p>
-      <p>You requested a password reset for your HealthCare account.</p>
+      <p>You requested a password reset for your Livora account.</p>
       <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+      <div style="margin: 20px 0;">
+        <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">Reset Password</a>
+      </div>
       <p>This link will expire in 10 minutes.</p>
       <p>If you didn't request this, please ignore this email.</p>
-      <p>Best regards,<br>HealthCare Team</p>
+      <p>Best regards,<br>The Livora Team</p>
     `;
 
     // Send email (only if SMTP is configured)
@@ -401,7 +408,7 @@ const forgotPassword = async (req, res, next) => {
         const mailOptions = {
           from: process.env.FROM_EMAIL || 'noreply@healthcare.com',
           to: user.email,
-          subject: 'Password Reset Request - HealthCare',
+          subject: 'Password Reset Request - Livora',
           html: message
         };
 
