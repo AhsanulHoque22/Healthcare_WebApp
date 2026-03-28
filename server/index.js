@@ -42,7 +42,7 @@ const limiter = rateLimit({
 // CORS configuration
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/$/, ''))
   .filter(Boolean);
 
 app.use(cors({
