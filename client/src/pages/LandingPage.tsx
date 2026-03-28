@@ -165,10 +165,9 @@ const LandingPage: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center group">
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <img src="/Print.svg" className="h-6 w-6 text-white filter brightness-0 invert" alt="Livora Logo" />
-                  <SparklesIcon className="h-3 w-3 text-white/70 absolute -top-1 -right-1 animate-pulse" />
+                <div className="relative">
+                  <img src="/Print.svg" className="h-12 w-12" alt="Livora Logo" />
+                  <SparklesIcon className="h-3 w-3 text-indigo-600 absolute -top-1 -right-1 animate-pulse" />
                 </div>
               </div>
               <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
@@ -890,9 +889,9 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <div className="flex items-center mb-6 group">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-                  <HeartIcon className="h-7 w-7 text-white" />
+              <div className="flex items-center group mb-6">
+                <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <img src="/Print.svg" className="h-12 w-12" alt="Livora Logo" />
                 </div>
                 <span className="ml-3 text-2xl font-bold group-hover:text-indigo-400 transition-colors">Livora</span>
               </div>
