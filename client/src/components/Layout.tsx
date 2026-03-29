@@ -120,7 +120,7 @@ const Layout: React.FC = () => {
           <div className="flex h-20 items-center justify-between px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
             <div className="flex items-center space-x-3">
               <div className="p-0">
-                <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
+                <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
               </div>
               <h1 className="text-xl font-bold text-white">Livora</h1>
             </div>
@@ -201,7 +201,7 @@ const Layout: React.FC = () => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-500 ease-in-out ${
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col z-50 transition-all duration-500 ease-in-out ${
         desktopSidebarCollapsed ? 'lg:w-16' : 'lg:w-72'
       }`}>
         <div className="flex flex-col flex-grow bg-white shadow-xl border-r border-gray-200 transition-all duration-500 ease-in-out">
@@ -211,7 +211,7 @@ const Layout: React.FC = () => {
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
                   <div className="p-0">
-                    <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-white">Livora</h1>
@@ -221,7 +221,7 @@ const Layout: React.FC = () => {
               ) : (
                 <div className="flex justify-center w-full">
                   <div className="p-0">
-                    <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-12 w-12" alt="Livora Logo" />
                   </div>
                 </div>
               )}
@@ -332,7 +332,7 @@ const Layout: React.FC = () => {
         desktopSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-72'
       }`}>
         {/* Top bar */}
-        <div className={`fixed top-0 z-50 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 sm:gap-x-6 sm:px-6 lg:px-8 transition-all duration-500 ${
+        <div className={`fixed top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 sm:gap-x-6 sm:px-6 lg:px-8 transition-all duration-500 ${
           scrolled
             ? 'border-white/30 bg-white/60 backdrop-blur-xl shadow-xl'
             : 'border-white/20 bg-white/40 backdrop-blur-lg shadow-lg'
