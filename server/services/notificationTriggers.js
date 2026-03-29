@@ -4,6 +4,7 @@
  */
 const { User } = require('../models');
 const { createNotification } = require('./notificationService');
+const { sendEmail } = require('./emailService');
 
 /**
  * Create notification(s) for one or more users
@@ -16,6 +17,7 @@ const { createNotification } = require('./notificationService');
  * @param {string} params.actionType - Trigger identifier (e.g. appointment_created)
  * @param {number} [params.entityId] - Related entity ID
  * @param {string} [params.entityType] - Related entity type (e.g. appointment, prescription)
+ * @param {Object} [params.emailOptions] - Optional email options: { subject, html }
  */
 const notifyUsers = async ({
   userIds,
@@ -26,12 +28,14 @@ const notifyUsers = async ({
   actionType,
   entityId,
   entityType,
+  emailOptions,
 }) => {
   const ids = Array.isArray(userIds) ? userIds : [userIds];
   const meta = { targetRole, actionType, entityId, entityType };
   for (const userId of ids) {
     if (!userId) continue;
     try {
+      // 1. Create in-app notification
       await createNotification({
         userId,
         title,
@@ -39,6 +43,23 @@ const notifyUsers = async ({
         type,
         ...meta,
       });
+
+      // 2. Send email if requested
+      if (emailOptions) {
+        const user = await User.findByPk(userId, { attributes: ['email', 'firstName'] });
+        if (user && user.email) {
+          sendEmail({
+            to: user.email,
+            subject: emailOptions.subject || title,
+            html: emailOptions.html || `
+              <h3>${title}</h3>
+              <p>Hello ${user.firstName || ''},</p>
+              <p>${message}</p>
+              <p>Best regards,<br>The Livora Team</p>
+            `
+          }).catch(err => console.error(`[notificationTriggers] Email failed for user ${userId}:`, err.message));
+        }
+      }
     } catch (err) {
       console.error(`[notificationTriggers] Failed to notify user ${userId}:`, err.message);
     }
@@ -111,6 +132,16 @@ const triggerAppointmentApproved = async (appointment, patient, doctor) => {
     actionType: 'appointment_approved',
     entityId: appointment.id,
     entityType: 'appointment',
+    emailOptions: {
+      subject: 'Appointment Approved - Livora',
+      html: `
+        <h2>Appointment Approved</h2>
+        <p>Hello,</p>
+        <p>Your appointment with <strong>${doctorName}</strong> on <strong>${dateStr}</strong> has been approved.</p>
+        <p>Please log in to your dashboard to view the details.</p>
+        <p>Best regards,<br>The Livora Team</p>
+      `
+    }
   });
 };
 
@@ -278,6 +309,16 @@ const triggerPrescriptionCreated = async (prescription, patient, doctor) => {
     actionType: 'prescription_created',
     entityId: prescription.id,
     entityType: 'prescription',
+    emailOptions: {
+      subject: 'New Prescription Ready - Livora',
+      html: `
+        <h2>Prescription Ready</h2>
+        <p>Hello,</p>
+        <p>A new prescription has been issued by <strong>${doctorName}</strong>.</p>
+        <p>You can view and download your prescription by logging into your Livora account.</p>
+        <p>Best regards,<br>The Livora Team</p>
+      `
+    }
   });
 };
 
@@ -391,6 +432,17 @@ const triggerDoctorVerified = async (doctor, isVerified) => {
     actionType: 'doctor_verification_changed',
     entityId: doctor.id,
     entityType: 'doctor',
+    emailOptions: {
+      subject: isVerified ? 'Account Verified - Livora' : 'Account Status Updated - Livora',
+      html: `
+        <h2>Account Verification Update</h2>
+        <p>Hello,</p>
+        <p>${isVerified 
+          ? 'Congratulations! Your doctor account has been verified. You can now receive appointment requests from patients.' 
+          : 'Your doctor verification status has been updated. Please contact the administrator for more details.'}</p>
+        <p>Best regards,<br>The Livora Team</p>
+      `
+    }
   });
 };
 
@@ -469,11 +521,21 @@ const triggerDoctorRatingReceivedAdmin = async (rating) => {
 const triggerWelcomePatient = async (user) => {
   await notifyUsers({
     userIds: user.id,
-    title: 'Welcome to HealthCare Pro!',
+    title: 'Welcome to Livora!',
     message: 'Thank you for joining. Your account has been created. Book appointments and manage your health easily.',
     type: 'success',
     targetRole: 'patient',
     actionType: 'user_registered',
+    emailOptions: {
+      subject: 'Welcome to Livora!',
+      html: `
+        <h2>Welcome to Livora</h2>
+        <p>Hello ${user.firstName || ''},</p>
+        <p>Thank you for joining Livora. Your account has been successfully created.</p>
+        <p>You can now book appointments, view your medical history, and manage your health records all in one place.</p>
+        <p>Best regards,<br>The Livora Team</p>
+      `
+    }
   });
 };
 
@@ -486,6 +548,16 @@ const triggerWelcomeDoctor = async (user) => {
     type: 'success',
     targetRole: 'doctor',
     actionType: 'user_registered',
+    emailOptions: {
+      subject: 'Welcome to the Livora Medical Team!',
+      html: `
+        <h2>Welcome, Doctor</h2>
+        <p>Hello ${user.firstName || ''},</p>
+        <p>Thank you for joining the Livora medical team. Your account has been created.</p>
+        <p>Please complete your professional profile and submit it for verification. Once verified, you will be able to receive and manage patient appointments.</p>
+        <p>Best regards,<br>The Livora Team</p>
+      `
+    }
   });
 };
 

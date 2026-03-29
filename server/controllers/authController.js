@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
 const { User, Patient, Doctor } = require('../models');
+const { sendEmail } = require('../services/emailService');
 const {
   triggerNewUserRegistration,
   triggerWelcomePatient,
@@ -296,24 +295,6 @@ const changePassword = async (req, res, next) => {
   }
 };
 
-// Email transporter configuration
-const createTransporter = () => {
-  const port = parseInt(process.env.SMTP_PORT) || 587;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: port,
-    secure: port === 465, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    },
-    tls: {
-      // Do not fail on invalid certs (helpful for some environments)
-      rejectUnauthorized: false
-    }
-  });
-};
-
 // Forgot password
 const forgotPassword = async (req, res, next) => {
   try {
@@ -397,65 +378,25 @@ const forgotPassword = async (req, res, next) => {
       <p>Best regards,<br>The Livora Team</p>
     `;
 
-    // Send email (favor SendGrid in production, fallback to Nodemailer)
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        console.log('🚀 Using SendGrid Web API for email delivery...');
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        
-        const msg = {
-          to: user.email,
-          from: process.env.FROM_EMAIL || 'noreply@livora.com',
-          subject: 'Password Reset Request - Livora',
-          html: message
-        };
-        
-        await sgMail.send(msg);
-        console.log('✅ Password reset email sent via SendGrid');
-      } catch (sgError) {
-        console.error('❌ SendGrid sending failed:', sgError.message);
-        if (sgError.response) console.error(sgError.response.body);
-        // If SendGrid fails, try Nodemailer as fallback if configured
-        if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-          await sendViaNodemailer(user.email, message);
-        }
-      }
-    } else if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-      await sendViaNodemailer(user.email, message);
-    } else {
-      console.warn('⚠️ No email service (SendGrid or SMTP) configured');
-    }
+    // Send email using optimized centralized service
+    // Fired in background to respond immediately to user
+    sendEmail({
+      to: user.email,
+      subject: 'Password Reset Request - Livora',
+      html: message
+    }).catch(err => {
+      console.error('❌ Background forgot-password email failed:', err.message);
+    });
 
+    // Always respond success to avoid email enumeration and to respond quickly
     res.status(200).json({
       success: true,
-      message: 'Password reset instructions sent to your email'
+      message: 'If an account exists with that email, instructions have been sent.'
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error('Forgot password endpoint error:', error.message);
     next(error);
-  }
-};
-
-// Helper function for Nodemailer sending
-const sendViaNodemailer = async (to, htmlContent) => {
-  try {
-    const transporter = createTransporter();
-    // Verify transporter configuration
-    await transporter.verify();
-    
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@livora.com',
-      to: to,
-      subject: 'Password Reset Request - Livora',
-      html: htmlContent
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Password reset email sent via Nodemailer:', info.messageId);
-  } catch (emailError) {
-    console.error('❌ Nodemailer sending failed:', emailError.message);
-    throw emailError;
   }
 };
 

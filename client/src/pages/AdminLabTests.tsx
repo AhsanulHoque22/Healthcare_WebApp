@@ -689,20 +689,30 @@ const AdminLabTests: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Category *
                         </label>
-                        <select
+                        <input
+                          type="text"
+                          list="category-suggestions"
                           value={editingTest.category || ''}
                           onChange={(e) => setEditingTest({ ...editingTest, category: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder="Type or select a category"
                           required
-                        >
-                          <option value="">Select Category</option>
-                          <option value="Blood Tests">Blood Tests</option>
-                          <option value="Imaging Tests">Imaging Tests</option>
-                          <option value="Urine Tests">Urine Tests</option>
-                          <option value="Cardiac Tests">Cardiac Tests</option>
-                          <option value="Hormone Tests">Hormone Tests</option>
-                          <option value="Cancer Screening">Cancer Screening</option>
-                        </select>
+                        />
+                        <datalist id="category-suggestions">
+                          {testsData?.categories?.map((category: string) => (
+                            <option key={category} value={category} />
+                          ))}
+                          {!testsData?.categories?.length && (
+                            <>
+                              <option value="Blood Tests" />
+                              <option value="Imaging Tests" />
+                              <option value="Urine Tests" />
+                              <option value="Cardiac Tests" />
+                              <option value="Hormone Tests" />
+                              <option value="Cancer Screening" />
+                            </>
+                          )}
+                        </datalist>
                       </div>
 
                       <div>
@@ -878,20 +888,30 @@ const AdminLabTests: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Category *
                         </label>
-                        <select
+                        <input
+                          type="text"
+                          list="edit-category-suggestions"
                           value={editingTest.category || ''}
                           onChange={(e) => setEditingTest({ ...editingTest, category: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder="Type or select a category"
                           required
-                        >
-                          <option value="">Select Category</option>
-                          <option value="Blood Tests">Blood Tests</option>
-                          <option value="Imaging Tests">Imaging Tests</option>
-                          <option value="Urine Tests">Urine Tests</option>
-                          <option value="Cardiac Tests">Cardiac Tests</option>
-                          <option value="Hormone Tests">Hormone Tests</option>
-                          <option value="Cancer Screening">Cancer Screening</option>
-                        </select>
+                        />
+                        <datalist id="edit-category-suggestions">
+                          {testsData?.categories?.map((category: string) => (
+                            <option key={category} value={category} />
+                          ))}
+                          {!testsData?.categories?.length && (
+                            <>
+                              <option value="Blood Tests" />
+                              <option value="Imaging Tests" />
+                              <option value="Urine Tests" />
+                              <option value="Cardiac Tests" />
+                              <option value="Hormone Tests" />
+                              <option value="Cancer Screening" />
+                            </>
+                          )}
+                        </datalist>
                       </div>
 
                       <div>
