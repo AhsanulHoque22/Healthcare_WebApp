@@ -19,6 +19,9 @@ import {
   ShieldCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  AcademicCapIcon,
+  MapPinIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 
 interface DashboardStats {
@@ -34,7 +37,18 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [pageLoaded, setPageLoaded] = useState(false);
   const [currentReview, setCurrentReview] = useState(0);
+  const [currentDoctorSlide, setCurrentDoctorSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+
+  // Fetch verified doctors for slideshow
+  const { data: availableDoctors } = useQuery({
+    queryKey: ['available-doctors'],
+    queryFn: async () => {
+      const response = await API.get('/doctors', { params: { limit: 10 } });
+      return response.data.data.doctors;
+    },
+    enabled: user?.role === 'patient'
+  });
 
   // Page load animation
   useEffect(() => {
@@ -336,9 +350,105 @@ const Dashboard: React.FC = () => {
                 </div>
                 </div>
               </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+
+        {/* Available Doctors Slideshow (For Patients) */}
+        {user?.role === 'patient' && availableDoctors && availableDoctors.length > 0 && (
+          <div className={`mt-8 ${pageLoaded ? 'animate-fade-in-up' : ''}`} style={{ animationDelay: '400ms' }}>
+            <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 rounded-3xl p-8 shadow-2xl shadow-indigo-200 border border-white/10">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+              <div className="relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                  <div>
+                    <div className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-indigo-100 text-xs font-bold mb-3 border border-white/20">
+                      <SparklesIcon className="h-4 w-4 mr-2 text-yellow-400" />
+                      AVAILABLE SPECIALISTS
+                    </div>
+                    <h2 className="text-3xl font-black text-white tracking-tight">Consult with Expert Doctors</h2>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setCurrentDoctorSlide((prev) => (prev - 1 + availableDoctors.length) % availableDoctors.length)}
+                      className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all backdrop-blur-md border border-white/10 active:scale-95"
+                    >
+                      <ChevronLeftIcon className="h-6 w-6" />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentDoctorSlide((prev) => (prev + 1) % availableDoctors.length)}
+                      className="p-3 bg-indigo-500 hover:bg-indigo-400 rounded-2xl text-white transition-all shadow-lg shadow-indigo-900/50 active:scale-95"
+                    >
+                      <ChevronRightIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative overflow-hidden h-[300px] md:h-[240px]">
+                  <div 
+                    className="flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] h-full"
+                    style={{ transform: `translateX(-${currentDoctorSlide * 100}%)` }}
+                  >
+                    {availableDoctors.map((doctor: any) => (
+                      <div key={doctor.id} className="w-full flex-shrink-0 px-2 h-full">
+                        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 h-full flex flex-col md:flex-row gap-6 hover:bg-white/10 transition-all duration-500 group/card">
+                          <div className="relative flex-shrink-0 mx-auto md:mx-0">
+                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
+                            {doctor.user?.profileImage ? (
+                              <img src={doctor.user.profileImage} className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover relative z-10 border-2 border-white/20 shadow-2xl" alt="avatar" />
+                            ) : (
+                              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white/20 shadow-2xl">
+                                <span className="text-white text-3xl font-black uppercase">{doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}</span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-1.5 shadow-lg z-20 border-2 border-indigo-900">
+                              <CheckCircleIcon className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                            <h3 className="text-2xl font-bold text-white mb-2 group-hover/card:text-indigo-200 transition-colors">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h3>
+                            <p className="text-indigo-300 font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <AcademicCapIcon className="h-4 w-4" />
+                              {doctor.specialization || doctor.department}
+                            </p>
+                            <div className="flex items-center gap-4 mb-4 text-white/60 text-sm">
+                              <span className="flex items-center gap-1">
+                                <MapPinIcon className="h-4 w-4 text-indigo-400" />
+                                {doctor.hospital || 'Private Practice'}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
+                                {doctor.averageRating || 'New'}
+                              </span>
+                            </div>
+                            <div className="mt-auto flex gap-4 w-full">
+                              <button 
+                                onClick={() => navigate(`/app/appointments?doctor=${doctor.id}`)}
+                                className="flex-1 py-3 bg-white text-indigo-900 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10"
+                              >
+                                Book Visit
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-center mt-6 gap-2">
+                  {availableDoctors.slice(0, 5).map((_: any, idx: number) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setCurrentDoctorSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentDoctorSlide ? 'w-8 bg-white' : 'w-2 bg-white/20 hover:bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content Grid */}
         <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${pageLoaded ? 'animate-fade-in' : ''}`}>
@@ -424,6 +534,27 @@ const Dashboard: React.FC = () => {
             <div className="space-y-4">
             {user?.role === 'patient' && (
               <>
+                <div className="relative group mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-200/30 to-orange-200/30 rounded-xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                  <button
+                    onClick={() => navigate('/find-doctors')}
+                    className="relative group w-full text-left p-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl hover:scale-[1.05] active:scale-[0.98] transition-all duration-500 shadow-xl shadow-amber-200/50 border border-amber-400 group-hover:rotate-1"
+                  >
+                    <div className="flex items-center">
+                        <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-5 group-hover:rotate-12 transition-transform duration-500">
+                          <MagnifyingGlassIcon className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                          <span className="text-white font-black text-xl tracking-tight block">Find Doctors</span>
+                          <span className="text-white/80 text-sm font-medium">Search available specialists</span>
+                        </div>
+                        <div className="ml-auto w-10 h-10 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-all">
+                          <ChevronRightIcon className="h-6 w-6 text-white" />
+                        </div>
+                    </div>
+                  </button>
+                </div>
+
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button

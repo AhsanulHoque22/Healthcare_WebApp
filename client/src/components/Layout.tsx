@@ -131,7 +131,7 @@ const Layout: React.FC = () => {
         <div className="fixed inset-y-0 left-0 flex w-72 flex-col bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
           {/* Mobile header */}
           <div className="flex h-20 items-center justify-between px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <Link to={getDashboardUrl()} className="flex items-center space-x-3 group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95">
+            <Link to="/" className="flex items-center space-x-3 group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95">
               <div className="relative group-hover:scale-110 transition-transform duration-500">
                 <div className="absolute inset-0 bg-blue-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <img src="/logo.png" className="h-14 w-14 relative z-10" alt="Livora Logo" />
@@ -224,7 +224,7 @@ const Layout: React.FC = () => {
         <div className="flex flex-col flex-grow bg-white shadow-xl border-r border-gray-200 transition-all duration-500 ease-in-out">
           {/* Desktop header */}
           <div className="flex h-20 items-center px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <Link to={getDashboardUrl()} className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-[0.98]">
+            <Link to="/" className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-[0.98]">
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
                   <div className="relative group-hover:scale-110 transition-transform duration-500 ease-out">

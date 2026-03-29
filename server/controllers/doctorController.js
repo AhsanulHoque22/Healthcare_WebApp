@@ -7,7 +7,8 @@ const { uploadToCloudinary } = require('../services/cloudinaryService');
 // Get all doctors (public endpoint)
 const getAllDoctors = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, department, search } = req.query;
+    const { page = 1, limit = 10, department, specialization, search } = req.query;
+    const targetDept = specialization || department;
 
     const whereClause = {
       isActive: true, // Only show active users
@@ -18,15 +19,19 @@ const getAllDoctors = async (req, res, next) => {
       isVerified: true // Only show verified doctors to patients
     };
     
-    if (department) {
-      doctorWhereClause.department = department;
+    if (targetDept && targetDept !== 'All') {
+      doctorWhereClause.department = targetDept;
     }
 
     if (search) {
       whereClause[Op.or] = [
-        { '$user.firstName$': { [Op.like]: `%${search}%` } },
-        { '$user.lastName$': { [Op.like]: `%${search}%` } },
-        { department: { [Op.like]: `%${search}%` } }
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } }
+      ];
+      // We also want to search by department on the doctor model
+      doctorWhereClause[Op.or] = [
+        { department: { [Op.like]: `%${search}%` } },
+        { hospital: { [Op.like]: `%${search}%` } }
       ];
     }
 
