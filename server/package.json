@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:railway": "node index.js",
+    "start:railway": "npm run migrate:prod && node index.js",
     "start:clean": "node start-server.js",
     "dev": "nodemon index.js",
     "test": "jest",
