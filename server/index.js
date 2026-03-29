@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const { sequelize } = require('./config/database');
@@ -23,6 +25,23 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Ensure upload directories exist
+const uploadDirs = [
+  'uploads',
+  'uploads/lab-results',
+  'uploads/prescriptions',
+  'uploads/doctor-profiles',
+  'uploads/patient-profiles'
+];
+
+uploadDirs.forEach(dir => {
+  const fullPath = path.join(__dirname, dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`Created directory: ${fullPath}`);
+  }
+});
 
 // Trust the proxy (Railway) for accurate IP-based rate limiting
 app.set('trust proxy', 1);
