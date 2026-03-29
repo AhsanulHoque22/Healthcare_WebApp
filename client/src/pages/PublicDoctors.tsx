@@ -118,7 +118,7 @@ const PublicDoctors: React.FC = () => {
                   value={specialization}
                   onChange={(e) => setSpecialization(e.target.value)}
                 >
-                  {specializations.map(spec => (
+                  {specializations.map((spec: string) => (
                     <option key={spec} value={spec}>{spec}</option>
                   ))}
                 </select>
@@ -133,7 +133,7 @@ const PublicDoctors: React.FC = () => {
         {/* Results Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(6)].map((_: any, i: number) => (
               <div key={i} className="h-[400px] bg-white/50 rounded-3xl animate-pulse border border-white"></div>
             ))}
           </div>

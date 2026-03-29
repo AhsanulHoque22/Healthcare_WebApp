@@ -354,7 +354,7 @@ const LandingPage: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+            {stats.map((stat: any, index: number) => (
               <div key={index} className="text-center group">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 border border-white/20">
                   <div className="flex justify-center mb-4">
@@ -514,7 +514,7 @@ const LandingPage: React.FC = () => {
                           
                           {/* Stars */}
                           <div className="flex justify-center mb-8">
-                            {[...Array(5)].map((_, i) => (
+                            {[...Array(5)].map((_: any, i: number) => (
                               <StarIcon key={i} className="h-7 w-7 text-yellow-400 fill-current mx-1" />
                             ))}
                           </div>
@@ -558,7 +558,7 @@ const LandingPage: React.FC = () => {
               
               {/* Enhanced Navigation Dots */}
               <div className="flex justify-center mt-12 space-x-4">
-                {testimonials.map((_, index) => (
+                {testimonials.map((_: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => {
@@ -737,7 +737,7 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-8 shadow-lg">
               <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
+                {[...Array(5)].map((_: any, i: number) => (
                   <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
@@ -758,7 +758,7 @@ const LandingPage: React.FC = () => {
 
             <div className="bg-white rounded-xl p-8 shadow-lg">
               <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
+                {[...Array(5)].map((_: any, i: number) => (
                   <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
@@ -779,7 +779,7 @@ const LandingPage: React.FC = () => {
 
             <div className="bg-white rounded-xl p-8 shadow-lg">
               <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
+                {[...Array(5)].map((_: any, i: number) => (
                   <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
