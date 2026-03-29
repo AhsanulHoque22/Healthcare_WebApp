@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
 import {
@@ -97,6 +97,19 @@ const Layout: React.FC = () => {
     return colors[color as keyof typeof colors] || colors.gray;
   };
 
+  const getProfileUrl = () => {
+    switch (user?.role) {
+      case 'patient':
+        return '/app/profile';
+      case 'doctor':
+        return '/app/doctor-profile';
+      case 'admin':
+        return '/app/admin-dashboard';
+      default:
+        return '/app/dashboard';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Mobile sidebar */}
@@ -152,27 +165,29 @@ const Layout: React.FC = () => {
           {/* Mobile user section */}
           <div className="p-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="flex-shrink-0">
-                {user?.profileImage ? (
-                  <img
-                    src={user.profileImage}
-                    alt={`${user.firstName} ${user.lastName}`}
-                    className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-                    <span className="text-sm font-bold text-white">
-                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-              </div>
+                <Link to={getProfileUrl()} className="flex-shrink-0 group hover:scale-105 transition-all duration-300">
+                  {user?.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-400"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:from-blue-600 group-hover:to-indigo-700">
+                      <span className="text-sm font-bold text-white">
+                        {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link to={getProfileUrl()} className="block hover:text-blue-600 transition-colors">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                  </Link>
+                  <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                </div>
             </div>
             <button
               onClick={handleLogout}
@@ -251,16 +266,16 @@ const Layout: React.FC = () => {
           <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 transition-all duration-500 ease-in-out">
             {!desktopSidebarCollapsed ? (
               <div className="transition-all duration-500 ease-in-out">
-                <div className="flex items-center space-x-3 mb-4">
+                <Link to={getProfileUrl()} className="flex items-center space-x-3 mb-4 group hover:scale-105 transition-all duration-300">
                   <div className="flex-shrink-0">
                     {user?.profileImage ? (
                       <img
                         src={user.profileImage}
                         alt={`${user.firstName} ${user.lastName}`}
-                        className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm"
+                        className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-400"
                       />
                     ) : (
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:from-blue-600 group-hover:to-indigo-700">
                         <span className="text-sm font-bold text-white">
                           {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                         </span>
@@ -268,12 +283,12 @@ const Layout: React.FC = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0 transition-all duration-500 ease-in-out">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600">
                       {user?.firstName} {user?.lastName}
                     </p>
                     <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
                   </div>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-200 hover:shadow-sm hover:border-gray-300"
@@ -284,21 +299,21 @@ const Layout: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-4 transition-all duration-500 ease-in-out">
-                <div className="flex-shrink-0">
+                <Link to={getProfileUrl()} className="flex-shrink-0 group hover:scale-110 transition-all duration-300">
                   {user?.profileImage ? (
                     <img
                       src={user.profileImage}
                       alt={`${user.firstName} ${user.lastName}`}
-                      className="h-8 w-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+                      className="h-8 w-8 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-400"
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:from-blue-600 group-hover:to-indigo-700">
                       <span className="text-xs font-bold text-white">
                         {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                       </span>
                     </div>
                   )}
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="p-2 text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-200 hover:shadow-sm hover:border-gray-300"
@@ -355,13 +370,13 @@ const Layout: React.FC = () => {
                 <NotificationDropdown />
                 
                 {/* User profile */}
-                <div className="relative">
+                <Link to={getProfileUrl()} className="relative group flex items-center space-x-3 hover:opacity-80 transition-all duration-300 transform hover:scale-105">
                   <div className="flex items-center space-x-3">
                     {user?.profileImage ? (
                       <img
                         src={user.profileImage}
                         alt={`${user.firstName} ${user.lastName}`}
-                        className="h-8 w-8 rounded-full object-cover ring-2 ring-ring-gray-200"
+                        className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-200 group-hover:ring-blue-400"
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
@@ -371,13 +386,13 @@ const Layout: React.FC = () => {
                       </div>
                     )}
                     <div className="hidden sm:block">
-                      <p className="text-sm font-medium text-gray-700">
+                      <p className="text-sm font-medium text-gray-700 group-hover:text-blue-600">
                         {user?.firstName} {user?.lastName}
                       </p>
                       <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
                     </div>
                   </div>
-                </div>
+                </Link>
                 
                 <button
                   onClick={handleLogout}
