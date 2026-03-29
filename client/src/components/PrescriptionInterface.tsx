@@ -137,6 +137,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   const [activeTab, setActiveTab] = useState<'medicines' | 'symptoms' | 'diagnosis' | 'suggestions' | 'tests' | 'reports'>('medicines');
   const [testSearchTerm, setTestSearchTerm] = useState('');
   const [showTestSearch, setShowTestSearch] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const form = useForm<PrescriptionFormData>({
     defaultValues: {
@@ -358,6 +359,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   }, [patientId, userRole]);
 
   const addMedicine = () => {
+    const newIndex = medicines.length;
     setMedicines([...medicines, { 
       name: '', 
       dosage: '', 
@@ -370,6 +372,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       duration: 7, // Default to 7 days
       notes: '' 
     }]);
+    setEditingIndex(newIndex); // Set new medicine to editing mode
   };
 
   const removeMedicine = (index: number) => {
@@ -660,6 +663,17 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <p className="text-sm text-gray-600">Manage patient medications and prescriptions</p>
                 </div>
               </div>
+              
+              {!isReadOnly && userRole === 'doctor' && (
+                <button
+                  type="button"
+                  onClick={addMedicine}
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Add Medicine
+                </button>
+              )}
             </div>
 
             {/* Existing Medicines Section */}
@@ -735,238 +749,253 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
                     <PlusIcon className="h-4 w-4 text-white" />
                   </div>
-                  <h5 className="text-lg font-semibold text-gray-900">New Medicines</h5>
+                  <h5 className="text-lg font-semibold text-gray-900">Added to Prescription</h5>
                 </div>
 
                 <div className="grid gap-6">
                   {medicines.map((medicine, index) => (
-                    <div key={index} className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl p-6 hover:shadow-md transition-all duration-200">
+                    <div key={index} className={`border rounded-2xl p-6 transition-all duration-200 ${
+                      editingIndex === index 
+                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-400 shadow-lg scale-[1.01]' 
+                        : 'bg-white border-gray-200 hover:shadow-md'
+                    }`}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">{index + 1}</span>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            editingIndex === index ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            <span className="font-bold text-sm">{index + 1}</span>
                           </div>
-                          <h5 className="text-lg font-bold text-gray-900">Medicine {index + 1}</h5>
+                          <h5 className="text-lg font-bold text-gray-900">
+                            {medicine.name || `New Medicine ${index + 1}`}
+                          </h5>
                         </div>
-                        {!isReadOnly && userRole === 'doctor' && (
-                          <button
-                            type="button"
-                            onClick={() => removeMedicine(index)}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
-                          >
-                            <XMarkIcon className="h-5 w-5" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Medicine Name</label>
-                          <input
-                            type="text"
-                            value={medicine.name}
-                            onChange={(e) => updateMedicine(index, 'name', e.target.value)}
-                            disabled={isReadOnly}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                            placeholder="e.g., Aspirin"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Medicine Type</label>
-                          <select
-                            value={medicine.type}
-                            onChange={(e) => {
-                              const type = e.target.value as 'tablet' | 'syrup';
-                              updateMedicine(index, 'type', type);
-                              updateMedicine(index, 'unit', type === 'tablet' ? 'mg' : 'ml');
-                            }}
-                            disabled={isReadOnly}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                          >
-                            <option value="tablet">Tablet</option>
-                            <option value="syrup">Syrup</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Dosage ({medicine.unit})</label>
-                          <input
-                            type="text"
-                            value={medicine.dosage}
-                            onChange={(e) => updateMedicine(index, 'dosage', e.target.value)}
-                            disabled={isReadOnly}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                            placeholder={medicine.type === 'tablet' ? 'e.g., 75' : 'e.g., 5'}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">Daily Schedule</label>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
-                            <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-                              Morning
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={medicine.morning}
-                              onChange={(e) => updateMedicine(index, 'morning', parseInt(e.target.value) || 0)}
-                              disabled={isReadOnly}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            />
-                          </div>
-                          <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
-                            <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                              Lunch
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={medicine.lunch}
-                              onChange={(e) => updateMedicine(index, 'lunch', parseInt(e.target.value) || 0)}
-                              disabled={isReadOnly}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            />
-                          </div>
-                          <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
-                            <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                              Dinner
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={medicine.dinner}
-                              onChange={(e) => updateMedicine(index, 'dinner', parseInt(e.target.value) || 0)}
-                              disabled={isReadOnly}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Meal Timing</label>
-                        <select
-                          value={medicine.mealTiming}
-                          onChange={(e) => updateMedicine(index, 'mealTiming', e.target.value as 'before' | 'after')}
-                          disabled={isReadOnly}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                        >
-                          <option value="after">After Meal</option>
-                          <option value="before">Before Meal</option>
-                        </select>
-                      </div>
-
-                      <div className="mt-6">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">Duration (Days)</label>
-                        <div className="flex gap-3 mb-4">
-                          <input
-                            type="number"
-                            min="1"
-                            max="365"
-                            value={medicine.duration}
-                            onChange={(e) => updateMedicine(index, 'duration', parseInt(e.target.value) || 1)}
-                            disabled={isReadOnly}
-                            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                            placeholder="Enter number of days"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => updateMedicine(index, 'duration', 7)}
-                              disabled={isReadOnly}
-                              className="px-3 py-3 text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 disabled:opacity-50 transition-all duration-200 hover:scale-105 font-medium"
-                            >
-                              7d
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateMedicine(index, 'duration', 14)}
-                              disabled={isReadOnly}
-                              className="px-3 py-3 text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 disabled:opacity-50 transition-all duration-200 hover:scale-105 font-medium"
-                            >
-                              14d
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateMedicine(index, 'duration', 30)}
-                              disabled={isReadOnly}
-                              className="px-3 py-3 text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 disabled:opacity-50 transition-all duration-200 hover:scale-105 font-medium"
-                            >
-                              30d
-                            </button>
-                          </div>
-                        </div>
-                        {medicine.duration > 0 && (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-xl p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                              <div>
-                                <p className="font-semibold text-blue-800">Course Duration</p>
-                                <p className="text-blue-700">{medicine.duration} day{medicine.duration !== 1 ? 's' : ''}</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-blue-800">Start Date</p>
-                                <p className="text-blue-700">{new Date().toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-blue-800">End Date</p>
-                                <p className="text-blue-700">{new Date(Date.now() + medicine.duration * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-6">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes</label>
-                        <textarea
-                          value={medicine.notes}
-                          onChange={(e) => updateMedicine(index, 'notes', e.target.value)}
-                          rows={3}
-                          disabled={isReadOnly}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                          placeholder="Special instructions, side effects, etc..."
-                        />
-                      </div>
-
-                      {medicine.name && medicine.dosage && (
-                        <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-l-4 border-emerald-400">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <CheckIcon className="h-4 w-4 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-bold text-emerald-800 mb-2">
-                                {medicine.name} {medicine.dosage}{medicine.unit}
-                              </p>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-emerald-700">
-                                <p><strong>Schedule:</strong> {medicine.morning}+{medicine.lunch}+{medicine.dinner} ({medicine.mealTiming} meal)</p>
-                                {medicine.duration > 0 && (
-                                  <p><strong>Duration:</strong> {medicine.duration} day{medicine.duration !== 1 ? 's' : ''}</p>
-                                )}
-                                <p><strong>Start:</strong> {new Date().toLocaleDateString()}</p>
-                                {medicine.duration > 0 && (
-                                  <p><strong>End:</strong> {new Date(Date.now() + medicine.duration * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
-                                )}
-                              </div>
-                              {medicine.notes && (
-                                <p className="text-xs text-emerald-600 mt-2 italic">
-                                  Notes: {medicine.notes}
-                                </p>
+                        <div className="flex items-center gap-2">
+                          {!isReadOnly && userRole === 'doctor' && (
+                            <>
+                              {editingIndex !== index ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingIndex(index)}
+                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                                  title="Edit Medicine"
+                                >
+                                  <PencilIcon className="h-5 w-5" />
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingIndex(null)}
+                                  className="px-3 py-1 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-all duration-200 flex items-center gap-1 shadow-sm"
+                                  title="Confirm and Save to List"
+                                >
+                                  <CheckIcon className="h-4 w-4" />
+                                  Confirm
+                                </button>
                               )}
+                              <button
+                                type="button"
+                                onClick={() => removeMedicine(index)}
+                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
+                                title="Remove Medicine"
+                              >
+                                <XMarkIcon className="h-5 w-5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {editingIndex === index ? (
+                        /* Edit Mode */
+                        <div className="animate-fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Medicine Name</label>
+                              <input
+                                type="text"
+                                value={medicine.name}
+                                onChange={(e) => updateMedicine(index, 'name', e.target.value)}
+                                disabled={isReadOnly}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                placeholder="e.g., Aspirin"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Medicine Type</label>
+                              <select
+                                value={medicine.type}
+                                onChange={(e) => {
+                                  const type = e.target.value as 'tablet' | 'syrup';
+                                  updateMedicine(index, 'type', type);
+                                  updateMedicine(index, 'unit', type === 'tablet' ? 'mg' : 'ml');
+                                }}
+                                disabled={isReadOnly}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                              >
+                                <option value="tablet">Tablet</option>
+                                <option value="syrup">Syrup</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Dosage ({medicine.unit})</label>
+                              <input
+                                type="text"
+                                value={medicine.dosage}
+                                onChange={(e) => updateMedicine(index, 'dosage', e.target.value)}
+                                disabled={isReadOnly}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                placeholder={medicine.type === 'tablet' ? 'e.g., 75' : 'e.g., 5'}
+                              />
                             </div>
                           </div>
+                          
+                          <div className="mt-6">
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">Daily Schedule</label>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
+                                <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
+                                  <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
+                                  Morning
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={medicine.morning}
+                                  onChange={(e) => updateMedicine(index, 'morning', parseInt(e.target.value) || 0)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500"
+                                />
+                              </div>
+                              <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
+                                <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
+                                  <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                                  Lunch
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={medicine.lunch}
+                                  onChange={(e) => updateMedicine(index, 'lunch', parseInt(e.target.value) || 0)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500"
+                                />
+                              </div>
+                              <div className="bg-white/70 rounded-xl p-4 border border-gray-200/50">
+                                <label className="block text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
+                                  <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                                  Dinner
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={medicine.dinner}
+                                  onChange={(e) => updateMedicine(index, 'dinner', parseInt(e.target.value) || 0)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Meal Timing</label>
+                              <select
+                                value={medicine.mealTiming}
+                                onChange={(e) => updateMedicine(index, 'mealTiming', e.target.value as 'before' | 'after')}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-emerald-500"
+                              >
+                                <option value="after">After Meal</option>
+                                <option value="before">Before Meal</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Duration (Days)</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  value={medicine.duration}
+                                  onChange={(e) => updateMedicine(index, 'duration', parseInt(e.target.value) || 1)}
+                                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-emerald-500"
+                                />
+                                <div className="flex gap-1">
+                                  {[7, 14, 30].map(d => (
+                                    <button
+                                      key={d}
+                                      type="button"
+                                      onClick={() => updateMedicine(index, 'duration', d)}
+                                      className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-200"
+                                    >
+                                      {d}d
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-6">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Instructions</label>
+                            <textarea
+                              value={medicine.notes}
+                              onChange={(e) => updateMedicine(index, 'notes', e.target.value)}
+                              rows={2}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-emerald-500"
+                              placeholder="Special instructions..."
+                            />
+                          </div>
+
+                          <div className="mt-6 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setEditingIndex(null)}
+                              className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all duration-200 shadow-md flex items-center gap-2"
+                            >
+                              <CheckIcon className="h-5 w-5" />
+                              Add this Medicine
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* View Mode */
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <p className="text-xs text-gray-500 font-medium">Type & Dosage</p>
+                            <p className="text-sm font-bold text-gray-900 capitalize">{medicine.type} - {medicine.dosage}{medicine.unit}</p>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <p className="text-xs text-gray-500 font-medium">Schedule</p>
+                            <p className="text-sm font-bold text-gray-900">{medicine.morning} + {medicine.lunch} + {medicine.dinner} ({medicine.mealTiming})</p>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <p className="text-xs text-gray-500 font-medium">Duration</p>
+                            <p className="text-sm font-bold text-gray-900">{medicine.duration} Days</p>
+                          </div>
+                          {medicine.notes && (
+                            <div className="bg-gray-50 rounded-xl p-3 lg:col-span-1">
+                              <p className="text-xs text-gray-500 font-medium">Notes</p>
+                              <p className="text-sm text-gray-900 truncate">{medicine.notes}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
+                
+                {!isReadOnly && userRole === 'doctor' && (
+                  <button
+                    type="button"
+                    onClick={addMedicine}
+                    className="w-full py-4 border-2 border-dashed border-emerald-300 rounded-2xl text-emerald-600 font-semibold hover:bg-emerald-50 hover:border-emerald-400 transition-all duration-200 flex items-center justify-center gap-2 group"
+                  >
+                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                      <PlusIcon className="h-5 w-5" />
+                    </div>
+                    Add Another Medicine
+                  </button>
+                )}
               </div>
             )}
             
