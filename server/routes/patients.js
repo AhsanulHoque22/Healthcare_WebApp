@@ -25,11 +25,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Accept only image files
-  if (file.mimetype.startsWith('image/')) {
+  // Accept image files and PDFs
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'), false);
+    cb(new Error('Only image and PDF files are allowed!'), false);
   }
 };
 
@@ -97,6 +97,9 @@ router.put('/profile', authorizeRoles('patient'), updatePatientValidation, patie
 
 // Image upload route
 router.post('/upload-image', authorizeRoles('patient'), upload.single('profileImage'), patientController.uploadProfileImage);
+
+// Document upload route
+router.post('/upload-document', authorizeRoles('patient'), upload.single('document'), patientController.uploadMedicalDocument);
 
 // Medical records routes
 router.get('/:id/medical-records', authorizeRoles('patient', 'doctor', 'admin'), patientController.getMedicalRecords);

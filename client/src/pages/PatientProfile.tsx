@@ -16,7 +16,9 @@ import {
   IdentificationIcon,
   CameraIcon,
   CheckCircleIcon,
-  PencilIcon
+  PencilIcon,
+  DocumentTextIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 
 
@@ -74,6 +76,13 @@ const PatientProfile: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Medical Documents State
+  const [medicalDocuments, setMedicalDocuments] = useState<any[]>([]);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const [docName, setDocName] = useState('');
+  const [docType, setDocType] = useState('Lab Report');
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,7 +102,8 @@ const PatientProfile: React.FC = () => {
     try {
       const response = await API.get('/patients/profile');
       const data = response.data.data.patient;
-      setPatientData({
+      
+      const pData = {
         bloodType: data.bloodType || '',
         allergies: data.allergies || '',
         emergencyContact: data.emergencyContact || '',
@@ -101,12 +111,22 @@ const PatientProfile: React.FC = () => {
         insuranceProvider: data.insuranceProvider || '',
         insuranceNumber: data.insuranceNumber || '',
         profileImage: data.profileImage || ''
-      });
+      };
+      
+      setPatientData(pData);
+      setMedicalDocuments(data.medicalDocuments || []);
       
       // Parse allergies string into array for selected allergies display
-      if (data.allergies) {
-        setSelectedAllergies(data.allergies.split(', ').filter((a: string) => a.trim()));
-      }
+      const parsedAllergies = data.allergies ? data.allergies.split(', ').filter((a: string) => a.trim()) : [];
+      setSelectedAllergies(parsedAllergies);
+      
+      // Pre-fill forms!
+      medicalForm.reset({
+        ...pData,
+        allergies: parsedAllergies,
+        customAllergies: ''
+      });
+      
     } catch (error) {
       console.error('Failed to fetch patient data:', error);
     }
@@ -196,6 +216,47 @@ const PatientProfile: React.FC = () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleDocUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      toast.error('Please select an image or PDF file');
+      return;
+    }
+
+    if (!docName.trim()) {
+      toast.error('Please enter a document name first');
+      return;
+    }
+
+    setIsUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('documentName', docName);
+      formData.append('documentType', docType);
+
+      const response = await API.post('/patients/upload-document', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.data.success) {
+        setMedicalDocuments([...medicalDocuments, response.data.data.document]);
+        toast.success('Document uploaded successfully!');
+        setDocName('');
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+    } catch (error: any) {
+      console.error('Document upload error:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload document');
+    } finally {
+      setIsUploadingDoc(false);
+      if (docInputRef.current) docInputRef.current.value = '';
     }
   };
 
@@ -778,6 +839,115 @@ const PatientProfile: React.FC = () => {
               </div>
             )}
           </div>
+        
+        {/* Medical Documents Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center">
+              <DocumentTextIcon className="h-6 w-6 mr-2 text-blue-600" />
+              Medical Documents
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Upload form */}
+            <div className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100">
+              <h4 className="font-semibold text-gray-800 mb-4">Upload New Document</h4>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Document Name</label>
+                  <input
+                    type="text"
+                    value={docName}
+                    onChange={(e) => setDocName(e.target.value)}
+                    placeholder="e.g. Blood Test Results"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</label>
+                  <select
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Lab Report">Lab Report</option>
+                    <option value="Prescription">Prescription</option>
+                    <option value="Imaging">Imaging (X-Ray, MRI)</option>
+                    <option value="Other">Other Medical Document</option>
+                  </select>
+                </div>
+                <div className="pt-2">
+                  <input
+                    ref={docInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleDocUpload}
+                    className="hidden"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (!docName.trim()) {
+                        toast.error('Please enter a document name before uploading.');
+                        return;
+                      }
+                      docInputRef.current?.click();
+                    }}
+                    disabled={isUploadingDoc}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow font-medium disabled:opacity-50"
+                  >
+                    <ArrowDownTrayIcon className="h-4 w-4" />
+                    {isUploadingDoc ? 'Uploading...' : 'Select File to Upload'}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">PDF, JPG, PNG up to 5MB</p>
+                </div>
+              </div>
+            </div>
+
+            {/* List of existing documents */}
+            <div className="md:col-span-2">
+              {medicalDocuments.length > 0 ? (
+                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100 shadow-inner max-h-80 overflow-y-auto">
+                  {medicalDocuments.map((doc, idx) => (
+                    <div key={doc.id || idx} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                          <DocumentTextIcon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold text-gray-900 truncate">{doc.name}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                              {doc.type}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(doc.uploadDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors whitespace-nowrap text-sm font-medium flex items-center opacity-0 group-hover:opacity-100 shrink-0 ml-4"
+                      >
+                        View
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full min-h-[160px] rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center p-6 bg-gray-50/50">
+                  <DocumentTextIcon className="h-10 w-10 text-gray-300 mb-2" />
+                  <p className="text-sm font-medium text-gray-900">No medical documents yet</p>
+                  <p className="text-xs text-gray-500 mt-1 max-w-sm">Upload your past lab reports, prescriptions, or imaging results using the form to keep all your medical history in one place.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         </div>
         </div>
       </div>

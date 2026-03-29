@@ -422,12 +422,79 @@ const uploadProfileImage = async (req, res, next) => {
   }
 };
 
+// Upload medical document
+const uploadMedicalDocument = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No document file provided'
+      });
+    }
+
+    const userId = req.user.id;
+    const documentName = req.body.documentName || req.file.originalname;
+    const documentType = req.body.documentType || 'Lab Report';
+    
+    // Find the patient profile
+    const patient = await Patient.findOne({
+      where: { userId }
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient profile not found'
+      });
+    }
+
+    // Upload to Cloudinary
+    let fileUrl = '';
+    try {
+      const result = await uploadToCloudinary(req.file.path, 'patient_documents');
+      fileUrl = result.secure_url;
+    } catch (uploadError) {
+      console.error('Cloudinary document upload failure:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload document to cloud storage'
+      });
+    }
+    
+    // Append to medicalDocuments JSON array
+    const currentDocuments = patient.medicalDocuments || [];
+    const newDocument = {
+      id: Date.now().toString(),
+      name: documentName,
+      type: documentType,
+      url: fileUrl,
+      fileName: req.file.originalname,
+      uploadDate: new Date().toISOString()
+    };
+    
+    await patient.update({
+      medicalDocuments: [...currentDocuments, newDocument]
+    });
+
+    res.json({
+      success: true,
+      message: 'Document uploaded successfully',
+      data: {
+        document: newDocument
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPatientProfile,
   updatePatientProfile,
   getCurrentPatientProfile,
   updateCurrentPatientProfile,
   uploadProfileImage,
+  uploadMedicalDocument,
   getMedicalRecords,
   getPatientAppointments,
   getPatientDashboardStats,

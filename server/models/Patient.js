@@ -47,6 +47,10 @@ const Patient = sequelize.define('Patient', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  medicalDocuments: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   profileImage: {
     type: DataTypes.STRING(500),
     allowNull: true
