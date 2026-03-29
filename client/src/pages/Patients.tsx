@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import API from '../api/api';
 import { 
@@ -120,6 +121,10 @@ const Patients: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [pageLoaded, setPageLoaded] = useState(false);
 
+  const [searchParams] = useSearchParams();
+  const patientIdFromURL = searchParams.get('patientId');
+  const viewFromURL = searchParams.get('view');
+
   // Get doctor ID first, then fetch patients
   const { data: doctorProfile } = useQuery({
     queryKey: ['doctor-profile'],
@@ -152,6 +157,21 @@ const Patients: React.FC = () => {
       phone.includes(searchLower)
     );
   }) || [];
+
+  // Effect to handle patient selection from URL
+  useEffect(() => {
+    if (patientIdFromURL && patients && patients.length > 0) {
+      const patient = patients.find(p => p.id.toString() === patientIdFromURL);
+      if (patient) {
+        setSelectedPatient(patient);
+        if (viewFromURL === 'records') {
+          setShowMedicalRecords(true);
+        } else {
+          setShowPatientModal(true);
+        }
+      }
+    }
+  }, [patientIdFromURL, patients, viewFromURL]);
 
   // Page load animation
   useEffect(() => {

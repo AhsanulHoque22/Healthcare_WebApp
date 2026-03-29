@@ -1059,7 +1059,7 @@ Do you want to proceed?`;
                       </div>
                       <div className="bg-white/70 rounded-xl p-4">
                         <button
-                          onClick={() => window.open(`/admin-lab-reports?patientId=${selectedAppointment.patient.id}`, '_blank')}
+                          onClick={() => window.open(`/app/patients?patientId=${selectedAppointment.patient.id}&view=records`, '_blank')}
                           className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 text-sm"
                         >
                           <DocumentTextIcon className="h-4 w-4" />
