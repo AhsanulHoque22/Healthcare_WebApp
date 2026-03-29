@@ -826,7 +826,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Phone Support</h3>
-                  <p className="text-white/80">+1 (555) 123-4567</p>
+                  <p className="text-white/80">01834123393</p>
                 </div>
               </div>
               
