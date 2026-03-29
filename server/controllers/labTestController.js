@@ -1686,12 +1686,13 @@ const uploadPrescriptionLabResults = async (req, res, next) => {
         testFound = tests[testIndex];
         
         // Ensure the test is fully paid before uploading results
-        const totalAmount = testFound.price || 0;
-        const paidAmount = testFound.paidAmount || 0;
-        if (paidAmount < totalAmount) {
+        const totalAmount = parseFloat(testFound.price || 0);
+        const paidAmount = (testFound.payments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        
+        if (paidAmount < totalAmount && totalAmount > 0) {
           return res.status(400).json({
             success: false,
-            message: 'Cannot upload results until payment is completed for this test'
+            message: `Cannot upload results until payment is completed. Paid: ${paidAmount}, Total: ${totalAmount}`
           });
         }
         

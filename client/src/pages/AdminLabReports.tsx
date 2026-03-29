@@ -705,7 +705,7 @@ const AdminLabReports: React.FC = () => {
             </button>
           )}
 
-          {test.status === 'sample_taken' && (test.paidAmount || 0) >= (test.totalAmount || test.price || 0) && (
+          {test.status === 'sample_taken' && Number(test.paidAmount || 0) >= Number(test.totalAmount || test.price || 0) && (
             <button
               onClick={() => handleUploadPrescriptionResults(test)}
               className="group relative px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-sm font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 hover:shadow-lg overflow-hidden"
@@ -1863,7 +1863,7 @@ const AdminLabReports: React.FC = () => {
                         <div className="space-y-2">
                           
                           {/* Upload Results button - only show if payment is 100% complete */}
-                          {(test.paymentStatus === 'paid' || (test.paidAmount || 0) >= (test.totalAmount || test.price || 0)) ? (
+                          {(test.paymentStatus === 'paid' || Number(test.paidAmount || 0) >= Number(test.totalAmount || test.price || 0)) ? (
                         <button
                       onClick={() => handleUploadPrescriptionResults(test)}
                               className="w-full btn-secondary flex items-center justify-center gap-2 text-sm"
