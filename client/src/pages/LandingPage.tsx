@@ -495,7 +495,7 @@ const LandingPage: React.FC = () => {
                   className="flex transition-transform duration-700 ease-in-out"
                   style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
                 >
-                  {testimonials.map((testimonial, index) => (
+                  {testimonials.map((testimonial: any, index: number) => (
                     <div key={index} className="w-full flex-shrink-0">
                       <div className="bg-white/70 backdrop-blur-lg rounded-3xl p-8 md:p-16 border border-white/40 relative overflow-hidden mx-4">
                         {/* Glassmorphism Background Effects */}
