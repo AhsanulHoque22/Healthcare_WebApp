@@ -331,6 +331,54 @@ const getRatingStats = async (req, res, next) => {
   }
 };
 
+// Get all ratings submitted by the current patient
+const getPatientRatings = async (req, res, next) => {
+  try {
+    const patientId = req.user.patientId;
+    const { page = 1, limit = 10 } = req.query;
+
+    const ratings = await DoctorRating.findAndCountAll({
+      where: { patientId },
+      include: [
+        {
+          model: Appointment,
+          as: 'appointment',
+          include: [
+            { 
+              model: Doctor, 
+              as: 'doctor', 
+              include: [{ 
+                model: User, 
+                as: 'user',
+                attributes: ['firstName', 'lastName', 'profileImage']
+              }] 
+            }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ratings: ratings.rows,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(ratings.count / parseInt(limit)),
+          totalRatings: ratings.count,
+          hasNext: parseInt(page) * parseInt(limit) < ratings.count,
+          hasPrev: parseInt(page) > 1
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get public reviews for landing page
 const getPublicReviews = async (req, res, next) => {
   try {
