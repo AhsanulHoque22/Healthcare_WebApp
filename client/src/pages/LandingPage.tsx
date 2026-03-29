@@ -836,7 +836,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Email Support</h3>
-                  <p className="text-white/80">support@livora.com</p>
+                  <p className="text-white/80">livora@outlook.com</p>
                 </div>
               </div>
               
