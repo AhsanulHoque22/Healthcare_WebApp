@@ -705,7 +705,7 @@ const AdminLabReports: React.FC = () => {
             </button>
           )}
 
-          {test.status === 'sample_taken' && (
+          {test.status === 'sample_taken' && (test.paidAmount || 0) >= (test.totalAmount || test.price || 0) && (
             <button
               onClick={() => handleUploadPrescriptionResults(test)}
               className="group relative px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-sm font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 hover:shadow-lg overflow-hidden"
@@ -738,16 +738,20 @@ const AdminLabReports: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              // Handle file download
-                              const link = document.createElement('a');
-                              link.href = `/uploads/lab-results/${file.filename}`;
-                              link.download = file.originalName || file.filename;
-                              link.click();
+                              // Handle file download (using Cloudinary URL)
+                              if (file.path && (file.path.startsWith('http') || file.path.startsWith('https'))) {
+                                window.open(file.path, '_blank');
+                              } else {
+                                const link = document.createElement('a');
+                                link.href = `/uploads/lab-results/${file.filename}`;
+                                link.download = file.originalName || file.filename;
+                                link.click();
+                              }
                             }}
                             className="px-2 py-1 text-xs text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg flex items-center space-x-1 transition-colors whitespace-nowrap"
                           >
                             <ArrowDownTrayIcon className="h-3 w-3" />
-                            <span>Download</span>
+                            <span>Download / View</span>
                           </button>
                         </div>
                       </div>

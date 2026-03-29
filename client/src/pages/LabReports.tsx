@@ -785,10 +785,10 @@ const LabReports: React.FC = () => {
                               {test.testReports.map((report: any, index: number) => (
                                 <a
                                   key={index}
-                                href={`/${report.path}`}
+                                  href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"
+                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
                                 >
                                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                   <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
@@ -814,10 +814,10 @@ const LabReports: React.FC = () => {
                                 test.testReports.map((report: any, index: number) => (
                                   <a
                                     key={index}
-                                    href={`/${report.path}`}
+                                    href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"
+                                    className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
                                   >
                                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                     <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
@@ -826,10 +826,10 @@ const LabReports: React.FC = () => {
                                 ))
                               ) : test.resultUrl && (
                                 <a
-                                  href={test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`}
+                                  href={test.resultUrl && (test.resultUrl.startsWith('http') || test.resultUrl.startsWith('https')) ? test.resultUrl : (test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-bounce"
+                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
                                 >
                                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                   <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />

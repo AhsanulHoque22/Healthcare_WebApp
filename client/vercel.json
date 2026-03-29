@@ -1,6 +1,11 @@
 {
   "version": 2,
+  "framework": "create-react-app",
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

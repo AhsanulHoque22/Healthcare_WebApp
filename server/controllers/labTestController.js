@@ -1685,6 +1685,16 @@ const uploadPrescriptionLabResults = async (req, res, next) => {
       if (testIndex !== -1) {
         testFound = tests[testIndex];
         
+        // Ensure the test is fully paid before uploading results
+        const totalAmount = testFound.price || 0;
+        const paidAmount = testFound.paidAmount || 0;
+        if (paidAmount < totalAmount) {
+          return res.status(400).json({
+            success: false,
+            message: 'Cannot upload results until payment is completed for this test'
+          });
+        }
+        
         // Process uploaded files
         const uploadedFiles = [];
         for (const file of req.files) {
