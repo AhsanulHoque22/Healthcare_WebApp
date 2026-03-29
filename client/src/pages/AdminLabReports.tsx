@@ -2032,7 +2032,7 @@ const AdminLabReports: React.FC = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
           <div className="relative max-w-md w-full">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30"></div>
-            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 w-full">
+            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 w-full overflow-y-auto max-h-[95vh]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Process Payment</h3>
                 <button
@@ -2163,7 +2163,7 @@ const AdminLabReports: React.FC = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="relative max-w-md w-full">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30"></div>
-            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 w-full">
+            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 w-full overflow-y-auto max-h-[95vh]">
               <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
                 Record Cash Payment - {selectedTestForCashPayment.name}
               </h3>
@@ -2248,7 +2248,7 @@ const AdminLabReports: React.FC = () => {
       {/* Payment History Modal */}
       {showPaymentHistoryModal && selectedTestForPaymentHistory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[95vh]">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Payment History - {selectedTestForPaymentHistory.name}
             </h3>

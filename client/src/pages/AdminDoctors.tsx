@@ -696,7 +696,7 @@ const AdminDoctors: React.FC = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="relative group max-w-5xl w-full max-h-[95vh]">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-3xl blur-xl opacity-50"></div>
-            <div className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+            <div className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 overflow-y-auto max-h-[95vh]">
               {/* Enhanced Modal Header */}
               <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 rounded-t-3xl">
                 <div className="absolute inset-0 bg-black/10"></div>

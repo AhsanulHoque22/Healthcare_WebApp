@@ -167,6 +167,22 @@ const PatientProfile: React.FC = () => {
     },
   });
 
+  // Effect to reset medical form when entering edit mode to ensure it has latest data
+  useEffect(() => {
+    if (isEditingMedical) {
+      medicalForm.reset({
+        bloodType: patientData.bloodType,
+        allergies: selectedAllergies,
+        customAllergies: '',
+        emergencyContact: patientData.emergencyContact,
+        emergencyPhone: patientData.emergencyPhone,
+        insuranceProvider: patientData.insuranceProvider,
+        insuranceNumber: patientData.insuranceNumber
+      });
+    }
+  }, [isEditingMedical, patientData, selectedAllergies, medicalForm]);
+
+
   // Handle image upload
   const handleImageUpload = () => {
     fileInputRef.current?.click();
@@ -223,8 +239,14 @@ const PatientProfile: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      toast.error('Please select an image or PDF file');
+    if (!file.type.startsWith('image/') && 
+        file.type !== 'application/pdf' && 
+        file.type !== 'application/msword' && 
+        file.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' &&
+        file.type !== 'application/vnd.ms-excel' &&
+        file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
+        !file.name.endsWith('.dcm') && !file.name.endsWith('.dicom')) {
+      toast.error('Supported formats: Images, PDF, Word, Excel, and Medical Imaging (DICOM)');
       return;
     }
 
@@ -881,7 +903,7 @@ const PatientProfile: React.FC = () => {
                   <input
                     ref={docInputRef}
                     type="file"
-                    accept="image/*,application/pdf"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.dcm,.dicom"
                     onChange={handleDocUpload}
                     className="hidden"
                   />
@@ -900,7 +922,7 @@ const PatientProfile: React.FC = () => {
                     <ArrowDownTrayIcon className="h-4 w-4" />
                     {isUploadingDoc ? 'Uploading...' : 'Select File to Upload'}
                   </button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">PDF, JPG, PNG up to 5MB</p>
+                  <p className="text-xs text-gray-500 mt-2 text-center">PDF, Image, Word, Excel, DICOM up to 10MB</p>
                 </div>
               </div>
             </div>

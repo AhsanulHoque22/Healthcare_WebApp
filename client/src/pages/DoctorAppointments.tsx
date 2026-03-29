@@ -889,6 +889,90 @@ Do you want to proceed?`;
                         <label className="text-sm font-semibold text-blue-800">Blood Type</label>
                         <p className="text-gray-900 font-medium">{selectedAppointment.patient.bloodType || 'Not provided'}</p>
                       </div>
+                      <div className="bg-white/70 rounded-xl p-4">
+                        <label className="text-sm font-semibold text-blue-800">Allergies</label>
+                        <p className="text-gray-900 font-medium">{selectedAppointment.patient.allergies || 'None reported'}</p>
+                      </div>
+                      <div className="bg-white/70 rounded-xl p-4">
+                        <label className="text-sm font-semibold text-blue-800">Medical History</label>
+                        <p className="text-gray-900 font-medium">{selectedAppointment.patient.medicalHistory || 'None reported'}</p>
+                      </div>
+                      <div className="bg-white/70 rounded-xl p-4">
+                        <label className="text-sm font-semibold text-blue-800">Current Medications</label>
+                        <p className="text-gray-900 font-medium">{selectedAppointment.patient.currentMedications || 'None reported'}</p>
+                      </div>
+                      {/* Patient Uploaded Medical Documents */}
+                      {selectedAppointment.patient.medicalDocuments && selectedAppointment.patient.medicalDocuments.length > 0 && (
+                        <div className="col-span-full mt-4 space-y-4">
+                          <h4 className="text-md font-bold text-gray-900 flex items-center">
+                            <DocumentTextIcon className="h-5 w-5 mr-2 text-blue-600" />
+                            Uploaded Medical Documents
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {selectedAppointment.patient.medicalDocuments.map((doc: any, idx: number) => (
+                              <div key={doc.id || idx} className="bg-white/70 rounded-xl p-4 flex items-center justify-between border border-blue-100 hover:shadow-md transition-all">
+                                <div className="flex items-start gap-3 min-w-0">
+                                  <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                                    <DocumentTextIcon className="h-5 w-5" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="text-xs font-semibold text-gray-900 truncate">{doc.name}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800">
+                                        {doc.type}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <a
+                                  href={doc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium hover:bg-blue-100 transition-colors shrink-0 ml-2"
+                                >
+                                  View
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* Patient Uploaded Medical Documents */}
+                      {selectedAppointment.patient.medicalDocuments && selectedAppointment.patient.medicalDocuments.length > 0 && (
+                        <div className="col-span-full mt-4 space-y-4">
+                          <h4 className="text-md font-bold text-gray-900 flex items-center">
+                            <DocumentTextIcon className="h-5 w-5 mr-2 text-blue-600" />
+                            Uploaded Medical Documents
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {selectedAppointment.patient.medicalDocuments.map((doc: any, idx: number) => (
+                              <div key={doc.id || idx} className="bg-white/70 rounded-xl p-4 flex items-center justify-between border border-blue-100 hover:shadow-md transition-all">
+                                <div className="flex items-start gap-3 min-w-0">
+                                  <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                                    <DocumentTextIcon className="h-5 w-5" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="text-xs font-semibold text-gray-900 truncate">{doc.name}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800">
+                                        {doc.type}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <a
+                                  href={doc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium hover:bg-blue-100 transition-colors shrink-0 ml-2"
+                                >
+                                  View
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1136,7 +1220,7 @@ Do you want to proceed?`;
         {/* Reschedule Modal */}
         {showRescheduleModal && selectedAppointment && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-3xl max-w-md w-full shadow-2xl border border-white/20">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl max-w-md w-full shadow-2xl border border-white/20 overflow-y-auto max-h-[95vh]">
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
                   <div className="flex items-center gap-3">
