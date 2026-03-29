@@ -98,10 +98,7 @@ const Doctors: React.FC = () => {
               </div>
               <div className="hidden md:block">
                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
-                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
-                    <HeartIcon className="h-8 w-8 text-white" />
-                    <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                  </div>
+                  <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
                 </div>
               </div>
             </div>

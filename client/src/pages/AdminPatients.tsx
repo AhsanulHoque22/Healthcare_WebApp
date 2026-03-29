@@ -169,7 +169,7 @@ const AdminPatients: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-                  <HeartIcon className="h-8 w-8 text-white" />
+                  <img src="/logo.png" className="h-8 w-8" alt="Livora Logo" />
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold tracking-tight mb-2">

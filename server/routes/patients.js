@@ -2,8 +2,39 @@ const express = require('express');
 const patientController = require('../controllers/patientController');
 const { authenticateToken, authorizeRoles, authorizeResourceAccess } = require('../middleware/auth');
 const { body } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'patient-profile-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: fileFilter
+});
 
 // Patient profile validation
 const updatePatientValidation = [
@@ -58,6 +89,9 @@ router.put('/:id/profile', authorizeRoles('patient', 'admin'), authorizeResource
 // Patient profile routes (current user)
 router.get('/profile', authorizeRoles('patient'), patientController.getCurrentPatientProfile);
 router.put('/profile', authorizeRoles('patient'), updatePatientValidation, patientController.updateCurrentPatientProfile);
+
+// Image upload route
+router.post('/upload-image', authorizeRoles('patient'), upload.single('profileImage'), patientController.uploadProfileImage);
 
 // Medical records routes
 router.get('/:id/medical-records', authorizeRoles('patient', 'doctor', 'admin'), patientController.getMedicalRecords);

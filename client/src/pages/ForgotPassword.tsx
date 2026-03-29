@@ -86,13 +86,9 @@ const ForgotPassword: React.FC = () => {
             <div className="flex justify-between items-center h-16">
               <Link to="/" className="flex items-center group">
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                  <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                    <HeartIcon className="h-6 w-6 text-white" />
-                    <SparklesIcon className="h-3 w-3 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                  </div>
+                  <img src="/logo.png" className="h-16 w-16 group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
                 </div>
-                <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">HealthCare Pro</span>
+                <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
               </Link>
               <Link
                 to="/"
@@ -181,12 +177,9 @@ const ForgotPassword: React.FC = () => {
             <Link to="/" className="flex items-center group">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <div className="relative w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <HeartIcon className="h-6 w-6 text-white" />
-                  <SparklesIcon className="h-3 w-3 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                </div>
+                <img src="/logo.png" className="h-16 w-16 group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">HealthCare Pro</span>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
             </Link>
             <Link
               to="/"
@@ -211,11 +204,7 @@ const ForgotPassword: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-center mb-8">
                   <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    <div className="relative w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300 animate-pulse">
-                      <HeartIcon className="h-8 w-8 text-white" />
-                      <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                    </div>
+                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 transform group-hover:rotate-12" alt="Livora Logo" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">
                     Forgot your password?

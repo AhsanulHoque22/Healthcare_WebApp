@@ -1,6 +1,8 @@
 const { Patient, User, MedicalRecord, Appointment } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
+const path = require('path');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Get patient profile
 const getPatientProfile = async (req, res, next) => {
@@ -358,11 +360,74 @@ const getPatientDashboardStats = async (req, res, next) => {
   }
 };
 
+// Upload profile image
+const uploadProfileImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+
+    const userId = req.user.id;
+    
+    // Find the patient profile
+    const patient = await Patient.findOne({
+      where: { userId }
+    });
+    
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient profile not found'
+      });
+    }
+
+    // Upload to Cloudinary
+    let imageUrl = '';
+    try {
+      const result = await uploadToCloudinary(req.file.path, 'patient_profiles');
+      imageUrl = result.secure_url;
+    } catch (uploadError) {
+      console.error('Cloudinary upload failure:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload image to cloud storage'
+      });
+    }
+    
+    // Update the patient's profile image
+    await patient.update({
+      profileImage: imageUrl
+    });
+
+    // Also update the user's profile image
+    const user = await User.findByPk(userId);
+    if (user) {
+      await user.update({
+        profileImage: imageUrl
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile image uploaded successfully',
+      data: {
+        imageUrl: imageUrl
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPatientProfile,
   updatePatientProfile,
   getCurrentPatientProfile,
   updateCurrentPatientProfile,
+  uploadProfileImage,
   getMedicalRecords,
   getPatientAppointments,
   getPatientDashboardStats,

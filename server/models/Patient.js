@@ -46,6 +46,10 @@ const Patient = sequelize.define('Patient', {
   currentMedications: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  profileImage: {
+    type: DataTypes.STRING(500),
+    allowNull: true
   }
 }, {
   tableName: 'patients'

@@ -13,7 +13,10 @@ import {
   PhoneIcon,
   HomeIcon,
   CalendarIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  CameraIcon,
+  CheckCircleIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 
 
@@ -64,8 +67,12 @@ const PatientProfile: React.FC = () => {
     emergencyContact: '',
     emergencyPhone: '',
     insuranceProvider: '',
-    insuranceNumber: ''
+    insuranceNumber: '',
+    profileImage: ''
   });
+
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -92,7 +99,8 @@ const PatientProfile: React.FC = () => {
         emergencyContact: data.emergencyContact || '',
         emergencyPhone: data.emergencyPhone || '',
         insuranceProvider: data.insuranceProvider || '',
-        insuranceNumber: data.insuranceNumber || ''
+        insuranceNumber: data.insuranceNumber || '',
+        profileImage: data.profileImage || ''
       });
       
       // Parse allergies string into array for selected allergies display
@@ -138,6 +146,58 @@ const PatientProfile: React.FC = () => {
       insuranceNumber: ''
     },
   });
+
+  // Handle image upload
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (JPG, PNG, GIF)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+
+      const response = await API.post('/patients/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setPatientData(prev => ({
+          ...prev,
+          profileImage: response.data.data.imageUrl
+        }));
+        
+        toast.success('Image uploaded successfully!');
+        window.location.reload();
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   // Filter allergies based on search
   const filteredAllergies = COMMON_ALLERGIES.filter(allergy =>
@@ -225,9 +285,7 @@ const PatientProfile: React.FC = () => {
               </div>
               <div className="hidden md:block">
                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
-                    <HeartIcon className="h-8 w-8 text-white" />
-                  </div>
+                  <img src="/logo.png" className="h-12 w-12" alt="Livora Logo" />
                 </div>
               </div>
             </div>
@@ -237,6 +295,59 @@ const PatientProfile: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Image Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+              <div className="flex items-center mb-6">
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg p-3 text-white mr-3">
+                  <CameraIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Profile Image</h3>
+                  <p className="text-sm text-gray-600">Your profile photo</p>
+                </div>
+              </div>
+              <div className="text-center">
+                {user?.profileImage || patientData.profileImage ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={user?.profileImage || patientData.profileImage}
+                      alt="Profile"
+                      className="h-40 w-40 rounded-2xl object-cover mx-auto mb-6 shadow-lg border-4 border-white"
+                    />
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircleIcon className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-40 w-40 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-white">
+                    <UserIcon className="h-20 w-20 text-gray-400" />
+                  </div>
+                )}
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <button 
+                  type="button"
+                  onClick={handleImageUpload}
+                  disabled={isUploading}
+                  className="flex items-center gap-2 mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CameraIcon className="h-5 w-5" />
+                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  JPG, PNG, GIF up to 5MB
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Profile Information */}
           <div className="lg:col-span-2">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
@@ -246,9 +357,12 @@ const PatientProfile: React.FC = () => {
                   Personal Information
                 </h3>
                 {!isEditingProfile && (
-                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">👤</span>
-                  </div>
+                  <button 
+                    onClick={() => setIsEditingProfile(true)}
+                    className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
                 )}
               </div>
             {isEditingProfile ? (

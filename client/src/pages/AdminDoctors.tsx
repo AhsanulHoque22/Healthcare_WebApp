@@ -156,10 +156,7 @@ const AdminDoctors: React.FC = () => {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-blue-200/30 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
                   <div className="relative p-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-                    <div className="relative">
-                      <HeartIcon className="h-8 w-8 text-white animate-pulse" />
-                      <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                    </div>
+                    <img src="/logo.png" className="h-8 w-8" alt="Livora Logo" />
                   </div>
                 </div>
                 <div>
