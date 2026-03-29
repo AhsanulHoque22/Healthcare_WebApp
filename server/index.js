@@ -180,13 +180,15 @@ const startServer = async () => {
       console.log('[Database] Synchronization complete.');
     }
     
-    // Always ensure Patient table is up to date with profileImage column
+    // Always ensure User and Patient tables are up to date with latest columns
     try {
-      const { Patient } = require('./models');
+      const { User, Patient } = require('./models');
+      await User.sync({ alter: true });
+      console.log('[Database] User schema altered to ensure latest columns exist.');
       await Patient.sync({ alter: true });
       console.log('[Database] Patient schema altered to ensure latest columns exist.');
     } catch (err) {
-      console.error('[Database] Failed to alter Patient table:', err.message);
+      console.error('[Database] Failed to alter database tables:', err.message);
     }
     
     const server = app.listen(PORT, () => {
