@@ -176,7 +176,17 @@ const startServer = async () => {
     if (shouldSync) {
       console.log('[Database] Starting synchronization...');
       await sequelize.sync({ force: false, alter: false });
+      
       console.log('[Database] Synchronization complete.');
+    }
+    
+    // Always ensure Patient table is up to date with profileImage column
+    try {
+      const { Patient } = require('./models');
+      await Patient.sync({ alter: true });
+      console.log('[Database] Patient schema altered to ensure latest columns exist.');
+    } catch (err) {
+      console.error('[Database] Failed to alter Patient table:', err.message);
     }
     
     const server = app.listen(PORT, () => {
