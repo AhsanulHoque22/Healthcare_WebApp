@@ -62,6 +62,13 @@ interface Appointment {
     currentMedications: string;
     emergencyContact: string;
     emergencyPhone: string;
+    medicalDocuments?: Array<{
+      id: string;
+      name: string;
+      url: string;
+      type: string;
+      uploadDate: string;
+    }>;
   };
 }
 
@@ -977,6 +984,50 @@ Do you want to proceed?`;
                       </div>
                     </div>
                   </div>
+
+                  {/* Patient Uploaded Medical Documents */}
+                  {selectedAppointment.patient.medicalDocuments && selectedAppointment.patient.medicalDocuments.length > 0 && (
+                    <div className="col-span-full mt-4">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200/50">
+                        <div className="flex items-center mb-6">
+                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-3 text-white mr-3">
+                            <DocumentTextIcon className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">Uploaded Documents</h3>
+                            <p className="text-sm text-gray-600">Lab reports, prescriptions, and imaging submitted by the patient</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {selectedAppointment.patient.medicalDocuments.map((doc, idx) => (
+                            <div key={doc.id || idx} className="bg-white/80 rounded-xl p-4 border border-blue-100 flex items-center justify-between hover:shadow-md transition-all">
+                              <div className="flex items-start gap-3 min-w-0">
+                                <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                                  <DocumentTextIcon className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="text-sm font-semibold text-gray-900 truncate">{doc.name}</h4>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                      {doc.type}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap shrink-0 ml-4"
+                              >
+                                View
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Emergency Contact */}
                   <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-6 border border-red-200/50">

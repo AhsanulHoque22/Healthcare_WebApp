@@ -37,6 +37,13 @@ interface Patient {
   insuranceNumber: string;
   medicalHistory: string;
   currentMedications: string;
+  medicalDocuments?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    uploadDate: string;
+  }>;
   createdAt: string;
   user: {
     id: number;
@@ -820,6 +827,46 @@ const AdminPatients: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Patient Uploaded Medical Documents */}
+                  {selectedPatient.medicalDocuments && selectedPatient.medicalDocuments.length > 0 && (
+                    <div className="bg-indigo-50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <DocumentTextIcon className="h-5 w-5 mr-2 text-indigo-600" />
+                        Uploaded Documents
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        {selectedPatient.medicalDocuments.map((doc, idx) => (
+                          <div key={doc.id || idx} className="bg-white rounded-lg p-4 flex items-center justify-between border border-blue-100 hover:shadow-md transition-all">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
+                                <DocumentTextIcon className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-semibold text-gray-900 truncate">{doc.name}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                    {doc.type}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(doc.uploadDate).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap shrink-0 ml-4"
+                            >
+                              View
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Account Status */}
                   <div className="bg-purple-50 rounded-xl p-6">
