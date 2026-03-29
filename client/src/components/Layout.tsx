@@ -97,6 +97,19 @@ const Layout: React.FC = () => {
     return colors[color as keyof typeof colors] || colors.gray;
   };
 
+  const getDashboardUrl = () => {
+    switch (user?.role) {
+      case 'patient':
+        return '/app/dashboard';
+      case 'doctor':
+        return '/app/doctor-dashboard';
+      case 'admin':
+        return '/app/admin-dashboard';
+      default:
+        return '/app/dashboard';
+    }
+  };
+
   const getProfileUrl = () => {
     switch (user?.role) {
       case 'patient':
@@ -118,12 +131,16 @@ const Layout: React.FC = () => {
         <div className="fixed inset-y-0 left-0 flex w-72 flex-col bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
           {/* Mobile header */}
           <div className="flex h-20 items-center justify-between px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <div className="flex items-center space-x-3">
-              <div className="p-0">
-                <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
+            <Link to={getDashboardUrl()} className="flex items-center space-x-3 group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95">
+              <div className="relative group-hover:scale-110 transition-transform duration-500">
+                <div className="absolute inset-0 bg-blue-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <img src="/logo.png" className="h-14 w-14 relative z-10" alt="Livora Logo" />
               </div>
-              <h1 className="text-xl font-bold text-white">Livora</h1>
-            </div>
+              <div className="relative z-10">
+                <h1 className="text-xl font-bold text-white tracking-tight group-hover:text-blue-100 transition-colors">Livora</h1>
+                <div className="h-0.5 w-0 bg-blue-200 group-hover:w-full transition-all duration-500 rounded-full"></div>
+              </div>
+            </Link>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -207,25 +224,26 @@ const Layout: React.FC = () => {
         <div className="flex flex-col flex-grow bg-white shadow-xl border-r border-gray-200 transition-all duration-500 ease-in-out">
           {/* Desktop header */}
           <div className="flex h-20 items-center px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <div className="flex items-center w-full">
+            <Link to={getDashboardUrl()} className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-[0.98]">
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
-                  <div className="p-0">
-                    <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
+                  <div className="relative group-hover:scale-110 transition-transform duration-500 ease-out">
+                    <div className="absolute inset-0 bg-blue-400/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="/logo.png" className="h-14 w-14 relative z-10 object-contain" alt="Livora Logo" />
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold text-white">Livora</h1>
-                    <p className="text-xs text-blue-100">Professional Healthcare</p>
+                  <div className="relative z-10">
+                    <h1 className="text-xl font-bold text-white tracking-tight group-hover:text-blue-50 transition-colors">Livora</h1>
+                    <p className="text-[10px] text-blue-100 font-medium uppercase tracking-widest opacity-80">Healthcare</p>
+                    <div className="h-0.5 w-0 bg-blue-100/50 group-hover:w-full transition-all duration-500 rounded-full mt-0.5"></div>
                   </div>
                 </div>
               ) : (
-                <div className="flex justify-center w-full">
-                  <div className="p-0">
-                    <img src="/logo.png" className="h-12 w-12" alt="Livora Logo" />
-                  </div>
+                <div className="flex justify-center w-full relative">
+                  <div className="absolute inset-0 bg-blue-400/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+                  <img src="/logo.png" className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125" alt="Livora Logo" />
                 </div>
               )}
-            </div>
+            </Link>
           </div>
 
           {/* Desktop navigation */}

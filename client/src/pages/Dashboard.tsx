@@ -15,6 +15,10 @@ import {
   ExclamationTriangleIcon,
   SparklesIcon,
   ArrowRightIcon,
+  StarIcon,
+  ShieldCheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
 interface DashboardStats {
@@ -29,6 +33,7 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [currentReview, setCurrentReview] = useState(0);
   const [scrolled, setScrolled] = useState(false);
 
   // Page load animation
@@ -161,6 +166,25 @@ const Dashboard: React.FC = () => {
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnMount: true, // Always refetch on mount
   });
+
+  // Fetch community reviews
+  const { data: communityReviews } = useQuery({
+    queryKey: ['community-reviews'],
+    queryFn: async () => {
+      const response = await API.get('/ratings/public');
+      return response.data.data.ratings;
+    }
+  });
+
+  // Auto-play reviews
+  useEffect(() => {
+    if (communityReviews && communityReviews.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentReview((prev) => (prev + 1) % communityReviews.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [communityReviews]);
 
   const getStats = () => {
     if (user?.role === 'admin') return stats;
@@ -540,6 +564,110 @@ const Dashboard: React.FC = () => {
           <div className="mt-8">
         <MedicineMatrix patientId={patientProfile.id} />
           </div>
+      )}
+
+      {/* Community Feedback Section */}
+      {communityReviews && communityReviews.length > 0 && (
+        <div className={`mt-12 mb-8 ${pageLoaded ? 'animate-fade-in-up' : ''}`} style={{ animationDelay: '600ms' }}>
+          <div className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white/80 to-indigo-50/50 backdrop-blur-xl border border-white p-8 md:p-12 shadow-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+            
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+                <div>
+                  <div className="inline-flex items-center px-4 py-2 bg-indigo-100/50 rounded-full text-indigo-700 text-xs font-bold mb-3 tracking-widest uppercase border border-indigo-200">
+                    <SparklesIcon className="h-4 w-4 mr-2" />
+                    Community Feedback
+                  </div>
+                  <h3 className="text-3xl font-black text-gray-900 tracking-tight">What our patients say</h3>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setCurrentReview((prev) => (prev - 1 + communityReviews.length) % communityReviews.length)}
+                    className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 hover:shadow-lg transition-all active:scale-90"
+                  >
+                    <ChevronLeftIcon className="h-6 w-6" />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentReview((prev) => (prev + 1) % communityReviews.length)}
+                    className="p-3 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:scale-110 active:scale-90 transition-all"
+                  >
+                    <ChevronRightIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative h-[250px] md:h-[200px]">
+                {communityReviews.map((review: any, index: number) => (
+                  <div 
+                    key={review.id}
+                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                      index === currentReview 
+                        ? 'opacity-100 translate-y-0 relative z-10' 
+                        : 'opacity-0 translate-y-8 pointer-events-none'
+                    }`}
+                  >
+                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                      <div className="flex-shrink-0 relative">
+                        <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 transform hover:scale-150 transition-transform duration-1000"></div>
+                        {review.patient?.user?.profileImage ? (
+                          <img 
+                            src={review.patient.user.profileImage}
+                            className="w-20 h-20 rounded-[2rem] object-cover relative z-10 border-2 border-white shadow-xl"
+                            alt="avatar"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white shadow-xl">
+                            <span className="text-white font-black text-xl uppercase">
+                              {review.isAnonymous ? 'AP' : (review.patient?.user?.firstName?.[0] + review.patient?.user?.lastName?.[0])}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1.5 shadow-lg z-20">
+                          <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex gap-1 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <StarIcon key={i} className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-200'}`} />
+                          ))}
+                        </div>
+                        <blockquote className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed italic mb-4">
+                          "{review.review || 'Exceptional service and professional medical care. Highly recommend to everyone.'}"
+                        </blockquote>
+                        <div className="flex items-center gap-3">
+                          <span className="font-black text-gray-900 tracking-tight">
+                            {review.isAnonymous ? 'Anonymous Patient' : `${review.patient?.user?.firstName} ${review.patient?.user?.lastName}`}
+                          </span>
+                          <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                          <span className="text-indigo-600 font-bold text-sm flex items-center">
+                            <ShieldCheckIcon className="h-4 w-4 mr-1" />
+                            Verified Patient
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-center mt-10 gap-2">
+                {communityReviews.map((_: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentReview(index)}
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      index === currentReview ? 'w-12 bg-indigo-600' : 'w-2 bg-indigo-100 hover:bg-indigo-200'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       </div>
     </div>

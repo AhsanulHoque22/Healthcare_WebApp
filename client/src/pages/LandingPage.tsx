@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import API from '../api/api';
 import { 
   HeartIcon,
   UserGroupIcon,
@@ -36,7 +38,16 @@ const LandingPage: React.FC = () => {
     satisfaction: 0
   });
 
-  const testimonials = [
+  // Fetch public reviews
+  const { data: publicReviews, isLoading: reviewsLoading } = useQuery({
+    queryKey: ['public-reviews'],
+    queryFn: async () => {
+      const response = await API.get('/ratings/public');
+      return response.data.data.ratings;
+    }
+  });
+
+  const demoTestimonials = [
     {
       name: "Sarah Johnson",
       role: "Patient",
@@ -60,24 +71,21 @@ const LandingPage: React.FC = () => {
       rating: 5,
       avatar: "ER",
       color: "from-purple-500 to-pink-600"
-    },
-    {
-      name: "Dr. Ahmed Hassan",
-      role: "Neurologist",
-      content: "The platform's efficiency has transformed my practice. Patient communication and record management have never been this smooth.",
-      rating: 5,
-      avatar: "AH",
-      color: "from-orange-500 to-red-600"
-    },
-    {
-      name: "Lisa Thompson",
-      role: "Patient",
-      content: "I can't imagine managing my health without this platform. The reminders and easy access to my medical history are game-changers.",
-      rating: 5,
-      avatar: "LT",
-      color: "from-teal-500 to-cyan-600"
     }
   ];
+
+  // Use real reviews if available, otherwise fallback to demo
+  const testimonials = publicReviews && publicReviews.length > 0 
+    ? publicReviews.map((r: any) => ({
+        name: r.isAnonymous ? "Anonymous Patient" : `${r.patient?.user?.firstName} ${r.patient?.user?.lastName}`,
+        role: "Verified Patient",
+        content: r.review || "Excellent service and professional care.",
+        rating: r.rating,
+        avatar: r.isAnonymous ? "AP" : (r.patient?.user?.firstName?.[0] + r.patient?.user?.lastName?.[0]),
+        color: r.rating >= 4 ? "from-blue-500 to-indigo-600" : "from-gray-500 to-slate-600",
+        image: r.patient?.user?.profileImage
+      }))
+    : demoTestimonials;
 
   const stats = [
     { label: "Active Patients", value: 10000, icon: UserGroupIcon, color: "text-blue-600" },
@@ -179,6 +187,13 @@ const LandingPage: React.FC = () => {
               >
                 Features
               </button>
+              <Link
+                to="/find-doctors"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-bounce flex items-center"
+              >
+                Find Doctors
+                <SparklesIcon className="h-4 w-4 ml-1.5 text-indigo-500" />
+              </Link>
               <button
                 onClick={() => {
                   const element = document.getElementById('stats');
@@ -511,16 +526,25 @@ const LandingPage: React.FC = () => {
                           
                           {/* Author Info */}
                           <div className="flex flex-col items-center space-y-4">
-                            <div className={`w-20 h-20 bg-gradient-to-r ${testimonial.color} rounded-3xl flex items-center justify-center border border-white/30 backdrop-blur-sm`}>
-                              <span className="text-white font-bold text-xl">
-                                {testimonial.avatar}
-                              </span>
-                            </div>
+                            {testimonial.image ? (
+                              <img 
+                                src={testimonial.image} 
+                                alt={testimonial.name}
+                                className="w-20 h-20 rounded-3xl object-cover border-2 border-white/50 shadow-lg group-hover:scale-110 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className={`w-20 h-20 bg-gradient-to-r ${testimonial.color} rounded-3xl flex items-center justify-center border border-white/30 backdrop-blur-sm group-hover:scale-110 transition-transform duration-500`}>
+                                <span className="text-white font-bold text-xl uppercase">
+                                  {testimonial.avatar}
+                                </span>
+                              </div>
+                            )}
                             <div className="text-center">
                               <h4 className="text-2xl font-bold text-gray-900 mb-2">
                                 {testimonial.name}
                               </h4>
-                              <p className="text-indigo-600 font-semibold text-lg">
+                              <p className="text-indigo-600 font-semibold text-lg flex items-center justify-center">
+                                <ShieldCheckIcon className="h-5 w-5 mr-1.5" />
                                 {testimonial.role}
                               </p>
                             </div>

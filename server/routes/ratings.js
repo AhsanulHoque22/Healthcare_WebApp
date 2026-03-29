@@ -14,7 +14,13 @@ const createRatingValidation = [
   body('isAnonymous').optional().isBoolean().withMessage('isAnonymous must be boolean')
 ];
 
-// All routes require authentication
+// Public doctor rating routes (approved ratings only)
+router.get('/public', ratingController.getPublicReviews);
+router.get('/doctor/:doctorId', 
+  ratingController.getDoctorRatings
+);
+
+// All other routes require authentication
 router.use(authenticateToken);
 
 // Patient routes
@@ -29,10 +35,6 @@ router.get('/my-ratings',
   ratingController.getPatientRatings
 );
 
-// Public doctor rating routes (approved ratings only)
-router.get('/doctor/:doctorId', 
-  ratingController.getDoctorRatings
-);
 
 // Admin routes
 router.get('/admin/all', 

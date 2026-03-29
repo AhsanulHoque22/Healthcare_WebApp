@@ -31,6 +31,7 @@ import LabReports from './pages/LabReports';
 import AdminLabReports from './pages/AdminLabReports';
 import AdminLabTests from './pages/AdminLabTests';
 import LandingPage from './pages/LandingPage';
+import PublicDoctors from './pages/PublicDoctors';
 import NotFound from './pages/NotFound';
 
 // Wrapper to pass userId to NotificationProvider (must be inside AuthProvider)
@@ -66,6 +67,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/find-doctors" element={<PublicDoctors />} />
               
               {/* Legacy dashboard route - redirect to app */}
               <Route path="/dashboard" element={<Navigate to="/app" replace />} />

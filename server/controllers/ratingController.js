@@ -331,40 +331,40 @@ const getRatingStats = async (req, res, next) => {
   }
 };
 
-// Get patient's own ratings
-const getPatientRatings = async (req, res, next) => {
+// Get public reviews for landing page
+const getPublicReviews = async (req, res, next) => {
   try {
-    const patientId = req.user.patientId;
-    const { page = 1, limit = 10 } = req.query;
+    const { limit = 6 } = req.query;
 
-    const ratings = await DoctorRating.findAndCountAll({
-      where: { patientId },
+    const ratings = await DoctorRating.findAll({
+      where: { status: 'approved' },
       include: [
         {
-          model: Appointment,
-          as: 'appointment',
-          include: [
-            { model: Doctor, as: 'doctor', include: [{ model: User, as: 'user' }] }
-          ]
+          model: Patient,
+          as: 'patient',
+          include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'profileImage']
+          }]
+        },
+        {
+          model: Doctor,
+          as: 'doctor',
+          include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName']
+          }]
         }
       ],
-      order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit)
+      order: [['rating', 'DESC'], ['createdAt', 'DESC']],
+      limit: parseInt(limit)
     });
 
     res.json({
       success: true,
-      data: {
-        ratings: ratings.rows,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(ratings.count / parseInt(limit)),
-          totalRatings: ratings.count,
-          hasNext: parseInt(page) * parseInt(limit) < ratings.count,
-          hasPrev: parseInt(page) > 1
-        }
-      }
+      data: { ratings }
     });
   } catch (error) {
     next(error);
@@ -377,5 +377,6 @@ module.exports = {
   getAllRatings,
   updateRatingStatus,
   getRatingStats,
-  getPatientRatings
+  getPatientRatings,
+  getPublicReviews
 };
