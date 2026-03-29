@@ -107,7 +107,7 @@ const Layout: React.FC = () => {
           <div className="flex h-20 items-center justify-between px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
             <div className="flex items-center space-x-3">
               <div className="p-0">
-                <img src="/Print.svg" className="h-10 w-10" alt="Livora Logo" />
+                <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
               </div>
               <h1 className="text-xl font-bold text-white">Livora</h1>
             </div>
@@ -196,7 +196,7 @@ const Layout: React.FC = () => {
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
                   <div className="p-0">
-                    <img src="/Print.svg" className="h-10 w-10" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-white">Livora</h1>
@@ -206,7 +206,7 @@ const Layout: React.FC = () => {
               ) : (
                 <div className="flex justify-center w-full">
                   <div className="p-0">
-                    <img src="/Print.svg" className="h-10 w-10" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-10 w-10" alt="Livora Logo" />
                   </div>
                 </div>
               )}

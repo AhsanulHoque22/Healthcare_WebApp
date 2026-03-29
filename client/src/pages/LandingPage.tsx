@@ -166,7 +166,7 @@ const LandingPage: React.FC = () => {
             <div className="flex items-center group">
               <div className="relative group">
                 <div className="relative">
-                  <img src="/Print.svg" className="h-12 w-12" alt="Livora Logo" />
+                  <img src="/logo.png" className="h-12 w-12" alt="Livora Logo" />
                   <SparklesIcon className="h-3 w-3 text-indigo-600 absolute -top-1 -right-1 animate-pulse" />
                 </div>
               </div>
@@ -891,7 +891,7 @@ const LandingPage: React.FC = () => {
             <div className="md:col-span-2">
               <div className="flex items-center group mb-6">
                 <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                  <img src="/Print.svg" className="h-12 w-12" alt="Livora Logo" />
+                  <img src="/logo.png" className="h-12 w-12" alt="Livora Logo" />
                 </div>
                 <span className="ml-3 text-2xl font-bold group-hover:text-indigo-400 transition-colors">Livora</span>
               </div>
