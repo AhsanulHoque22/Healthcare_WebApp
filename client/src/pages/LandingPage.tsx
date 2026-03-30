@@ -570,6 +570,110 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Available Doctors Slideshow - Moved here and restyled */}
+      {availableDoctors && availableDoctors.length > 0 && (
+        <section className="py-20 bg-gradient-to-br from-white to-indigo-50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5"></div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-full text-sm font-medium text-indigo-700 mb-6 font-bold shadow-sm border border-indigo-200/50">
+                <SparklesIcon className="h-4 w-4 mr-2 text-indigo-600" />
+                OUR PREMIUM SPECIALISTS
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+                Connect with <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">Top Rated Doctors</span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
+                Verified healthcare professionals ready to provide exceptional care for you and your family.
+              </p>
+            </div>
+
+            <div className="relative group p-1">
+              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 blur-3xl rounded-[40px] opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
+              
+              <div className="relative overflow-hidden h-[340px] md:h-[280px]">
+                <div 
+                  className="flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] h-full"
+                  style={{ transform: `translateX(-${currentDoctorSlide * 100}%)` }}
+                >
+                  {availableDoctors.map((doctor: any) => (
+                    <div key={doctor.id} className="w-full flex-shrink-0 px-4 h-full">
+                      <div className="bg-white/70 backdrop-blur-2xl rounded-[32px] p-8 border border-white/80 h-full flex flex-col md:flex-row gap-8 shadow-2xl shadow-indigo-100/50 hover:shadow-indigo-200/50 transition-all duration-500 group/card relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-100/20 to-purple-100/20 rounded-full blur-2xl"></div>
+                        
+                        <div className="relative flex-shrink-0 mx-auto md:mx-0">
+                          <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-10 group-hover/card:opacity-30 transition-opacity"></div>
+                          {doctor.user?.profileImage ? (
+                            <img src={doctor.user.profileImage} className="w-24 h-24 md:w-36 md:h-36 rounded-3xl object-cover relative z-10 border-4 border-white shadow-2xl transition-transform duration-500 group-hover/card:scale-105" alt="avatar" />
+                          ) : (
+                            <div className="w-24 h-24 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center relative z-10 border-4 border-white shadow-2xl transition-transform duration-500 group-hover/card:scale-105">
+                              <span className="text-white text-4xl font-black uppercase tracking-tighter opacity-80">{doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}</span>
+                            </div>
+                          )}
+                          <div className="absolute -bottom-3 -right-3 bg-indigo-600 text-white rounded-2xl p-2.5 shadow-xl z-20 border-4 border-white scale-90 group-hover/card:scale-110 transition-transform duration-500">
+                            <ShieldCheckIcon className="h-5 w-5" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left relative z-10">
+                          <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h3>
+                          <p className="text-indigo-600 font-black text-sm uppercase tracking-[4px] mb-4 flex items-center gap-2">
+                             {doctor.specialization || doctor.department}
+                          </p>
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-6 text-gray-500 font-bold text-sm">
+                            <span className="flex items-center gap-1.5 bg-gray-50/80 px-3 py-1.5 rounded-xl border border-gray-100">
+                              <MapPinIcon className="h-4 w-4 text-indigo-500" />
+                              {doctor.hospital || 'Elite General'}
+                            </span>
+                            <span className="flex items-center gap-1.5 bg-yellow-50/80 px-3 py-1.5 rounded-xl border border-yellow-100/50">
+                              <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
+                              {doctor.averageRating || 'Top Tier'}
+                            </span>
+                          </div>
+                          <div className="mt-auto w-full md:w-auto">
+                            <button 
+                              onClick={() => navigate(user ? `/app/appointments?doctor=${doctor.id}` : '/login')}
+                              className="w-full md:w-64 py-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-200"
+                            >
+                              Book Consultation
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 md:px-0 pointer-events-none">
+                  <button 
+                    onClick={() => setCurrentDoctorSlide((prev) => (prev - 1 + availableDoctors.length) % availableDoctors.length)}
+                    className="p-4 bg-white/90 text-indigo-600 rounded-full shadow-2xl hover:bg-white transition-all active:scale-90 pointer-events-auto border border-gray-100 -ml-2 md:-ml-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    <ChevronLeftIcon className="h-6 w-6" />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentDoctorSlide((prev) => (prev + 1) % availableDoctors.length)}
+                    className="p-4 bg-white/90 text-indigo-600 rounded-full shadow-2xl hover:bg-white transition-all active:scale-90 pointer-events-auto border border-gray-100 -mr-2 md:-mr-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    <ChevronRightIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-center mt-10 gap-3">
+                {availableDoctors.slice(0, 5).map((_: any, idx: number) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setCurrentDoctorSlide(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-700 ease-out shadow-sm ${idx === currentDoctorSlide ? 'w-12 bg-indigo-600' : 'w-3 bg-gray-200 hover:bg-gray-300'}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Dynamic Testimonials Section */}
       <section id="testimonials" className="py-20 bg-gradient-to-br from-indigo-50 to-purple-50 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 to-purple-600/5"></div>
@@ -798,137 +902,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Trusted by Thousands
-            </h2>
-            <p className="text-xl text-blue-100">
-              Join the growing community of patients and healthcare providers
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-white mb-2">10,000+</div>
-              <div className="text-blue-100">Active Patients</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-white mb-2">500+</div>
-              <div className="text-blue-100">Verified Doctors</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-white mb-2">50,000+</div>
-              <div className="text-blue-100">Appointments Booked</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-white mb-2">99.9%</div>
-              <div className="text-blue-100">Uptime</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Available Doctors Slideshow */}
-      {availableDoctors && availableDoctors.length > 0 && (
-        <section className="py-20 bg-gradient-to-br from-indigo-50/50 to-white relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 rounded-3xl p-8 shadow-2xl shadow-indigo-200 border border-white/10">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-              <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                  <div>
-                    <div className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-indigo-100 text-xs font-bold mb-3 border border-white/20">
-                      <SparklesIcon className="h-4 w-4 mr-2 text-yellow-400" />
-                      MEET OUR SPECIALISTS
-                    </div>
-                    <h2 className="text-3xl font-black text-white tracking-tight">Top Rated Doctors</h2>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setCurrentDoctorSlide((prev) => (prev - 1 + availableDoctors.length) % availableDoctors.length)}
-                      className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all backdrop-blur-md border border-white/10 active:scale-95"
-                    >
-                      <ChevronLeftIcon className="h-6 w-6" />
-                    </button>
-                    <button 
-                      onClick={() => setCurrentDoctorSlide((prev) => (prev + 1) % availableDoctors.length)}
-                      className="p-3 bg-indigo-500 hover:bg-indigo-400 rounded-2xl text-white transition-all shadow-lg shadow-indigo-900/50 active:scale-95"
-                    >
-                      <ChevronRightIcon className="h-6 w-6" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="relative overflow-hidden h-[300px] md:h-[240px]">
-                  <div 
-                    className="flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] h-full"
-                    style={{ transform: `translateX(-${currentDoctorSlide * 100}%)` }}
-                  >
-                    {availableDoctors.map((doctor: any) => (
-                      <div key={doctor.id} className="w-full flex-shrink-0 px-2 h-full">
-                        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 h-full flex flex-col md:flex-row gap-6 hover:bg-white/10 transition-all duration-500 group/card">
-                          <div className="relative flex-shrink-0 mx-auto md:mx-0">
-                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
-                            {doctor.user?.profileImage ? (
-                              <img src={doctor.user.profileImage} className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover relative z-10 border-2 border-white/20 shadow-2xl" alt="avatar" />
-                            ) : (
-                              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white/20 shadow-2xl">
-                                <span className="text-white text-3xl font-black uppercase">{doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}</span>
-                              </div>
-                            )}
-                            <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-1.5 shadow-lg z-20 border-2 border-indigo-900">
-                              <CheckCircleIcon className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                            <h3 className="text-2xl font-bold text-white mb-2 group-hover/card:text-indigo-200 transition-colors">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h3>
-                            <p className="text-indigo-300 font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
-                              <AcademicCapIcon className="h-4 w-4" />
-                              {doctor.specialization || doctor.department}
-                            </p>
-                            <div className="flex items-center gap-4 mb-4 text-white/60 text-sm">
-                              <span className="flex items-center gap-1">
-                                <MapPinIcon className="h-4 w-4 text-indigo-400" />
-                                {doctor.hospital || 'Private Practice'}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
-                                {doctor.averageRating || 'New'}
-                              </span>
-                            </div>
-                            <div className="mt-auto flex gap-4 w-full">
-                              <button 
-                                onClick={() => navigate(user ? `/app/appointments?doctor=${doctor.id}` : '/login')}
-                                className="flex-1 py-3 bg-white text-indigo-900 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10"
-                              >
-                                Book Visit
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-center mt-6 gap-2">
-                  {availableDoctors.slice(0, 5).map((_: any, idx: number) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setCurrentDoctorSlide(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentDoctorSlide ? 'w-8 bg-white' : 'w-2 bg-white/20 hover:bg-white/40'}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">
