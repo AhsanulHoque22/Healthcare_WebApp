@@ -34,12 +34,12 @@ import LandingPage from './pages/LandingPage';
 import PublicDoctors from './pages/PublicDoctors';
 import NotFound from './pages/NotFound';
 
-// Wrapper to pass userId to NotificationProvider (must be inside AuthProvider)
-function AppWithNotifications() {
+// Wrapper to pass userId to NotificationProvider everywhere
+function GlobalNotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   return (
     <NotificationProvider userId={user?.id}>
-      <Layout />
+      {children}
     </NotificationProvider>
   );
 }
@@ -60,24 +60,25 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/find-doctors" element={<PublicDoctors />} />
-              
-              {/* Legacy dashboard route - redirect to app */}
-              <Route path="/dashboard" element={<Navigate to="/app" replace />} />
-              
-        {/* Protected routes */}
-        <Route path="/app" element={
-          <ProtectedRoute>
-            <AppWithNotifications />
-          </ProtectedRoute>
-        }>
+            <GlobalNotificationProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/find-doctors" element={<PublicDoctors />} />
+                
+                {/* Legacy dashboard route - redirect to app */}
+                <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+                
+          {/* Protected routes */}
+          <Route path="/app" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
                 <Route index element={<RoleBasedRedirect />} />
                 
                 {/* Patient-only routes */}
@@ -177,6 +178,7 @@ function App() {
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </GlobalNotificationProvider>
             
             <Toaster
               position="top-right"

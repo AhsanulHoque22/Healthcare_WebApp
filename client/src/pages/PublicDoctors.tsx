@@ -91,7 +91,7 @@ const PublicDoctors: React.FC = () => {
                         />
                       ) : (
                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-sm group-hover/account:scale-105 transition-all">
-                          {user.firstName[0]}{user.lastName[0]}
+                          {user?.firstName?.charAt(0) || ''}{user?.lastName?.charAt(0) || ''}
                         </div>
                       )}
                     </div>
