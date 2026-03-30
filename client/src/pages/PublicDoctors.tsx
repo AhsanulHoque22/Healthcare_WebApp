@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import API from '../api/api';
+import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from '../components/NotificationDropdown';
 import {
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -17,9 +19,19 @@ import {
 } from '@heroicons/react/24/outline';
 
 const PublicDoctors: React.FC = () => {
+  const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [specialization, setSpecialization] = useState('All');
   const [pageLoaded, setPageLoaded] = useState(false);
+
+  const getDashboardUrl = () => {
+    switch (user?.role) {
+      case 'patient': return '/app/dashboard';
+      case 'doctor': return '/app/doctor-dashboard';
+      case 'admin': return '/app/admin-dashboard';
+      default: return '/app/dashboard';
+    }
+  };
 
   React.useEffect(() => {
     setPageLoaded(true);
@@ -63,8 +75,48 @@ const PublicDoctors: React.FC = () => {
               <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-gray-900 via-indigo-900 to-blue-900 bg-clip-text text-transparent">Livora</span>
             </Link>
             <div className="flex items-center space-x-6">
-              <Link to="/login" className="text-gray-600 font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
-              <Link to="/register" className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-110 active:scale-95 transition-all duration-300">Join Now</Link>
+              {user ? (
+                <div className="flex items-center space-x-6">
+                  <NotificationDropdown />
+                  <Link
+                    to={getDashboardUrl()}
+                    className="flex items-center space-x-3 group/account transition-all duration-300"
+                  >
+                    <div className="relative">
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={user.firstName}
+                          className="h-10 w-10 rounded-full object-cover ring-2 ring-indigo-100 group-hover/account:ring-indigo-500 transition-all shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-sm group-hover/account:scale-105 transition-all">
+                          {user.firstName[0]}{user.lastName[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div className="hidden lg:block text-left">
+                      <p className="text-sm font-bold text-gray-900 group-hover/account:text-indigo-600 transition-colors">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold opacity-70">
+                        {user.role} Dashboard
+                      </p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => logout()}
+                    className="hidden lg:flex items-center px-4 py-2 text-sm font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link to="/login" className="text-gray-600 font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
+                  <Link to="/register" className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-110 active:scale-95 transition-all duration-300">Join Now</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

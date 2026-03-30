@@ -388,7 +388,7 @@ const Layout: React.FC = () => {
                 <NotificationDropdown />
                 
                 {/* User profile */}
-                <Link to={getProfileUrl()} className="relative group flex items-center space-x-3 hover:opacity-80 transition-all duration-300 transform hover:scale-105">
+                <Link to={getDashboardUrl()} className="relative group flex items-center space-x-3 hover:opacity-80 transition-all duration-300 transform hover:scale-105">
                   <div className="flex items-center space-x-3">
                     {user?.profileImage ? (
                       <img

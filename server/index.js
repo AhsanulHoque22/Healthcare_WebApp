@@ -21,6 +21,7 @@ const labTestRoutes = require('./routes/labTests');
 const bkashRoutes = require('./routes/bkash');
 const medicineRoutes = require('./routes/medicine');
 const notificationRoutes = require('./routes/notifications');
+const websiteReviewRoutes = require('./routes/websiteReviews');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -134,6 +135,7 @@ app.use('/api/lab-tests', labTestRoutes);
 app.use('/api/bkash', bkashRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/website-reviews', websiteReviewRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -201,11 +203,13 @@ const startServer = async () => {
     
     // Always ensure User and Patient tables are up to date with latest columns
     try {
-      const { User, Patient } = require('./models');
+      const { User, Patient, WebsiteReview } = require('./models');
       await User.sync({ alter: true });
       console.log('[Database] User schema altered to ensure latest columns exist.');
       await Patient.sync({ alter: true });
       console.log('[Database] Patient schema altered to ensure latest columns exist.');
+      await WebsiteReview.sync({ alter: true });
+      console.log('[Database] WebsiteReview schema initialized/altered.');
     } catch (err) {
       console.error('[Database] Failed to alter database tables:', err.message);
     }

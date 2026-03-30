@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import API from '../api/api';
+import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from '../components/NotificationDropdown';
+import toast from 'react-hot-toast';
 import { 
   HeartIcon,
   UserGroupIcon,
@@ -28,6 +31,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const LandingPage: React.FC = () => {
+  const { user, logout } = useAuth();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -37,55 +41,60 @@ const LandingPage: React.FC = () => {
     appointments: 0,
     satisfaction: 0
   });
+  
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [newReview, setNewReview] = useState({ rating: 5, review: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch public reviews
-  const { data: publicReviews, isLoading: reviewsLoading } = useQuery({
-    queryKey: ['public-reviews'],
+  // Fetch website reviews
+  const { data: websiteReviews, isLoading: reviewsLoading, refetch: refetchReviews } = useQuery({
+    queryKey: ['website-reviews'],
     queryFn: async () => {
-      const response = await API.get('/ratings/public');
-      return response.data.data.ratings;
+      const response = await API.get('/website-reviews/public');
+      return response.data.data.reviews;
     }
   });
 
-  const demoTestimonials = [
+  const demoReviews = [
     {
-      name: "Sarah Johnson",
-      role: "Patient",
-      content: "Livora has revolutionized how I manage my health. The appointment booking is seamless and I love having all my records in one place.",
+      user: { firstName: "Sarah", lastName: "Johnson", role: "patient" },
+      review: "Livora has revolutionized how I manage my health. The appointment booking is seamless and I love having all my records in one place.",
       rating: 5,
-      avatar: "SJ",
-      color: "from-blue-500 to-indigo-600"
+      createdAt: new Date().toISOString()
     },
     {
-      name: "Dr. Michael Chen",
-      role: "Cardiologist",
-      content: "As a doctor, this platform has made patient management so much easier. The digital records and appointment system are exceptional.",
+      user: { firstName: "Dr. Michael", lastName: "Chen", role: "doctor" },
+      review: "As a doctor, this platform has made patient management so much easier. The digital records and appointment system are exceptional.",
       rating: 5,
-      avatar: "MC",
-      color: "from-green-500 to-emerald-600"
+      createdAt: new Date().toISOString()
     },
     {
-      name: "Emily Rodriguez",
-      role: "Patient",
-      content: "The lab test results feature is amazing. I get my results instantly and can track my health progress over time.",
+      user: { firstName: "Emily", lastName: "Rodriguez", role: "patient" },
+      review: "The lab test results feature is amazing. I get my results instantly and can track my health progress over time.",
       rating: 5,
-      avatar: "ER",
-      color: "from-purple-500 to-pink-600"
+      createdAt: new Date().toISOString()
     }
   ];
 
-  // Use real reviews if available, otherwise fallback to demo
-  const testimonials = publicReviews && publicReviews.length > 0 
-    ? publicReviews.map((r: any) => ({
-        name: r.isAnonymous ? "Anonymous Patient" : `${r.patient?.user?.firstName} ${r.patient?.user?.lastName}`,
-        role: "Verified Patient",
-        content: r.review || "Excellent service and professional care.",
+  // Use real reviews if available, otherwise combine with demo
+  const testimonials = reviewsLoading ? demoReviews : (websiteReviews && websiteReviews.length > 0 
+    ? [...websiteReviews, ...demoReviews].slice(0, 10).map((r: any) => ({
+        name: `${r.user?.firstName} ${r.user?.lastName}`,
+        role: r.user?.role === 'doctor' ? 'Healthcare Professional' : 'Verified Patient',
+        content: r.review,
         rating: r.rating,
-        avatar: r.isAnonymous ? "AP" : (r.patient?.user?.firstName?.[0] + r.patient?.user?.lastName?.[0]),
+        avatar: (r.user?.firstName?.[0] + r.user?.lastName?.[0]),
         color: r.rating >= 4 ? "from-blue-500 to-indigo-600" : "from-gray-500 to-slate-600",
-        image: r.patient?.user?.profileImage
+        image: r.user?.profileImage
       }))
-    : demoTestimonials;
+    : demoReviews.map(r => ({
+        name: `${r.user.firstName} ${r.user.lastName}`,
+        role: r.user.role === 'doctor' ? 'Healthcare Professional' : 'Verified Patient',
+        content: r.review,
+        rating: r.rating,
+        avatar: (r.user.firstName[0] + r.user.lastName[0]),
+        color: "from-blue-500 to-indigo-600"
+      })));
 
   const stats = [
     { label: "Active Patients", value: 10000, icon: UserGroupIcon, color: "text-blue-600" },
@@ -148,6 +157,36 @@ const LandingPage: React.FC = () => {
     }, 6000);
     return () => clearInterval(interval);
   }, [isAnimating]);
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('You must be logged in to write a review');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await API.post('/website-reviews', newReview);
+      toast.success('Thank you for your review!');
+      setShowReviewModal(false);
+      setNewReview({ rating: 5, review: '' });
+      refetchReviews();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getDashboardUrl = () => {
+    switch (user?.role) {
+      case 'patient': return '/app/dashboard';
+      case 'doctor': return '/app/doctor-dashboard';
+      case 'admin': return '/app/admin-dashboard';
+      default: return '/app/dashboard';
+    }
+  };
 
   useEffect(() => {
     // Add smooth scroll behavior to the document
@@ -223,21 +262,69 @@ const LandingPage: React.FC = () => {
               </button>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                to="/login"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-bounce"
-              >
-                Sign In
-              </Link>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/40 to-blue-200/40 rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                <Link
-                  to="/register"
-                  className="relative bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-500 shadow-lg hover:shadow-xl hover:scale-110 hover:-translate-y-1 transform font-semibold animate-pulse"
-                >
-                  Get Started
-                </Link>
-              </div>
+              {user ? (
+                <div className="flex items-center space-x-6">
+                  {/* Notifications */}
+                  <div className="relative group">
+                    <NotificationDropdown />
+                  </div>
+                  
+                  {/* Dashboard/Account Link */}
+                  <Link
+                    to={getDashboardUrl()}
+                    className="flex items-center space-x-3 group/account transition-all duration-300"
+                  >
+                    <div className="relative">
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={user.firstName}
+                          className="h-10 w-10 rounded-full object-cover ring-2 ring-indigo-100 group-hover/account:ring-indigo-500 transition-all shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-sm group-hover/account:scale-105 transition-all">
+                          {user.firstName[0]}{user.lastName[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div className="hidden lg:block text-left">
+                      <p className="text-sm font-bold text-gray-900 group-hover/account:text-indigo-600 transition-colors">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold opacity-70">
+                        {user.role} Dashboard
+                      </p>
+                    </div>
+                  </Link>
+                  
+                  {/* Sign Out */}
+                  <button
+                    onClick={() => logout()}
+                    className="flex items-center px-4 py-2 text-sm font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 group"
+                  >
+                    <ArrowPathIcon className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-500" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
+                  >
+                    Sign In
+                  </Link>
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/40 to-blue-200/40 rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                    <Link
+                      to="/register"
+                      className="relative bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-500 shadow-lg hover:shadow-xl hover:scale-110 hover:-translate-y-1 transform font-semibold"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -485,6 +572,15 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Discover why thousands of healthcare providers and patients choose our platform
             </p>
+            {user && (
+              <button 
+                onClick={() => setShowReviewModal(true)}
+                className="mt-8 inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-300 group"
+              >
+                <SparklesIcon className="h-5 w-5 mr-2 animate-pulse" />
+                Write a Website Review
+              </button>
+            )}
           </div>
           
           <div className="max-w-6xl mx-auto">
@@ -992,6 +1088,78 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => !isSubmitting && setShowReviewModal(false)}></div>
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all animate-scale-in">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+              <h3 className="text-2xl font-bold">Share Your Experience</h3>
+              <p className="text-indigo-100 text-sm opacity-90">How do you like using Livora?</p>
+            </div>
+            
+            <form onSubmit={handleReviewSubmit} className="p-8 space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Overall Rating</label>
+                <div className="flex space-x-3">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
+                      className={`p-2 rounded-xl transition-all duration-300 ${
+                        newReview.rating >= star 
+                          ? 'bg-yellow-50 text-yellow-500 scale-110' 
+                          : 'bg-gray-50 text-gray-300 hover:bg-gray-100'
+                      }`}
+                    >
+                      <StarIcon className={`h-8 w-8 ${newReview.rating >= star ? 'fill-current' : ''}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider font-montserrat">Your Review</label>
+                <textarea
+                  required
+                  rows={4}
+                  className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all resize-none"
+                  placeholder="Tell us what you think about our website and services..."
+                  value={newReview.review}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, review: e.target.value }))}
+                />
+              </div>
+              
+              <div className="flex space-x-4 pt-2">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => setShowReviewModal(false)}
+                  className="flex-1 px-6 py-4 border-2 border-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
+                >
+                  {isSubmitting ? (
+                    <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Submit Review
+                      <RocketLaunchIcon className="h-5 w-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
