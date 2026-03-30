@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
@@ -27,12 +27,25 @@ import {
   AcademicCapIcon,
   BriefcaseIcon,
   EyeIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 const LandingPage: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [currentDoctorSlide, setCurrentDoctorSlide] = useState(0);
+
+  // Fetch verified doctors for slideshow
+  const { data: availableDoctors } = useQuery({
+    queryKey: ['available-doctors-public'],
+    queryFn: async () => {
+      const response = await API.get('/doctors', { params: { limit: 10 } });
+      return response.data.data.doctors;
+    }
+  });
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatedStats, setAnimatedStats] = useState({
@@ -818,84 +831,104 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What Our Patients Say
-            </h2>
-            <p className="text-xl text-gray-600">
-              Real stories from real people who trust us with their healthcare
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_: any, i: number) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "The appointment booking system is incredibly easy to use. I can find and book 
-                appointments with specialists in minutes. The platform has revolutionized my healthcare experience."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-blue-100 rounded-full p-2 mr-4">
-                  <UserGroupIcon className="h-6 w-6 text-blue-600" />
+      {/* Available Doctors Slideshow */}
+      {availableDoctors && availableDoctors.length > 0 && (
+        <section className="py-20 bg-gradient-to-br from-indigo-50/50 to-white relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 rounded-3xl p-8 shadow-2xl shadow-indigo-200 border border-white/10">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+              <div className="relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                  <div>
+                    <div className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-indigo-100 text-xs font-bold mb-3 border border-white/20">
+                      <SparklesIcon className="h-4 w-4 mr-2 text-yellow-400" />
+                      MEET OUR SPECIALISTS
+                    </div>
+                    <h2 className="text-3xl font-black text-white tracking-tight">Top Rated Doctors</h2>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setCurrentDoctorSlide((prev) => (prev - 1 + availableDoctors.length) % availableDoctors.length)}
+                      className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all backdrop-blur-md border border-white/10 active:scale-95"
+                    >
+                      <ChevronLeftIcon className="h-6 w-6" />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentDoctorSlide((prev) => (prev + 1) % availableDoctors.length)}
+                      className="p-3 bg-indigo-500 hover:bg-indigo-400 rounded-2xl text-white transition-all shadow-lg shadow-indigo-900/50 active:scale-95"
+                    >
+                      <ChevronRightIcon className="h-6 w-6" />
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Sarah Ahmed</div>
-                  <div className="text-gray-500 text-sm">Patient</div>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_: any, i: number) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "As a doctor, I love how this platform streamlines my practice. The patient management 
-                tools and appointment scheduling make my work so much more efficient."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-green-100 rounded-full p-2 mr-4">
-                  <HeartIcon className="h-6 w-6 text-green-600" />
+                <div className="relative overflow-hidden h-[300px] md:h-[240px]">
+                  <div 
+                    className="flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] h-full"
+                    style={{ transform: `translateX(-${currentDoctorSlide * 100}%)` }}
+                  >
+                    {availableDoctors.map((doctor: any) => (
+                      <div key={doctor.id} className="w-full flex-shrink-0 px-2 h-full">
+                        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 h-full flex flex-col md:flex-row gap-6 hover:bg-white/10 transition-all duration-500 group/card">
+                          <div className="relative flex-shrink-0 mx-auto md:mx-0">
+                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
+                            {doctor.user?.profileImage ? (
+                              <img src={doctor.user.profileImage} className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover relative z-10 border-2 border-white/20 shadow-2xl" alt="avatar" />
+                            ) : (
+                              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white/20 shadow-2xl">
+                                <span className="text-white text-3xl font-black uppercase">{doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}</span>
+                              </div>
+                            )}
+                            <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-1.5 shadow-lg z-20 border-2 border-indigo-900">
+                              <CheckCircleIcon className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                            <h3 className="text-2xl font-bold text-white mb-2 group-hover/card:text-indigo-200 transition-colors">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h3>
+                            <p className="text-indigo-300 font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <AcademicCapIcon className="h-4 w-4" />
+                              {doctor.specialization || doctor.department}
+                            </p>
+                            <div className="flex items-center gap-4 mb-4 text-white/60 text-sm">
+                              <span className="flex items-center gap-1">
+                                <MapPinIcon className="h-4 w-4 text-indigo-400" />
+                                {doctor.hospital || 'Private Practice'}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
+                                {doctor.averageRating || 'New'}
+                              </span>
+                            </div>
+                            <div className="mt-auto flex gap-4 w-full">
+                              <button 
+                                onClick={() => navigate(user ? `/app/appointments?doctor=${doctor.id}` : '/login')}
+                                className="flex-1 py-3 bg-white text-indigo-900 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10"
+                              >
+                                Book Visit
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Dr. Yasir Junaid</div>
-                  <div className="text-gray-500 text-sm">Cardiologist</div>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_: any, i: number) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-600 mb-6">
-                "The lab test results feature is amazing. I can track my health metrics over time 
-                and share them with my doctor easily. It's like having a personal health assistant."
-              </p>
-              <div className="flex items-center">
-                <div className="bg-purple-100 rounded-full p-2 mr-4">
-                  <BeakerIcon className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Mohammad Rahman</div>
-                  <div className="text-gray-500 text-sm">Patient</div>
+                <div className="flex justify-center mt-6 gap-2">
+                  {availableDoctors.slice(0, 5).map((_: any, idx: number) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setCurrentDoctorSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentDoctorSlide ? 'w-8 bg-white' : 'w-2 bg-white/20 hover:bg-white/40'}`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 relative overflow-hidden">

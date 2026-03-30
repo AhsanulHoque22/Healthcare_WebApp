@@ -24,6 +24,7 @@ import {
   CalendarIcon,
   IdentificationIcon
 } from '@heroicons/react/24/outline';
+import DoctorRatings from '../components/DoctorRatings';
 
 interface DoctorProfileData {
   profileImage?: string;
@@ -52,6 +53,7 @@ const DoctorProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [doctorId, setDoctorId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileData, setProfileData] = useState<DoctorProfileData>({
     department: '',
@@ -103,6 +105,7 @@ const DoctorProfile: React.FC = () => {
     try {
       const response = await API.get('/doctors/profile');
       const data = response.data.data.doctor;
+      setDoctorId(data.id);
       setProfileData({
         profileImage: data.profileImage || '',
         bmdcRegistrationNumber: data.bmdcRegistrationNumber || '',
@@ -1003,6 +1006,24 @@ const DoctorProfile: React.FC = () => {
                 </div>
               )}
             </form>
+
+            <div className={`mt-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+              <div className="flex items-center mb-6">
+                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-3 text-white mr-3">
+                  <StarIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Your Ratings & Reviews</h3>
+                  <p className="text-sm text-gray-600">See what your patients are saying</p>
+                </div>
+              </div>
+              
+              {doctorId ? (
+                <DoctorRatings doctorId={doctorId} showAll={true} />
+              ) : (
+                <div className="text-center text-gray-500">Loading reviews...</div>
+              )}
+            </div>
           </div>
         </div>
       </div>

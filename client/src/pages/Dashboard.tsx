@@ -35,20 +35,8 @@ interface DashboardStats {
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [currentReview, setCurrentReview] = useState(0);
-  const [currentDoctorSlide, setCurrentDoctorSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
-
-  // Fetch verified doctors for slideshow
-  const { data: availableDoctors } = useQuery({
-    queryKey: ['available-doctors'],
-    queryFn: async () => {
-      const response = await API.get('/doctors', { params: { limit: 10 } });
-      return response.data.data.doctors;
-    },
-    enabled: user?.role === 'patient'
-  });
+  const [pageLoaded, setPageLoaded] = useState(false);
 
   // Page load animation
   useEffect(() => {
@@ -180,25 +168,6 @@ const Dashboard: React.FC = () => {
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnMount: true, // Always refetch on mount
   });
-
-  // Fetch community reviews
-  const { data: communityReviews } = useQuery({
-    queryKey: ['community-reviews'],
-    queryFn: async () => {
-      const response = await API.get('/ratings/public');
-      return response.data.data.ratings;
-    }
-  });
-
-  // Auto-play reviews
-  useEffect(() => {
-    if (communityReviews && communityReviews.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentReview((prev) => (prev + 1) % communityReviews.length);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [communityReviews]);
 
   const getStats = () => {
     if (user?.role === 'admin') return stats;
@@ -354,102 +323,6 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Available Doctors Slideshow (For Patients) */}
-        {user?.role === 'patient' && availableDoctors && availableDoctors.length > 0 && (
-          <div className={`mt-8 ${pageLoaded ? 'animate-fade-in-up' : ''}`} style={{ animationDelay: '400ms' }}>
-            <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-800 rounded-3xl p-8 shadow-2xl shadow-indigo-200 border border-white/10">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-              <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                  <div>
-                    <div className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-indigo-100 text-xs font-bold mb-3 border border-white/20">
-                      <SparklesIcon className="h-4 w-4 mr-2 text-yellow-400" />
-                      AVAILABLE SPECIALISTS
-                    </div>
-                    <h2 className="text-3xl font-black text-white tracking-tight">Consult with Expert Doctors</h2>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setCurrentDoctorSlide((prev) => (prev - 1 + availableDoctors.length) % availableDoctors.length)}
-                      className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all backdrop-blur-md border border-white/10 active:scale-95"
-                    >
-                      <ChevronLeftIcon className="h-6 w-6" />
-                    </button>
-                    <button 
-                      onClick={() => setCurrentDoctorSlide((prev) => (prev + 1) % availableDoctors.length)}
-                      className="p-3 bg-indigo-500 hover:bg-indigo-400 rounded-2xl text-white transition-all shadow-lg shadow-indigo-900/50 active:scale-95"
-                    >
-                      <ChevronRightIcon className="h-6 w-6" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="relative overflow-hidden h-[300px] md:h-[240px]">
-                  <div 
-                    className="flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] h-full"
-                    style={{ transform: `translateX(-${currentDoctorSlide * 100}%)` }}
-                  >
-                    {availableDoctors.map((doctor: any) => (
-                      <div key={doctor.id} className="w-full flex-shrink-0 px-2 h-full">
-                        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 h-full flex flex-col md:flex-row gap-6 hover:bg-white/10 transition-all duration-500 group/card">
-                          <div className="relative flex-shrink-0 mx-auto md:mx-0">
-                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity"></div>
-                            {doctor.user?.profileImage ? (
-                              <img src={doctor.user.profileImage} className="w-24 h-24 md:w-32 md:h-32 rounded-2xl object-cover relative z-10 border-2 border-white/20 shadow-2xl" alt="avatar" />
-                            ) : (
-                              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white/20 shadow-2xl">
-                                <span className="text-white text-3xl font-black uppercase">{doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}</span>
-                              </div>
-                            )}
-                            <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-1.5 shadow-lg z-20 border-2 border-indigo-900">
-                              <CheckCircleIcon className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                            <h3 className="text-2xl font-bold text-white mb-2 group-hover/card:text-indigo-200 transition-colors">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h3>
-                            <p className="text-indigo-300 font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
-                              <AcademicCapIcon className="h-4 w-4" />
-                              {doctor.specialization || doctor.department}
-                            </p>
-                            <div className="flex items-center gap-4 mb-4 text-white/60 text-sm">
-                              <span className="flex items-center gap-1">
-                                <MapPinIcon className="h-4 w-4 text-indigo-400" />
-                                {doctor.hospital || 'Private Practice'}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
-                                {doctor.averageRating || 'New'}
-                              </span>
-                            </div>
-                            <div className="mt-auto flex gap-4 w-full">
-                              <button 
-                                onClick={() => navigate(`/app/appointments?doctor=${doctor.id}`)}
-                                className="flex-1 py-3 bg-white text-indigo-900 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10"
-                              >
-                                Book Visit
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-center mt-6 gap-2">
-                  {availableDoctors.slice(0, 5).map((_: any, idx: number) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setCurrentDoctorSlide(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentDoctorSlide ? 'w-8 bg-white' : 'w-2 bg-white/20 hover:bg-white/40'}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Content Grid */}
         <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${pageLoaded ? 'animate-fade-in' : ''}`}>
@@ -698,109 +571,6 @@ const Dashboard: React.FC = () => {
           </div>
       )}
 
-      {/* Community Feedback Section */}
-      {communityReviews && communityReviews.length > 0 && (
-        <div className={`mt-12 mb-8 ${pageLoaded ? 'animate-fade-in-up' : ''}`} style={{ animationDelay: '600ms' }}>
-          <div className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white/80 to-indigo-50/50 backdrop-blur-xl border border-white p-8 md:p-12 shadow-2xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
-            
-            <div className="relative z-10">
-              <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
-                <div>
-                  <div className="inline-flex items-center px-4 py-2 bg-indigo-100/50 rounded-full text-indigo-700 text-xs font-bold mb-3 tracking-widest uppercase border border-indigo-200">
-                    <SparklesIcon className="h-4 w-4 mr-2" />
-                    Community Feedback
-                  </div>
-                  <h3 className="text-3xl font-black text-gray-900 tracking-tight">What our patients say</h3>
-                </div>
-                <div className="flex gap-3">
-                  <button 
-                    onClick={() => setCurrentReview((prev) => (prev - 1 + communityReviews.length) % communityReviews.length)}
-                    className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 hover:shadow-lg transition-all active:scale-90"
-                  >
-                    <ChevronLeftIcon className="h-6 w-6" />
-                  </button>
-                  <button 
-                    onClick={() => setCurrentReview((prev) => (prev + 1) % communityReviews.length)}
-                    className="p-3 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:scale-110 active:scale-90 transition-all"
-                  >
-                    <ChevronRightIcon className="h-6 w-6" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative h-[250px] md:h-[200px]">
-                {communityReviews.map((review: any, index: number) => (
-                  <div 
-                    key={review.id}
-                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                      index === currentReview 
-                        ? 'opacity-100 translate-y-0 relative z-10' 
-                        : 'opacity-0 translate-y-8 pointer-events-none'
-                    }`}
-                  >
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                      <div className="flex-shrink-0 relative">
-                        <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 transform hover:scale-150 transition-transform duration-1000"></div>
-                        {review.patient?.user?.profileImage ? (
-                          <img 
-                            src={review.patient.user.profileImage}
-                            className="w-20 h-20 rounded-[2rem] object-cover relative z-10 border-2 border-white shadow-xl"
-                            alt="avatar"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center relative z-10 border-2 border-white shadow-xl">
-                            <span className="text-white font-black text-xl uppercase">
-                              {review.isAnonymous ? 'AP' : (review.patient?.user?.firstName?.[0] + review.patient?.user?.lastName?.[0])}
-                            </span>
-                          </div>
-                        )}
-                        <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1.5 shadow-lg z-20">
-                          <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex gap-1 mb-3">
-                          {[...Array(5)].map((_, i) => (
-                            <StarIcon key={i} className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-200'}`} />
-                          ))}
-                        </div>
-                        <blockquote className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed italic mb-4">
-                          "{review.review || 'Exceptional service and professional medical care. Highly recommend to everyone.'}"
-                        </blockquote>
-                        <div className="flex items-center gap-3">
-                          <span className="font-black text-gray-900 tracking-tight">
-                            {review.isAnonymous ? 'Anonymous Patient' : `${review.patient?.user?.firstName} ${review.patient?.user?.lastName}`}
-                          </span>
-                          <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                          <span className="text-indigo-600 font-bold text-sm flex items-center">
-                            <ShieldCheckIcon className="h-4 w-4 mr-1" />
-                            Verified Patient
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-center mt-10 gap-2">
-                {communityReviews.map((_: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentReview(index)}
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      index === currentReview ? 'w-12 bg-indigo-600' : 'w-2 bg-indigo-100 hover:bg-indigo-200'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       </div>
     </div>
   );

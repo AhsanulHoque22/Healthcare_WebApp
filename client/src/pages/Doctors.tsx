@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import DoctorRatings from '../components/DoctorRatings';
 import API from '../api/api';
 import { formatCurrency } from '../services/paymentService';
 import { 
@@ -448,6 +449,15 @@ const Doctors: React.FC = () => {
                     <p className="text-2xl font-bold text-green-600">{formatCurrency(selectedDoctor.consultationFee)}</p>
                   </div>
                 )}
+                
+                {/* Patient Reviews */}
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mt-6 lg:col-span-2">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                    <StarIcon className="h-5 w-5 mr-2 text-yellow-500 fill-current" />
+                    Patient Reviews
+                  </h4>
+                  <DoctorRatings doctorId={selectedDoctor.id} />
+                </div>
               </div>
             </div>
 
