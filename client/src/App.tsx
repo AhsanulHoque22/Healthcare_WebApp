@@ -22,7 +22,7 @@ import Appointments from './pages/Appointments';
 import DoctorAppointments from './pages/DoctorAppointments';
 import MedicalRecords from './pages/MedicalRecords';
 import Users from './pages/Users';
-import Doctors from './pages/Doctors';
+
 import Patients from './pages/Patients';
 import AdminDoctors from './pages/AdminDoctors';
 import AdminPatients from './pages/AdminPatients';
@@ -162,12 +162,6 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* Patient-facing routes */}
-                <Route path="doctors" element={
-                  <ProtectedRoute requiredRole="patient">
-                    <Doctors />
-                  </ProtectedRoute>
-                } />
                 <Route path="patients" element={
                   <ProtectedRoute requiredRole="doctor">
                     <Patients />

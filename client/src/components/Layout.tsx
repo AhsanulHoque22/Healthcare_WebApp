@@ -50,7 +50,7 @@ const Layout: React.FC = () => {
     { name: 'Appointments', href: '/app/doctor-appointments', icon: CalendarIcon, roles: ['doctor'], color: 'purple' },
     { name: 'Medical Records', href: '/app/medical-records', icon: ClipboardDocumentListIcon, roles: ['patient'], color: 'indigo' },
     { name: 'Lab Reports', href: '/app/lab-reports', icon: BeakerIcon, roles: ['patient'], color: 'orange' },
-    { name: 'Find Doctors', href: '/app/doctors', icon: UserGroupIcon, roles: ['patient'], color: 'teal' },
+    { name: 'Find Doctors', href: '/find-doctors', icon: UserGroupIcon, roles: ['patient'], color: 'teal' },
     { name: 'My Patients', href: '/app/patients', icon: UsersIcon, roles: ['doctor'], color: 'teal' },
     { name: 'Users', href: '/app/users', icon: UsersIcon, roles: ['admin'], color: 'gray' },
     { name: 'Doctors', href: '/app/admin-doctors', icon: UserGroupIcon, roles: ['admin'], color: 'green' },

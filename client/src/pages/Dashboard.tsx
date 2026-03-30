@@ -459,21 +459,6 @@ const Dashboard: React.FC = () => {
                   </div>
                   </button>
                 </div>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-violet-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <button
-                    onClick={() => navigate('/app/doctors')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-purple-200/50 hover:shadow-lg animate-pulse"
-                  >
-                  <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                        <UserGroupIcon className="h-5 w-5 text-white" />
-                      </div>
-                      <span className="text-purple-800 font-semibold">Find Doctors</span>
-                      <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-all duration-500 group-hover:scale-110 ml-auto" />
-                  </div>
-                  </button>
-                </div>
               </>
             )}
             {user?.role === 'doctor' && (

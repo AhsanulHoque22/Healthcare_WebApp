@@ -24,14 +24,18 @@ const getAllDoctors = async (req, res, next) => {
     }
 
     if (search) {
-      whereClause[Op.or] = [
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } }
-      ];
-      // We also want to search by department on the doctor model
+      // Use a more relaxed search that works across both models
+      // We'll put name search in the user where clause and other details in doctor where clause
+      // But we should ensure it doesn't filter out results if searching for just a name
+      delete whereClause[Op.or];
+      delete doctorWhereClause[Op.or];
+
       doctorWhereClause[Op.or] = [
         { department: { [Op.like]: `%${search}%` } },
-        { hospital: { [Op.like]: `%${search}%` } }
+        { hospital: { [Op.like]: `%${search}%` } },
+        { bio: { [Op.like]: `%${search}%` } },
+        { '$user.firstName$': { [Op.like]: `%${search}%` } },
+        { '$user.lastName$': { [Op.like]: `%${search}%` } }
       ];
     }
 
