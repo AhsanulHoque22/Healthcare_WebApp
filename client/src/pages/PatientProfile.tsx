@@ -70,7 +70,18 @@ const PatientProfile: React.FC = () => {
     emergencyPhone: '',
     insuranceProvider: '',
     insuranceNumber: '',
-    profileImage: ''
+    profileImage: '',
+    // New fields
+    height: '',
+    weight: '',
+    bloodPressure: '',
+    pulse: '',
+    chronicConditions: '',
+    pastSurgeries: '',
+    familyMedicalHistory: '',
+    smokingStatus: '',
+    alcoholConsumption: '',
+    physicalActivity: ''
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -110,7 +121,17 @@ const PatientProfile: React.FC = () => {
         emergencyPhone: data.emergencyPhone || '',
         insuranceProvider: data.insuranceProvider || '',
         insuranceNumber: data.insuranceNumber || '',
-        profileImage: data.profileImage || ''
+        profileImage: data.profileImage || '',
+        height: data.height || '',
+        weight: data.weight || '',
+        bloodPressure: data.bloodPressure || '',
+        pulse: data.pulse || '',
+        chronicConditions: data.chronicConditions || '',
+        pastSurgeries: data.pastSurgeries || '',
+        familyMedicalHistory: data.familyMedicalHistory || '',
+        smokingStatus: data.smokingStatus || '',
+        alcoholConsumption: data.alcoholConsumption || '',
+        physicalActivity: data.physicalActivity || ''
       };
       
       setPatientData(pData);
@@ -155,6 +176,16 @@ const PatientProfile: React.FC = () => {
     emergencyPhone: string;
     insuranceProvider: string;
     insuranceNumber: string;
+    height: string;
+    weight: string;
+    bloodPressure: string;
+    pulse: string;
+    chronicConditions: string;
+    pastSurgeries: string;
+    familyMedicalHistory: string;
+    smokingStatus: string;
+    alcoholConsumption: string;
+    physicalActivity: string;
   }>({
     defaultValues: {
       bloodType: '',
@@ -163,7 +194,17 @@ const PatientProfile: React.FC = () => {
       emergencyContact: '',
       emergencyPhone: '',
       insuranceProvider: '',
-      insuranceNumber: ''
+      insuranceNumber: '',
+      height: '',
+      weight: '',
+      bloodPressure: '',
+      pulse: '',
+      chronicConditions: '',
+      pastSurgeries: '',
+      familyMedicalHistory: '',
+      smokingStatus: '',
+      alcoholConsumption: '',
+      physicalActivity: ''
     },
   });
 
@@ -177,7 +218,17 @@ const PatientProfile: React.FC = () => {
         emergencyContact: patientData.emergencyContact,
         emergencyPhone: patientData.emergencyPhone,
         insuranceProvider: patientData.insuranceProvider,
-        insuranceNumber: patientData.insuranceNumber
+        insuranceNumber: patientData.insuranceNumber,
+        height: patientData.height,
+        weight: patientData.weight,
+        bloodPressure: patientData.bloodPressure,
+        pulse: patientData.pulse,
+        chronicConditions: patientData.chronicConditions,
+        pastSurgeries: patientData.pastSurgeries,
+        familyMedicalHistory: patientData.familyMedicalHistory,
+        smokingStatus: patientData.smokingStatus,
+        alcoholConsumption: patientData.alcoholConsumption,
+        physicalActivity: patientData.physicalActivity
       });
     }
   }, [isEditingMedical, patientData, selectedAllergies, medicalForm]);
@@ -435,40 +486,402 @@ const PatientProfile: React.FC = () => {
 
         {/* Row 2: Medical Info & Documents */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 h-full">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center mb-6"><HeartIcon className="h-6 w-6 mr-2 text-rose-600" />Medical Info</h3>
+          <div className="lg:col-span-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/50 h-full">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+                    <HeartIcon className="h-8 w-8 mr-3 text-rose-600" />
+                    Medical Information
+                  </h3>
+                  <p className="text-gray-500 mt-1">Detailed health and clinical records.</p>
+                </div>
+                {!isEditingMedical && (
+                  <button 
+                    onClick={() => setIsEditingMedical(true)} 
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-semibold hover:bg-rose-100 transition-colors"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                    Edit Info
+                  </button>
+                )}
+              </div>
+
               {isEditingMedical ? (
-                <form onSubmit={medicalForm.handleSubmit(onSubmitMedical)} className="space-y-4">
-                  <select {...medicalForm.register('bloodType')} className="w-full px-4 py-3 border rounded-xl"><option value="">Blood Type</option><option value="A+">A+</option><option value="O+">O+</option></select>
-                  <label className="block text-sm font-semibold text-gray-700">Allergies</label>
-                  <div className="flex flex-wrap gap-2">{selectedAllergies.map(a => (<span key={a} className="px-2 py-1 bg-yellow-100 rounded-full text-xs flex items-center gap-1">{a}<XMarkIcon className="h-3 w-3" onClick={() => removeAllergy(a)} /></span>))}</div>
-                  <input value={allergySearch} onChange={e => setAllergySearch(e.target.value)} placeholder="Search Allergies" className="w-full px-3 py-2 border rounded-lg" />
-                  <div className="flex gap-4"><button type="submit" className="flex-1 bg-rose-600 text-white py-3 rounded-xl">Save</button><button type="button" onClick={() => setIsEditingMedical(false)} className="px-6 py-3 border rounded-xl">Cancel</button></div>
+                <form onSubmit={medicalForm.handleSubmit(onSubmitMedical)} className="space-y-8">
+                  {/* Subsection: Vitals & Body Metrics */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-gray-700 flex items-center gap-2">
+                        <ShieldCheckIcon className="h-5 w-5 text-blue-500" />
+                        Vitals & Metrics
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Blood Type</label>
+                          <select {...medicalForm.register('bloodType')} className="w-full px-4 py-2 border rounded-xl bg-white">
+                            <option value="">Select</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Blood Pressure</label>
+                          <input {...medicalForm.register('bloodPressure')} placeholder="e.g. 120/80" className="w-full px-4 py-2 border rounded-xl bg-white" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Height (cm)</label>
+                          <input {...medicalForm.register('height')} type="number" step="0.1" className="w-full px-4 py-2 border rounded-xl bg-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Weight (kg)</label>
+                          <input {...medicalForm.register('weight')} type="number" step="0.1" className="w-full px-4 py-2 border rounded-xl bg-white" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Pulse (bpm)</label>
+                        <input {...medicalForm.register('pulse')} type="number" className="w-full px-4 py-2 border rounded-xl bg-white" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-gray-700 flex items-center gap-2">
+                        <DocumentTextIcon className="h-5 w-5 text-indigo-500" />
+                        Insurance Details
+                      </h4>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Provider</label>
+                        <input {...medicalForm.register('insuranceProvider')} className="w-full px-4 py-2 border rounded-xl bg-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Policy Number</label>
+                        <input {...medicalForm.register('insuranceNumber')} className="w-full px-4 py-2 border rounded-xl bg-white" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Emergency Contact</label>
+                          <input {...medicalForm.register('emergencyContact')} className="w-full px-4 py-2 border rounded-xl bg-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-gray-500 uppercase">Emergency Phone</label>
+                          <input {...medicalForm.register('emergencyPhone')} className="w-full px-4 py-2 border rounded-xl bg-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subsection: Allergies */}
+                  <div className="p-6 bg-amber-50/50 rounded-2xl border border-amber-100">
+                    <h4 className="font-bold text-gray-700 flex items-center gap-2 mb-4">
+                      <ShieldCheckIcon className="h-5 w-5 text-amber-500" />
+                      Known Allergies
+                    </h4>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedAllergies.length > 0 ? selectedAllergies.map(a => (
+                        <span key={a} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium flex items-center gap-2 border border-amber-200">
+                          {a}
+                          <XMarkIcon className="h-4 w-4 cursor-pointer hover:text-amber-600" onClick={() => removeAllergy(a)} />
+                        </span>
+                      )) : (
+                        <p className="text-gray-400 text-sm italic">No allergies added yet.</p>
+                      )}
+                    </div>
+                    
+                    <div className="relative" ref={dropdownRef}>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={allergySearch}
+                            onChange={(e) => {
+                              setAllergySearch(e.target.value);
+                              setShowAllergyDropdown(true);
+                            }}
+                            onFocus={() => setShowAllergyDropdown(true)}
+                            placeholder="Search common allergies (e.g. Peanuts, Penicillin)..."
+                            className="w-full pl-4 pr-10 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                          />
+                          <ChevronDownIcon className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addCustomAllergy}
+                          className="px-4 py-2 bg-gray-800 text-white rounded-xl text-sm font-medium"
+                        >
+                          Add Custom
+                        </button>
+                      </div>
+
+                      {showAllergyDropdown && filteredAllergies.length > 0 && (
+                        <div className="absolute z-50 mt-2 w-full max-h-60 overflow-auto bg-white border rounded-xl shadow-2xl py-2">
+                          {filteredAllergies.map(allergy => (
+                            <button
+                              key={allergy}
+                              type="button"
+                              onClick={() => addAllergy(allergy)}
+                              className="w-full text-left px-4 py-2 hover:bg-amber-50 transition-colors text-sm"
+                            >
+                              {allergy}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Subsection: Medical History & Lifestyle */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-gray-700 flex items-center gap-2">
+                        <DocumentTextIcon className="h-5 w-5 text-teal-500" />
+                        Medical History
+                      </h4>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Chronic Conditions</label>
+                        <textarea {...medicalForm.register('chronicConditions')} rows={2} className="w-full px-4 py-2 border rounded-xl" placeholder="e.g. Diabetes, Hypertension" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Past Surgeries</label>
+                        <textarea {...medicalForm.register('pastSurgeries')} rows={2} className="w-full px-4 py-2 border rounded-xl" placeholder="e.g. Appendectomy (2015)" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Family History</label>
+                        <textarea {...medicalForm.register('familyMedicalHistory')} rows={2} className="w-full px-4 py-2 border rounded-xl" placeholder="Any significant family health issues" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-gray-700 flex items-center gap-2">
+                        <ShieldCheckIcon className="h-5 w-5 text-purple-500" />
+                        Lifestyle & Habits
+                      </h4>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Smoking Status</label>
+                        <select {...medicalForm.register('smokingStatus')} className="w-full px-4 py-2 border rounded-xl">
+                          <option value="never">Never Smoked</option>
+                          <option value="former">Former Smoker</option>
+                          <option value="current">Current Smoker</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Alcohol Consumption</label>
+                        <select {...medicalForm.register('alcoholConsumption')} className="w-full px-4 py-2 border rounded-xl">
+                          <option value="never">Never</option>
+                          <option value="occasional">Occasional / Social</option>
+                          <option value="regular">Regular</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-500 uppercase">Physical Activity</label>
+                        <select {...medicalForm.register('physicalActivity')} className="w-full px-4 py-2 border rounded-xl">
+                          <option value="sedentary">Sedentary (Minimal exercise)</option>
+                          <option value="moderate">Moderate (3-4 times/week)</option>
+                          <option value="active">Active (Daily exercise)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t">
+                    <button type="submit" disabled={isLoading} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-rose-200 transition-all">
+                      {isLoading ? 'Saving Changes...' : 'Save Comprehensive Profile'}
+                    </button>
+                    <button type="button" onClick={() => setIsEditingMedical(false)} className="px-8 py-4 border-2 border-gray-100 hover:bg-gray-50 text-gray-600 rounded-2xl font-bold transition-all">
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <div className="bg-rose-50 p-4 rounded-xl"><label className="text-sm font-bold">Blood Type</label><p>{patientData.bloodType || 'N/A'}</p></div>
-                  <div className="bg-amber-50 p-4 rounded-xl"><label className="text-sm font-bold">Allergies</label><p>{selectedAllergies.join(', ') || 'None'}</p></div>
-                  <button onClick={() => setIsEditingMedical(true)} className="w-full bg-rose-600 text-white py-3 rounded-xl">Update Medical Info</button>
+                <div className="space-y-8">
+                  {/* Dashboard-style Metrics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                      <span className="text-xs font-bold text-blue-600 uppercase">Blood Type</span>
+                      <p className="text-2xl font-black text-blue-900 mt-1">{patientData.bloodType || '??'}</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                      <span className="text-xs font-bold text-emerald-600 uppercase">Weight</span>
+                      <p className="text-2xl font-black text-emerald-900 mt-1">{patientData.weight ? `${patientData.weight}kg` : '—'}</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
+                      <span className="text-xs font-bold text-purple-600 uppercase">BMI</span>
+                      <p className="text-2xl font-black text-purple-900 mt-1">
+                        {patientData.height && patientData.weight 
+                          ? (parseFloat(patientData.weight) / Math.pow(parseFloat(patientData.height)/100, 2)).toFixed(1)
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-rose-50 rounded-2xl p-4 border border-rose-100">
+                      <span className="text-xs font-bold text-rose-600 uppercase">Allergies</span>
+                      <p className="text-lg font-bold text-rose-900 mt-1 truncate">{selectedAllergies.length || 'Zero'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Vitals Feed */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest">Latest Vitals</h4>
+                      <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100 border border-gray-100">
+                        <div className="p-4 flex justify-between items-center">
+                          <span className="text-gray-600 font-medium">Blood Pressure</span>
+                          <span className="text-gray-900 font-bold">{patientData.bloodPressure || 'No data'}</span>
+                        </div>
+                        <div className="p-4 flex justify-between items-center">
+                          <span className="text-gray-600 font-medium">Pulse Rate</span>
+                          <span className="text-gray-900 font-bold">{patientData.pulse ? `${patientData.pulse} bpm` : 'No data'}</span>
+                        </div>
+                        <div className="p-4 flex justify-between items-center">
+                          <span className="text-gray-600 font-medium">Height</span>
+                          <span className="text-gray-900 font-bold">{patientData.height ? `${patientData.height} cm` : 'No data'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Medical Summary */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest">Medical Summary</h4>
+                      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase">Chronic Conditions</label>
+                          <p className="text-sm text-gray-700 font-medium">{patientData.chronicConditions || 'None reported'}</p>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase">Past Surgeries</label>
+                          <p className="text-sm text-gray-700 font-medium">{patientData.pastSurgeries || 'None reported'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lifestyle Badges */}
+                  <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div className="absolute right-0 top-0 h-full w-48 bg-gradient-to-l from-white/10 to-transparent"></div>
+                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Lifestyle & Habits</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase font-bold">Smoking</p>
+                          <p className="text-sm font-semibold capitalize">{patientData.smokingStatus || 'Not set'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-purple-400"></div>
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase font-bold">Alcohol</p>
+                          <p className="text-sm font-semibold capitalize">{patientData.alcoholConsumption || 'Not set'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase font-bold">Activity</p>
+                          <p className="text-sm font-semibold capitalize">{patientData.physicalActivity || 'Not set'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="lg:col-span-2">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 h-full">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center"><DocumentTextIcon className="h-6 w-6 mr-2 text-blue-600" />Documents</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1 bg-blue-50 p-4 rounded-xl">
-                  <input value={docName} onChange={e => setDocName(e.target.value)} className="w-full px-3 py-2 border rounded-lg mb-3" placeholder="Doc Name" />
-                  <input ref={docInputRef} type="file" onChange={handleDocUpload} className="hidden" />
-                  <button onClick={() => docInputRef.current?.click()} className="w-full bg-blue-600 text-white py-2 rounded-lg">Upload</button>
+          <div className="lg:col-span-1">
+            <div className="space-y-8">
+              {/* Emergency & Insurance Card */}
+              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white shadow-xl">
+                <h3 className="text-xl font-bold flex items-center mb-6">
+                  <ShieldCheckIcon className="h-7 w-7 mr-3 text-indigo-200" />
+                  Health Shield
+                </h3>
+                <div className="space-y-6">
+                  <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                    <label className="text-[10px] font-black text-indigo-200 uppercase tracking-wider mb-1 block">Emergency Contact</label>
+                    <p className="text-lg font-bold">{patientData.emergencyContact || 'Not assigned'}</p>
+                    <p className="text-sm text-indigo-100">{patientData.emergencyPhone}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
+                    <label className="text-[10px] font-black text-indigo-200 uppercase tracking-wider mb-1 block">Insurance Plan</label>
+                    <p className="text-lg font-bold">{patientData.insuranceProvider || 'No provider'}</p>
+                    <p className="text-xs text-indigo-100 font-mono mt-1 opacity-80">{patientData.insuranceNumber}</p>
+                  </div>
                 </div>
-                <div className="md:col-span-2 space-y-2">
-                  {medicalDocuments.map(doc => (
-                    <div key={doc.id} className="p-3 bg-gray-50 border rounded-lg flex justify-between items-center"><span className="text-sm font-medium">{doc.name}</span><a href={doc.url} target="_blank" rel="noreferrer" className="text-blue-600 text-sm">View</a></div>
-                  ))}
+              </div>
+
+              {/* Document Repository */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                    <DocumentTextIcon className="h-7 w-7 mr-3 text-blue-600" />
+                    MedVault
+                  </h3>
+                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{medicalDocuments.length} files</span>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="space-y-3">
+                    <input 
+                      value={docName} 
+                      onChange={e => setDocName(e.target.value)} 
+                      className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500" 
+                      placeholder="Document Name (e.g. Blood Test...)" 
+                    />
+                    <select 
+                      value={docType} 
+                      onChange={e => setDocType(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Lab Report">Lab Report</option>
+                      <option value="Prescription">Prescription</option>
+                      <option value="X-Ray/Imaging">X-Ray/Imaging</option>
+                      <option value="Surgery Summary">Surgery Summary</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <input ref={docInputRef} type="file" onChange={handleDocUpload} className="hidden" />
+                  <button 
+                    onClick={() => docInputRef.current?.click()} 
+                    disabled={isUploadingDoc}
+                    className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-200"
+                  >
+                    {isUploadingDoc ? 'Encrypting...' : (
+                      <>
+                        <PlusIcon className="h-5 w-5" />
+                        Secure Upload
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {medicalDocuments.length > 0 ? medicalDocuments.map(doc => (
+                    <div key={doc.id} className="group p-4 bg-gray-50 hover:bg-blue-50 rounded-2xl border border-gray-100 hover:border-blue-200 transition-all flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
+                          <DocumentTextIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
+                          <p className="text-[10px] text-gray-500">{doc.type}</p>
+                        </div>
+                      </div>
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-white rounded-full transition-all">
+                        <ArrowDownTrayIcon className="h-5 w-5" />
+                      </a>
+                    </div>
+                  )) : (
+                    <div className="text-center py-8">
+                      <DocumentTextIcon className="h-10 w-10 text-gray-200 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400 font-medium">No medical documents uploaded yet</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
