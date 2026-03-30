@@ -180,7 +180,7 @@ const PublicDoctors: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    placeholder="Search by name, specialization, or hospital..."
+                    placeholder="Search by name, reg no, or hospital..."
                     className="w-full pl-16 pr-6 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all text-lg font-medium outline-none"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

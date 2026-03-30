@@ -33,9 +33,15 @@ const getAllDoctors = async (req, res, next) => {
       doctorWhereClause[Op.or] = [
         { department: { [Op.like]: `%${search}%` } },
         { hospital: { [Op.like]: `%${search}%` } },
+        { bmdcRegistrationNumber: { [Op.like]: `%${search}%` } },
         { bio: { [Op.like]: `%${search}%` } },
         { '$user.firstName$': { [Op.like]: `%${search}%` } },
-        { '$user.lastName$': { [Op.like]: `%${search}%` } }
+        { '$user.lastName$': { [Op.like]: `%${search}%` } },
+        // Full name search using concatenation
+        Doctor.sequelize.where(
+          Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.first_name'), ' ', Doctor.sequelize.col('user.last_name')),
+          { [Op.like]: `%${search}%` }
+        )
       ];
     }
 
