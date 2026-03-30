@@ -11,8 +11,10 @@ import {
   PlayIcon,
   ArrowPathIcon,
   SparklesIcon,
-  FunnelIcon
+  FunnelIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
+import jsPDF from 'jspdf';
 
 interface LabOrder {
   id: number;
@@ -329,6 +331,259 @@ const LabReports: React.FC = () => {
       notes: ''
     });
     setShowPrescriptionPaymentModal(true);
+  };
+
+  const handleDownloadInvoice = (test: any) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const cw = pageWidth - margin * 2;
+
+    // helper
+    const hLine = (y: number, r = 180, g = 180, b = 180, lw = 0.3) => {
+      doc.setDrawColor(r, g, b); doc.setLineWidth(lw);
+      doc.line(margin, y, pageWidth - margin, y);
+    };
+    const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+    const invoiceId = `LIV-INV-${test.id}-${Date.now().toString().slice(-5)}`;
+    const total   = getTotalAmount(test);
+    const paid    = getPaidAmount(test);
+    const due     = getRemainingAmount(test);
+    const isFullyPaid = paid >= total;
+
+    // ── PAGE BORDER ───────────────────────────────────────────
+    doc.setDrawColor(41, 98, 180); doc.setLineWidth(0.8);
+    doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
+    doc.setLineWidth(0.3);
+    doc.rect(9, 9, pageWidth - 18, pageHeight - 18);
+
+    // ── HEADER BAND ───────────────────────────────────────────
+    doc.setFillColor(41, 98, 180);
+    doc.rect(margin, margin, cw, 24, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20); doc.setFont('helvetica', 'bold');
+    doc.text('LIVORA', margin + 5, margin + 11);
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.text('PREMIUM HEALTHCARE SOLUTIONS', margin + 5, margin + 17);
+
+    const rx = pageWidth - margin - 5;
+    doc.setFontSize(7.5);
+    doc.text('Livora Digital Clinic, 123 Wellness Ave, Dhaka', rx, margin + 7, { align: 'right' });
+    doc.text('Tel: +880 1234-567890  |  www.livora-health.app', rx, margin + 12, { align: 'right' });
+    doc.text('info@livora-health.app', rx, margin + 17, { align: 'right' });
+
+    // ── INVOICE LABEL & STATUS ────────────────────────────────
+    let y = margin + 30;
+
+    // Left: "TAX INVOICE"
+    doc.setTextColor(20, 20, 20);
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text('LABORATORY INVOICE', margin, y + 5);
+
+    // Right: Invoice meta box
+    doc.setFillColor(248, 250, 255);
+    doc.setDrawColor(200, 215, 240); doc.setLineWidth(0.3);
+    doc.rect(pageWidth - margin - 65, y - 2, 65, 22, 'FD');
+
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(41, 98, 180);
+    doc.text('INVOICE NO', pageWidth - margin - 62, y + 4);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(20, 20, 20);
+    doc.text(invoiceId, pageWidth - margin - 62, y + 9);
+
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(41, 98, 180);
+    doc.text('DATE', pageWidth - margin - 62, y + 14);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(20, 20, 20);
+    doc.text(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), pageWidth - margin - 62, y + 19);
+
+    // PAID watermark badge
+    if (isFullyPaid) {
+      doc.setFillColor(16, 185, 129); // emerald-500
+      doc.roundedRect(pageWidth - margin - 30, y + 24, 30, 9, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text('PAID', pageWidth - margin - 15, y + 30, { align: 'center' });
+    } else {
+      doc.setFillColor(239, 68, 68);
+      doc.roundedRect(pageWidth - margin - 30, y + 24, 30, 9, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text('UNPAID', pageWidth - margin - 15, y + 30, { align: 'center' });
+    }
+
+    y += 36;
+    hLine(y, 41, 98, 180);
+    y += 6;
+
+    // ── BILL TO / ORDER INFO ──────────────────────────────────
+    const col1 = margin;
+    const col2 = margin + cw / 2 + 5;
+
+    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(131, 145, 172);
+    doc.text('BILL TO', col1, y);
+    doc.text('ORDER DETAILS', col2, y);
+    y += 5;
+
+    const pName = test.type === 'ordered'
+      ? `${test.patient?.user?.firstName || ''} ${test.patient?.user?.lastName || ''}`.trim()
+      : (test.patientName || '—');
+    const pEmail = test.type === 'ordered' ? (test.patient?.user?.email || '—') : (test.patientEmail || '—');
+
+    const docName = test.doctorName ||
+      (test.doctor ? `Dr. ${test.doctor.user.firstName} ${test.doctor.user.lastName}` : '—');
+    const orderNo = test.type === 'ordered'
+      ? (test.orderNumber || `ORD-${test.id}`)
+      : `PRES-${test.prescriptionId || test.id}`;
+    const orderDate = test.createdAt ? fmtDate(test.createdAt) : '—';
+    const orderType = test.type === 'ordered' ? 'Self-Ordered' : 'Doctor Prescribed';
+
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(10, 10, 10);
+    doc.text(pName || '—', col1, y);
+    doc.text(orderNo, col2, y);
+
+    y += 5;
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+    doc.text(pEmail, col1, y);
+    doc.text(`Date: ${orderDate}`, col2, y);
+
+    y += 5;
+    doc.text(`Type: ${orderType}`, col2, y);
+    if (docName !== '—') {
+      y += 5;
+      doc.text(`Referring Doctor: ${docName}`, col2, y);
+    }
+
+    y += 10;
+    hLine(y, 200, 215, 240);
+    y += 5;
+
+    // ── ITEMIZED TEST TABLE ───────────────────────────────────
+    // Header row
+    doc.setFillColor(233, 239, 252);
+    doc.rect(margin, y, cw, 8, 'F');
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 50, 120);
+    doc.text('#', margin + 2, y + 5.5);
+    doc.text('TEST NAME', margin + 10, y + 5.5);
+    doc.text('CATEGORY', margin + 110, y + 5.5);
+    doc.text('AMOUNT (BDT)', pageWidth - margin - 2, y + 5.5, { align: 'right' });
+    y += 10;
+
+    const tests_list = test.type === 'ordered' ? (test.testDetails || []) : [{ name: test.name, category: test.category || 'Lab Test', price: test.price }];
+
+    tests_list.forEach((td: any, idx: number) => {
+      if (idx % 2 === 1) {
+        doc.setFillColor(248, 250, 255);
+        doc.rect(margin, y - 1, cw, 8, 'F');
+      }
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(20, 20, 20);
+      doc.text(`${idx + 1}`, margin + 2, y + 5);
+      const nameLines = doc.splitTextToSize(td.name || '—', 90);
+      doc.text(nameLines, margin + 10, y + 5);
+      doc.text(td.category || '—', margin + 110, y + 5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(formatCurrency(td.price || 0), pageWidth - margin - 2, y + 5, { align: 'right' });
+      y += 8;
+    });
+
+    y += 4;
+    hLine(y, 200, 215, 240);
+    y += 6;
+
+    // ── FINANCIAL SUMMARY ─────────────────────────────────────
+    const summaryX = pageWidth - margin - 75;
+    const summaryColR = pageWidth - margin;
+
+    // Sub-total
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+    doc.text('Sub-total', summaryX, y);
+    doc.text(formatCurrency(total), summaryColR, y, { align: 'right' });
+
+    y += 7;
+    doc.text('Discount / Insurance', summaryX, y);
+    doc.text(formatCurrency(0), summaryColR, y, { align: 'right' });
+
+    y += 7;
+    hLine(y, 200, 215, 240);
+    y += 5;
+
+    // Total
+    doc.setFillColor(41, 98, 180);
+    doc.rect(summaryX - 3, y - 2, pageWidth - margin - summaryX + 3, 9, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL AMOUNT', summaryX, y + 4.5);
+    doc.text(formatCurrency(total), summaryColR, y + 4.5, { align: 'right' });
+    y += 13;
+
+    // Paid
+    doc.setFillColor(16, 185, 129, 0.15);
+    doc.setTextColor(5, 100, 70);
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
+    doc.text('AMOUNT PAID', summaryX, y);
+    doc.text(formatCurrency(paid), summaryColR, y, { align: 'right' });
+
+    y += 7;
+    doc.setTextColor(due > 0 ? 180 : 20, due > 0 ? 30 : 100, due > 0 ? 30 : 50);
+    doc.text('BALANCE DUE', summaryX, y);
+    doc.text(formatCurrency(due), summaryColR, y, { align: 'right' });
+
+    y += 12;
+
+    // ── PAYMENT HISTORY ───────────────────────────────────────
+    if (test.payments && test.payments.length > 0) {
+      hLine(y, 200, 215, 240); y += 5;
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(41, 98, 180);
+      doc.text('PAYMENT TRANSACTION HISTORY', margin, y);
+      y += 7;
+
+      // table header
+      doc.setFillColor(233, 239, 252);
+      doc.rect(margin, y, cw, 7, 'F');
+      doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 50, 120);
+      doc.text('DATE', margin + 2, y + 5);
+      doc.text('METHOD', margin + 30, y + 5);
+      doc.text('TRANSACTION ID', margin + 65, y + 5);
+      doc.text('STATUS', margin + 128, y + 5);
+      doc.text('AMOUNT', pageWidth - margin - 2, y + 5, { align: 'right' });
+      y += 9;
+
+      test.payments.forEach((p: any, idx: number) => {
+        if (y > pageHeight - 30) { doc.addPage(); y = 20; }
+        if (idx % 2 === 1) {
+          doc.setFillColor(248, 250, 255);
+          doc.rect(margin, y - 1, cw, 7, 'F');
+        }
+        doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 30, 30);
+        doc.text(fmtDate(p.paidAt), margin + 2, y + 4);
+        doc.text((p.paymentMethod || '—').toUpperCase(), margin + 30, y + 4);
+        doc.text(p.transactionId || 'N/A', margin + 65, y + 4);
+
+        const st = (p.status || '').toUpperCase();
+        doc.setTextColor(st === 'COMPLETED' ? 5 : 180, st === 'COMPLETED' ? 100 : 50, st === 'COMPLETED' ? 70 : 50);
+        doc.text(st, margin + 128, y + 4);
+
+        doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold');
+        doc.text(formatCurrency(p.amount), pageWidth - margin - 2, y + 4, { align: 'right' });
+        y += 7;
+      });
+    }
+
+    // ── FOOTER ────────────────────────────────────────────────
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const fy = pageHeight - 20;
+      hLine(fy - 3, 41, 98, 180);
+      doc.setFontSize(6.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140);
+      doc.text('This is a computer-generated invoice and does not require a physical signature.', margin, fy + 2);
+      doc.text('Livora Healthcare  |  www.livora-health.app  |  info@livora-health.app', margin, fy + 7);
+      doc.text(`Page ${i} of ${pageCount}`, margin, fy + 12);
+      doc.text('Thank you for choosing Livora Healthcare!', pageWidth - margin, fy + 7, { align: 'right' });
+    }
+
+    doc.save(`Livora-Invoice-${test.id}-${Date.now().toString().slice(-5)}.pdf`);
   };
 
 
@@ -797,6 +1052,15 @@ const LabReports: React.FC = () => {
                               ))}
                             </div>
                           )}
+
+                          <button
+                            onClick={() => handleDownloadInvoice(test)}
+                            className="group relative w-full overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+                          >
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                            <DocumentDuplicateIcon className="h-5 w-5 relative z-10" />
+                            <span className="relative z-10">Download Invoice</span>
+                          </button>
                           
                           {/* Show download buttons for regular lab orders with reports */}
                           {test.type === 'ordered' && canDownloadReports(test) && (
