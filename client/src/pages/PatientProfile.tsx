@@ -113,6 +113,7 @@ const PatientProfile: React.FC = () => {
     try {
       const response = await API.get('/patients/profile');
       const data = response.data.data.patient;
+      console.log('Fetched patient data:', data);
       
       const pData = {
         bloodType: data.bloodType || '',
@@ -392,7 +393,10 @@ const PatientProfile: React.FC = () => {
       setIsEditingMedical(false);
       await fetchPatientData();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update medical information');
+      console.error('Submit medical error:', error);
+      const errMsg = error.response?.data?.message || 'Failed to update medical information';
+      const detail = error.response?.data?.error ? `: ${error.response.data.error}` : '';
+      toast.error(`${errMsg}${detail}`);
     } finally {
       setIsLoading(false);
     }

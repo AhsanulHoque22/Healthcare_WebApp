@@ -63,24 +63,40 @@ const updatePatientProfile = async (req, res, next) => {
       });
     }
 
-    await patient.update({
-      bloodType: bloodType || null,
-      allergies: allergies || null,
-      emergencyContact: emergencyContact || null,
-      emergencyPhone: emergencyPhone || null,
-      insuranceProvider: insuranceProvider || null,
-      insuranceNumber: insuranceNumber || null,
-      height: height || null,
-      weight: weight || null,
-      bloodPressure: bloodPressure || null,
-      pulse: pulse || null,
-      chronicConditions: chronicConditions || null,
-      pastSurgeries: pastSurgeries || null,
-      familyMedicalHistory: familyMedicalHistory || null,
-      smokingStatus: smokingStatus || null,
-      alcoholConsumption: alcoholConsumption || null,
-      physicalActivity: physicalActivity || null
-    });
+    // Helper to handle numeric conversions properly
+    const toNum = (val) => {
+      if (val === '' || val === undefined || val === null) return null;
+      const num = parseFloat(val);
+      return isNaN(num) ? null : num;
+    };
+
+    try {
+      await patient.update({
+        bloodType: bloodType || null,
+        allergies: allergies || null,
+        emergencyContact: emergencyContact || null,
+        emergencyPhone: emergencyPhone || null,
+        insuranceProvider: insuranceProvider || null,
+        insuranceNumber: insuranceNumber || null,
+        height: toNum(height),
+        weight: toNum(weight),
+        bloodPressure: bloodPressure || null,
+        pulse: toNum(pulse),
+        chronicConditions: chronicConditions || null,
+        pastSurgeries: pastSurgeries || null,
+        familyMedicalHistory: familyMedicalHistory || null,
+        smokingStatus: smokingStatus || null,
+        alcoholConsumption: alcoholConsumption || null,
+        physicalActivity: physicalActivity || null
+      });
+    } catch (dbError) {
+      console.error('[patientController] Failed to update patient fields:', dbError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Database update failed. Ensure schema is up to date.',
+        error: dbError.message
+      });
+    }
 
     const updatedPatient = await Patient.findByPk(patientId, {
       include: [
@@ -305,26 +321,42 @@ const updateCurrentPatientProfile = async (req, res, next) => {
       });
     }
 
-    await patient.update({
-      bloodType: bloodType || null,
-      allergies: allergies || null,
-      emergencyContact: emergencyContact || null,
-      emergencyPhone: emergencyPhone || null,
-      insuranceProvider: insuranceProvider || null,
-      insuranceNumber: insuranceNumber || null,
-      medicalHistory: medicalHistory || null,
-      currentMedications: currentMedications || null,
-      height: height || null,
-      weight: weight || null,
-      bloodPressure: bloodPressure || null,
-      pulse: pulse || null,
-      chronicConditions: chronicConditions || null,
-      pastSurgeries: pastSurgeries || null,
-      familyMedicalHistory: familyMedicalHistory || null,
-      smokingStatus: smokingStatus || null,
-      alcoholConsumption: alcoholConsumption || null,
-      physicalActivity: physicalActivity || null
-    });
+    // Helper to handle numeric conversions properly
+    const toNum = (val) => {
+      if (val === '' || val === undefined || val === null) return null;
+      const num = parseFloat(val);
+      return isNaN(num) ? null : num;
+    };
+
+    try {
+      await patient.update({
+        bloodType: bloodType || null,
+        allergies: allergies || null,
+        emergencyContact: emergencyContact || null,
+        emergencyPhone: emergencyPhone || null,
+        insuranceProvider: insuranceProvider || null,
+        insuranceNumber: insuranceNumber || null,
+        medicalHistory: medicalHistory || null,
+        currentMedications: currentMedications || null,
+        height: toNum(height),
+        weight: toNum(weight),
+        bloodPressure: bloodPressure || null,
+        pulse: toNum(pulse),
+        chronicConditions: chronicConditions || null,
+        pastSurgeries: pastSurgeries || null,
+        familyMedicalHistory: familyMedicalHistory || null,
+        smokingStatus: smokingStatus || null,
+        alcoholConsumption: alcoholConsumption || null,
+        physicalActivity: physicalActivity || null
+      });
+    } catch (dbError) {
+      console.error('[patientController] Failed to update patient fields:', dbError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Database update failed. Ensure schema is up to date.',
+        error: dbError.message
+      });
+    }
 
     const updatedPatient = await Patient.findByPk(patient.id, {
       include: [

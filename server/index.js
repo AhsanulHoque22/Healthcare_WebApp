@@ -201,17 +201,28 @@ const startServer = async () => {
       console.log('[Database] Synchronization complete.');
     }
     
-    // Always ensure User and Patient tables are up to date with latest columns
+    // Always ensure critical tables are up to date with latest columns
     try {
-      const { User, Patient, WebsiteReview } = require('./models');
-      await User.sync({ alter: true });
-      console.log('[Database] User schema altered to ensure latest columns exist.');
-      await Patient.sync({ alter: true });
-      console.log('[Database] Patient schema altered to ensure latest columns exist.');
-      await WebsiteReview.sync({ alter: true });
-      console.log('[Database] WebsiteReview schema initialized/altered.');
+      const { User, Patient, WebsiteReview, Doctor, Appointment, LabTestOrder } = require('./models');
+      
+      const syncTable = async (model, name) => {
+        try {
+          await model.sync({ alter: true });
+          console.log(`[Database] ${name} schema verified/altered successfully.`);
+        } catch (err) {
+          console.error(`[Database] Failed to alter ${name} table:`, err.message);
+        }
+      };
+
+      await syncTable(User, 'User');
+      await syncTable(Patient, 'Patient');
+      await syncTable(Doctor, 'Doctor');
+      await syncTable(WebsiteReview, 'WebsiteReview');
+      await syncTable(Appointment, 'Appointment');
+      await syncTable(LabTestOrder, 'LabTestOrder');
+      
     } catch (err) {
-      console.error('[Database] Failed to alter database tables:', err.message);
+      console.error('[Database] Critical error during table synchronization loop:', err.message);
     }
     
     const server = app.listen(PORT, () => {
