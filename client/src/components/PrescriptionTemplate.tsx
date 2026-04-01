@@ -29,7 +29,8 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
 
   const doctor = appointmentData?.doctor;
   const patient = appointmentData?.patient;
-  const doctorName = `${doctor?.user?.firstName || ''} ${doctor?.user?.lastName || ''}`.trim();
+  const user = doctor?.user;
+  const doctorName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
   const patientName = `${patient?.user?.firstName || ''} ${patient?.user?.lastName || ''}`.trim();
 
   useEffect(() => {
@@ -64,9 +65,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
     return `${age} Y`;
   };
 
-  const patient = appointmentData?.patient;
-  const doctor = appointmentData?.doctor;
-  const user = doctor?.user;
+  // Patient and doctor variables are already declared at the top of the component
 
   return (
     <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative overflow-hidden">
@@ -231,7 +230,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       <div className="mt-auto pt-12 border-t-2 border-gray-100 flex justify-between items-end pb-4">
         <div className="flex gap-8 items-center">
             {/* QR Code */}
-            <div className="p-1 bgColor-white border-2 border-blue-50 shadow-inner rounded-xl overflow-hidden">
+            <div className="p-1 bg-white border-2 border-blue-50 shadow-inner rounded-xl overflow-hidden">
                 {qrCodeData ? (
                     <img src={qrCodeData} alt="QR" className="w-24 h-24" />
                 ) : (
@@ -270,6 +269,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           authorized pharmacy. To verify authenticity, scan the QR code or use the verify token: 
           <span className="font-mono text-blue-900 ml-1">LV-{prescriptionData?.id || '00'}T{(Math.random()*1000).toFixed(0)}</span>
         </p>
+      </div>
       </div>
     </div>
   );
