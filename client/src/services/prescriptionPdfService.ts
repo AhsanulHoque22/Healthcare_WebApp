@@ -15,19 +15,20 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   
   const parseJsonField = (field: any) => {
     if (!field) return null;
-    if (typeof field !== 'string') return field;
+    if (typeof field === 'object') return field;
     try {
       return JSON.parse(field);
     } catch {
-      return field;
+      return null;
     }
   };
 
   const medicines = parseJsonField(prescriptionData?.medicines);
-  const symptoms = parseJsonField(prescriptionData?.symptoms);
-  const diagnoses = parseJsonField(prescriptionData?.diagnosis || prescriptionData?.diagnoses);
+  const symptoms = parseJsonField(prescriptionData?.symptoms) || appointmentData?.symptoms;
+  const diagnoses = parseJsonField(prescriptionData?.diagnosis) || appointmentData?.diagnosis;
+  const suggestions = parseJsonField(prescriptionData?.suggestions) || appointmentData?.notes;
   const tests = parseJsonField(prescriptionData?.tests);
-  const suggestions = parseJsonField(prescriptionData?.suggestions);
+  const basicPrescription = appointmentData?.prescription;
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -242,6 +243,16 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.text('Rx', rightColX, rightY + 5);
   
   rightY += 15;
+
+  // Basic fallback if no structured medicines
+  if (!medicines && basicPrescription) {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    const lines = doc.splitTextToSize(basicPrescription, rightColWidth - 5);
+    doc.text(lines, rightColX, rightY);
+    rightY += lines.length * 4.5 + 5;
+  }
 
   if (Array.isArray(medicines) && medicines.length > 0) {
     (doc as any).autoTable({

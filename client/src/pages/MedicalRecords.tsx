@@ -186,7 +186,12 @@ const MedicalRecords: React.FC = () => {
     } catch (error: any) {
       console.error('PDF generation error:', error);
       if (error.response?.status === 404) {
-        toast.error('No prescription has been created for this appointment yet.');
+        // Fallback: Generate basic PDF from appointment notes if prescription is missing
+        try {
+          await generatePrescriptionPdf({ prescriptionData: null, appointmentData: appointment });
+        } catch (fallbackError) {
+          toast.error('No prescription found, and failed to generate basic summary.');
+        }
       } else {
         toast.error('Failed to generate high-fidelity prescription PDF. Please try again.');
       }
