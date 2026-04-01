@@ -941,24 +941,127 @@ const Appointments: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Medical Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Medical Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Allergies</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.allergies || 'None reported'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Current Medications</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.currentMedications || 'None reported'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Medical History</label>
-                      <p className="text-gray-900">{selectedAppointment.patient?.medicalHistory || 'None reported'}</p>
-                    </div>
-                  </div>
-                </div>
+                 {/* Medical Information */}
+                 <div className="space-y-6">
+                   <h3 className="text-xl font-bold text-gray-900 border-b pb-2">Medical Information</h3>
+                   
+                   {/* Vitals Section */}
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                     <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                       <label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Height</label>
+                       <p className="text-lg font-bold text-blue-900">{selectedAppointment.patient?.height ? `${selectedAppointment.patient.height} cm` : '—'}</p>
+                     </div>
+                     <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                       <label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Weight</label>
+                       <p className="text-lg font-bold text-emerald-900">{selectedAppointment.patient?.weight ? `${selectedAppointment.patient.weight} kg` : '—'}</p>
+                     </div>
+                     <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                       <label className="text-xs font-bold text-purple-600 uppercase tracking-wider">Blood Pressure</label>
+                       <p className="text-lg font-bold text-purple-900">{selectedAppointment.patient?.bloodPressure || '—'}</p>
+                     </div>
+                     <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                       <label className="text-xs font-bold text-red-600 uppercase tracking-wider">Pulse</label>
+                       <p className="text-lg font-bold text-red-900">{selectedAppointment.patient?.pulse ? `${selectedAppointment.patient.pulse} bpm` : '—'}</p>
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-4">
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                           Allergies
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.allergies || 'None reported'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                           Current Medications
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.currentMedications || 'None reported'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                           Chronic Conditions
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.chronicConditions || 'None reported'}
+                         </p>
+                       </div>
+                     </div>
+
+                     <div className="space-y-4">
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                           Smoking Status
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.smokingStatus || 'Not specified'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                           Alcohol Consumption
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.alcoholConsumption || 'Not specified'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 bg-teal-500 rounded-full"></div>
+                           Physical Activity
+                         </label>
+                         <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                           {selectedAppointment.patient?.physicalActivity || 'Not specified'}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div className="space-y-4">
+                     <div>
+                       <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                         Medical History / Past Surgeries
+                       </label>
+                       <div className="text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-100 mt-1 space-y-2">
+                         {selectedAppointment.patient?.medicalHistory && (
+                           <div>
+                             <span className="text-xs font-bold text-gray-400 uppercase">History:</span>
+                             <p>{selectedAppointment.patient.medicalHistory}</p>
+                           </div>
+                         )}
+                         {selectedAppointment.patient?.pastSurgeries && (
+                           <div>
+                             <span className="text-xs font-bold text-gray-400 uppercase">Surgeries:</span>
+                             <p>{selectedAppointment.patient.pastSurgeries}</p>
+                           </div>
+                         )}
+                         {!selectedAppointment.patient?.medicalHistory && !selectedAppointment.patient?.pastSurgeries && (
+                           <p>None reported</p>
+                         )}
+                       </div>
+                     </div>
+                     <div>
+                       <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                         Family Medical History
+                       </label>
+                       <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                         {selectedAppointment.patient?.familyMedicalHistory || 'None reported'}
+                       </p>
+                     </div>
+                   </div>
+                 </div>
 
                 {/* Patient Uploaded Medical Documents */}
                 {selectedAppointment.patient?.medicalDocuments && selectedAppointment.patient.medicalDocuments.length > 0 && (

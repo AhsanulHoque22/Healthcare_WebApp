@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 import { 
   DocumentTextIcon, 
   EyeIcon, 
@@ -18,7 +19,7 @@ import {
   CheckCircleIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
-import jsPDF from 'jspdf';
+import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
 import PrescriptionView from '../components/PrescriptionView';
 import MedicineHistory from '../components/MedicineHistory';
 import { getDepartmentLabel } from '../utils/departments';
@@ -53,6 +54,16 @@ interface AppointmentMedicalRecord {
     allergies: string;
     medicalHistory: string;
     currentMedications: string;
+    height?: number;
+    weight?: number;
+    bloodPressure?: string;
+    pulse?: number;
+    chronicConditions?: string;
+    pastSurgeries?: string;
+    familyMedicalHistory?: string;
+    smokingStatus?: string;
+    alcoholConsumption?: string;
+    physicalActivity?: string;
     emergencyContact: string;
     emergencyPhone: string;
     medicalDocuments?: Array<{
@@ -74,21 +85,11 @@ interface AppointmentMedicalRecord {
 interface PrescriptionData {
   id: number;
   appointmentId: number;
-  medicines: Array<{
-    name: string;
-    dosage: string;
-    schedule: string;
-    instructions?: string;
-  }>;
-  tests: Array<{
-    name: string;
-    status: string;
-    result?: string;
-  }>;
-  recommendations: string;
-  exercises: string;
-  followUpInstructions: string;
-  emergencyInstructions: string;
+  symptoms?: string | any[];
+  diagnoses?: string | any[];
+  medicines?: string | any[];
+  tests?: string | any[];
+  suggestions?: string | any;
   createdAt: string;
 }
 
@@ -166,164 +167,23 @@ const MedicalRecords: React.FC = () => {
     }
   };
 
-  const handleDownload = (appointment: AppointmentMedicalRecord) => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MEDICAL RECORD', 105, 20, { align: 'center' });
-    
-    // Line under header
-    doc.setLineWidth(0.5);
-    doc.line(20, 25, 190, 25);
-    
-    let yPos = 35;
-    
-    // Appointment Information
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Appointment Information:', 20, yPos);
-    yPos += 7;
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${new Date(appointment.appointmentDate).toLocaleDateString()}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Time: ${appointment.appointmentTime}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Serial #: ${appointment.serialNumber}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Type: ${appointment.type.replace('_', ' ').toUpperCase()}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Doctor: Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Department: ${getDepartmentLabel(appointment.doctor.department)}`, 20, yPos);
-    yPos += 10;
-    
-    // Patient Information
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
-    }
-    doc.setFont('helvetica', 'bold');
-    doc.text('Patient Information:', 20, yPos);
-    yPos += 7;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${appointment.patient.user.firstName} ${appointment.patient.user.lastName}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Blood Type: ${appointment.patient.bloodType || 'Not provided'}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Allergies: ${appointment.patient.allergies || 'None reported'}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Current Medications: ${appointment.patient.currentMedications || 'None reported'}`, 20, yPos);
-    yPos += 10;
-    
-    // Reason and Symptoms
-    if (appointment.reason || appointment.symptoms) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Appointment Details:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
+  const handleDownload = async (appointment: AppointmentMedicalRecord | null) => {
+    if (!appointment) return;
+    try {
+      // Attempt to fetch prescription data for high-fidelity PDF
+      const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
+      const prescriptionData = response.data.data.prescription;
       
-      if (appointment.reason) {
-        doc.text(`Reason: ${appointment.reason}`, 20, yPos);
-        yPos += 5;
+      if (prescriptionData) {
+        generatePrescriptionPdf({ prescriptionData, appointmentData: appointment });
+      } else {
+        // Fallback to basic record if no structured prescription exists
+        toast.error('No structured prescription found for this record.');
       }
-      if (appointment.symptoms) {
-        const symptomLines = doc.splitTextToSize(`Symptoms: ${appointment.symptoms}`, 170);
-        doc.text(symptomLines, 20, yPos);
-        yPos += symptomLines.length * 5 + 5;
-      }
+    } catch (error) {
+      console.error('Error fetching prescription for download:', error);
+      toast.error('Failed to generate high-fidelity prescription PDF.');
     }
-    
-    // Doctor's Notes
-    if (appointment.notes) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Doctor\'s Notes:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
-      const notesLines = doc.splitTextToSize(appointment.notes, 170);
-      doc.text(notesLines, 20, yPos);
-      yPos += notesLines.length * 5 + 5;
-    }
-    
-    // Diagnosis
-    if (appointment.diagnosis) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Diagnosis:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
-      const diagnosisLines = doc.splitTextToSize(appointment.diagnosis, 170);
-      doc.text(diagnosisLines, 20, yPos);
-      yPos += diagnosisLines.length * 5 + 5;
-    }
-    
-    // Prescription
-    if (appointment.prescription) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Prescription:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
-      const prescriptionLines = doc.splitTextToSize(appointment.prescription, 170);
-      doc.text(prescriptionLines, 20, yPos);
-      yPos += prescriptionLines.length * 5 + 5;
-    }
-    
-    // Appointment Duration
-    if (appointment.startedAt && appointment.completedAt) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Appointment Duration:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
-      const start = new Date(appointment.startedAt);
-      const end = new Date(appointment.completedAt);
-      const diffMs = end.getTime() - start.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const hours = Math.floor(diffMins / 60);
-      const mins = diffMins % 60;
-      const duration = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-      doc.text(`Started: ${start.toLocaleString()}`, 20, yPos);
-      yPos += 5;
-      doc.text(`Completed: ${end.toLocaleString()}`, 20, yPos);
-      yPos += 5;
-      doc.text(`Duration: ${duration}`, 20, yPos);
-      yPos += 5;
-    }
-    
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
-      doc.text('This is a computer-generated medical record', 105, 285, { align: 'center' });
-    }
-    
-    // Save the PDF
-    const fileName = `medical-record-${appointment.id}-${new Date(appointment.appointmentDate).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
   };
 
   const getAppointmentTypeColor = (type: string) => {
@@ -748,20 +608,123 @@ const MedicalRecords: React.FC = () => {
                 </div>
 
                 {/* Medical Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Medical Information</h3>
-                  <div className="space-y-3">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-gray-900 border-b pb-2">Medical Information</h3>
+                  
+                  {/* Vitals Section */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                      <label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Height</label>
+                      <p className="text-lg font-bold text-blue-900">{selectedRecord.patient?.height ? `${selectedRecord.patient.height} cm` : '—'}</p>
+                    </div>
+                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                      <label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Weight</label>
+                      <p className="text-lg font-bold text-emerald-900">{selectedRecord.patient?.weight ? `${selectedRecord.patient.weight} kg` : '—'}</p>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                      <label className="text-xs font-bold text-purple-600 uppercase tracking-wider">Blood Pressure</label>
+                      <p className="text-lg font-bold text-purple-900">{selectedRecord.patient?.bloodPressure || '—'}</p>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                      <label className="text-xs font-bold text-red-600 uppercase tracking-wider">Pulse</label>
+                      <p className="text-lg font-bold text-red-900">{selectedRecord.patient?.pulse ? `${selectedRecord.patient.pulse} bpm` : '—'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                          Allergies
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.allergies || 'None reported'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          Current Medications
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.currentMedications || 'None reported'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                          Chronic Conditions
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.chronicConditions || 'None reported'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                          Smoking Status
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.smokingStatus || 'Not specified'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                          Alcohol Consumption
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.alcoholConsumption || 'Not specified'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-teal-500 rounded-full"></div>
+                          Physical Activity
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                          {selectedRecord.patient?.physicalActivity || 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Allergies</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.allergies || 'None reported'}</p>
+                      <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                        Medical History / Past Surgeries
+                      </label>
+                      <div className="text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-100 mt-1 space-y-2">
+                        {selectedRecord.patient?.medicalHistory && (
+                          <div>
+                            <span className="text-xs font-bold text-gray-400 uppercase">History:</span>
+                            <p>{selectedRecord.patient.medicalHistory}</p>
+                          </div>
+                        )}
+                        {selectedRecord.patient?.pastSurgeries && (
+                          <div>
+                            <span className="text-xs font-bold text-gray-400 uppercase">Surgeries:</span>
+                            <p>{selectedRecord.patient.pastSurgeries}</p>
+                          </div>
+                        )}
+                        {!selectedRecord.patient?.medicalHistory && !selectedRecord.patient?.pastSurgeries && (
+                          <p>None reported</p>
+                        )}
+                      </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Current Medications</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.currentMedications || 'None reported'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Medical History</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.medicalHistory || 'None reported'}</p>
+                      <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                        Family Medical History
+                      </label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
+                        {selectedRecord.patient?.familyMedicalHistory || 'None reported'}
+                      </p>
                     </div>
                   </div>
                 </div>
