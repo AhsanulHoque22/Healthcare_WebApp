@@ -26,7 +26,9 @@ const runDailyReminders = async () => {
 
 const startDailyReminderScheduler = () => {
   setInterval(runDailyReminders, 60 * 60 * 1000);
-  runDailyReminders();
+  runDailyReminders().catch(err => {
+    console.error('[dailyAppointmentReminder] Initial run failed:', err.message);
+  });
 };
 
 module.exports = { startDailyReminderScheduler };

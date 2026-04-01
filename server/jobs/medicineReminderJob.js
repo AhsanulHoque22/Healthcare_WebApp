@@ -106,7 +106,9 @@ async function runMedicineReminders() {
 function startMedicineReminderJob() {
   const intervalMs = 5 * 60 * 1000;
   setInterval(runMedicineReminders, intervalMs);
-  runMedicineReminders();
+  runMedicineReminders().catch(err => {
+    console.error('[medicineReminderJob] Initial run failed:', err.message);
+  });
 }
 
 module.exports = { startMedicineReminderJob, runMedicineReminders };

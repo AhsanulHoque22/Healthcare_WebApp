@@ -90,7 +90,3 @@ const PrescriptionView: React.FC<PrescriptionViewProps> = ({
 };
 
 export default PrescriptionView;
-  );
-};
-
-export default PrescriptionView;
