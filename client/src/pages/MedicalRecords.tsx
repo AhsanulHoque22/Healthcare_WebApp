@@ -78,6 +78,8 @@ interface AppointmentMedicalRecord {
       lastName: string;
       email: string;
       phone: string;
+      dateOfBirth?: string;
+      gender?: string;
     };
   };
 }

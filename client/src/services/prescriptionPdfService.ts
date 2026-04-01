@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { getDepartmentLabel } from '../utils/departments';
 
