@@ -8,6 +8,7 @@ const {
   triggerWelcomePatient,
   triggerWelcomeDoctor,
   triggerDoctorVerificationRequest,
+  buildEmailHtml,
 } = require('../services/notificationTriggers');
 
 // Generate JWT token
@@ -286,6 +287,23 @@ const changePassword = async (req, res, next) => {
     // Update password
     await user.update({ password: newPassword });
 
+    // Security alert email — fire in background
+    sendEmail({
+      to: user.email,
+      subject: 'Password Changed – Livora Security Alert',
+      html: buildEmailHtml('Your Password Has Been Changed', `
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${user.firstName || ''},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your Livora account password was successfully changed.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffaf0;border-left:4px solid #dd6b20;border-radius:4px;padding:20px;margin:0 0 20px;">
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:180px;">Date &amp; Time</td><td style="padding:6px 0;color:#2d3748;">${new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Account</td><td style="padding:6px 0;color:#2d3748;">${user.email}</td></tr>
+        </table>
+        <p style="color:#e53e3e;font-weight:600;margin:0 0 8px;">⚠️ If you did not make this change:</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Contact our support team immediately and use the "Forgot Password" feature to secure your account.</p>
+        <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+      `)
+    }).catch(err => console.error('[authController] changePassword email failed:', err.message));
+
     res.json({
       success: true,
       message: 'Password changed successfully'
@@ -475,6 +493,23 @@ const resetPassword = async (req, res, next) => {
       resetPasswordToken: null,
       resetPasswordExpires: null
     });
+
+    // Confirmation email — fire in background
+    sendEmail({
+      to: user.email,
+      subject: 'Password Reset Successful – Livora',
+      html: buildEmailHtml('Password Reset Successful', `
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${user.firstName || ''},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your Livora account password has been successfully reset. You can now log in with your new password.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border-left:4px solid #38a169;border-radius:4px;padding:20px;margin:0 0 20px;">
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:180px;">Date &amp; Time</td><td style="padding:6px 0;color:#2d3748;">${new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Account</td><td style="padding:6px 0;color:#2d3748;">${user.email}</td></tr>
+        </table>
+        <p style="color:#e53e3e;font-weight:600;margin:0 0 8px;">⚠️ If you did not request this reset:</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Contact our support team immediately as your account may have been compromised.</p>
+        <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+      `)
+    }).catch(err => console.error('[authController] resetPassword email failed:', err.message));
 
     res.status(200).json({
       success: true,

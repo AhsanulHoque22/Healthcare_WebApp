@@ -2,10 +2,12 @@ const { User, Patient, Doctor, Appointment, MedicalRecord, DoctorRating } = requ
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const { body, validationResult } = require('express-validator');
+const { sendEmail } = require('../services/emailService');
 const {
   triggerDoctorVerified,
   triggerUserDeactivated,
   triggerNewUserRegistration,
+  buildEmailHtml,
 } = require('../services/notificationTriggers');
 
 // Get all users with pagination and filters
@@ -133,6 +135,30 @@ const updateUserStatus = async (req, res, next) => {
       triggerUserDeactivated(updatedUser.get({ plain: true })).catch((err) =>
         console.error('[adminController] triggerUserDeactivated:', err.message)
       );
+
+      // Email the deactivated user directly
+      sendEmail({
+        to: updatedUser.email,
+        subject: 'Account Deactivated – Livora',
+        html: buildEmailHtml('Your Account Has Been Deactivated', `
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${updatedUser.firstName || ''},</p>
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your Livora account has been deactivated by an administrator.</p>
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">If you believe this is a mistake or have questions, please contact our support team.</p>
+          <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+        `)
+      }).catch(err => console.error('[adminController] Deactivation email failed:', err.message));
+    } else if (isActive === true) {
+      // Email the reactivated user directly
+      sendEmail({
+        to: updatedUser.email,
+        subject: 'Account Reactivated – Livora',
+        html: buildEmailHtml('Your Account Has Been Reactivated', `
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${updatedUser.firstName || ''},</p>
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Great news! Your Livora account has been reactivated by an administrator.</p>
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">You can now log in to your dashboard and resume using all Livora services.</p>
+          <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+        `)
+      }).catch(err => console.error('[adminController] Reactivation email failed:', err.message));
     }
 
     res.json({
@@ -165,6 +191,18 @@ const deleteUser = async (req, res, next) => {
     triggerUserDeactivated(updatedUser.get({ plain: true })).catch((err) =>
       console.error('[adminController] triggerUserDeactivated:', err.message)
     );
+
+    // Email the deactivated user directly
+    sendEmail({
+      to: updatedUser.email,
+      subject: 'Account Deactivated – Livora',
+      html: buildEmailHtml('Your Account Has Been Deactivated', `
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${updatedUser.firstName || ''},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your Livora account has been deactivated by an administrator.</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">If you believe this is a mistake or have questions, please contact our support team.</p>
+        <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+      `)
+    }).catch(err => console.error('[adminController] Deactivation email failed:', err.message));
 
     res.json({
       success: true,
