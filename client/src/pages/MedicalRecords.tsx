@@ -104,6 +104,7 @@ const MedicalRecords: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'appointments' | 'medicines'>('appointments');
   const [pageLoaded, setPageLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<number | null>(null);
 
   // Get patient ID first
   const { data: patientProfile } = useQuery({
@@ -182,9 +183,15 @@ const MedicalRecords: React.FC = () => {
         // Fallback to basic record if no structured prescription exists
         toast.error('No structured prescription found for this record.');
       }
-    } catch (error) {
-      console.error('Error fetching prescription for download:', error);
-      toast.error('Failed to generate high-fidelity prescription PDF.');
+    } catch (error: any) {
+      console.error('PDF generation error:', error);
+      if (error.response?.status === 404) {
+        toast.error('No prescription has been created for this appointment yet.');
+      } else {
+        toast.error('Failed to generate high-fidelity prescription PDF. Please try again.');
+      }
+    } finally {
+      setIsDownloading(null);
     }
   };
 

@@ -9,7 +9,9 @@ export interface PrescriptionPdfData {
 }
 
 export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
-  const { prescriptionData, appointmentData } = data;
+  try {
+    const { prescriptionData, appointmentData } = data;
+    console.log('[PDF Service] Starting generation for prescription:', prescriptionData?.id);
   
   const parseJsonField = (field: any) => {
     if (!field) return null;
@@ -241,47 +243,23 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   
   rightY += 15;
 
-  if (medicines && Array.isArray(medicines) && medicines.length > 0) {
-    medicines.forEach((med: any, idx: number) => {
-      if (rightY > 240) {
-        doc.addPage();
-        rightY = margin + 10;
-        // Reinstate borders and vertical line if needed
-      }
-
-      // Index and Name
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(20, 20, 20);
-      doc.text(`${idx + 1}. ${med.form || 'Tab.'} ${med.name} ${med.strength || med.dosage}`, rightColX, rightY);
-      
-      // Generic Name
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(120, 120, 120);
-      doc.text(`(${med.genericName || 'Generic N/A'})`, rightColX + 5, rightY + 4);
-      
-      // Sig/Instructions
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(41, 50, 100);
-      const schedule = `Sig: ${med.morning || 0}-${med.lunch || 0}-${med.dinner || 0} (${med.mealTiming || 'after meal'}) x ${med.duration || 0} Days`;
-      doc.text(schedule, rightColX + 5, rightY + 9);
-      
-      // Details (Route, Disp)
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(150, 150, 150);
-      const details = `ROUTE: ${med.route || 'PO'}    |    DISP: ${(parseInt(med.morning || 0) + parseInt(med.lunch || 0) + parseInt(med.dinner || 0)) * (parseInt(med.duration || 0))} UNITS`;
-      doc.text(details, rightColX + 5, rightY + 13);
-
-      if (med.notes) {
-        doc.text(`Note: ${med.notes}`, rightColX + 5, rightY + 17);
-        rightY += 17 + 8;
-      } else {
-        rightY += 13 + 8;
-      }
+  if (Array.isArray(medicines) && medicines.length > 0) {
+    (doc as any).autoTable({
+      startY: rightY,
+      head: [['Medicine', 'Dosage', 'Duration', 'Instructions']],
+      body: medicines.map((m: any) => [
+        `${m.name || 'Unknown'} ${m.strength || ''}`,
+        `${m.morning || 0}-${m.lunch || 0}-${m.dinner || 0}`,
+        `${m.duration || 0} Days`,
+        m.notes || '—'
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [41, 98, 180], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 8 },
+      margin: { left: rightColX },
+      tableWidth: rightColWidth - 5
     });
+    rightY = (doc as any).lastAutoTable.finalY + 10;
   }
 
   // Advice/Suggestions at bottom right
@@ -355,4 +333,8 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     // Fallback filename if the complex one fails
     doc.save('Prescription_Download.pdf');
   }
+} catch (error) {
+  console.error('[PDF Service] Generation crashed:', error);
+  throw error;
+}
 };
