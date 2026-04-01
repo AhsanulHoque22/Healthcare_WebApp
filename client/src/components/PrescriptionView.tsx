@@ -17,10 +17,17 @@ const PrescriptionView: React.FC<PrescriptionViewProps> = ({
   userRole = 'patient'
 }) => {
   const handleInternalDownload = async () => {
-    if (onDownload) {
-      onDownload();
-    } else {
-      await generatePrescriptionPdf({ prescriptionData, appointmentData });
+    try {
+      if (onDownload) {
+        onDownload();
+      } else {
+        await generatePrescriptionPdf({ prescriptionData, appointmentData });
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      import('react-hot-toast').then(({ toast }) => {
+        toast.error('Failed to generate PDF. Please try again.');
+      });
     }
   };
 

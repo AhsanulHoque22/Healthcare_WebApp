@@ -10,10 +10,11 @@ export interface PrescriptionPdfData {
 export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   const { prescriptionData, appointmentData } = data;
   
-  const parseJsonField = (field: string) => {
+  const parseJsonField = (field: any) => {
     if (!field) return null;
+    if (typeof field !== 'string') return field;
     try {
-      return typeof field === 'string' ? JSON.parse(field) : field;
+      return JSON.parse(field);
     } catch {
       return field;
     }
@@ -41,16 +42,26 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
 
   // ─────────────────────────────────────────────────────────
   // BACKGROUND WATERMARK (Digitally Generated)
-  doc.setTextColor(245, 245, 245);
-  doc.setFontSize(60);
-  doc.setFont('helvetica', 'bold');
-  doc.saveGraphicsState();
-  doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
-  doc.text('DIGITALLY GENERATED', pageWidth / 2, pageHeight / 2, {
-    align: 'center',
-    angle: 45
-  });
-  doc.restoreGraphicsState();
+  try {
+    doc.setTextColor(245, 245, 245);
+    doc.setFontSize(60);
+    doc.setFont('helvetica', 'bold');
+    doc.saveGraphicsState();
+    
+    // Safety check for GState
+    const GState = (doc as any).GState || (jsPDF as any).GState;
+    if (GState) {
+      doc.setGState(new GState({ opacity: 0.1 }));
+    }
+    
+    doc.text('DIGITALLY GENERATED', pageWidth / 2, pageHeight / 2, {
+      align: 'center',
+      angle: 45
+    });
+    doc.restoreGraphicsState();
+  } catch (watermarkError) {
+    console.warn('Failed to render watermark:', watermarkError);
+  }
 
   // ─────────────────────────────────────────────────────────
   // PAGE BORDER
@@ -329,6 +340,18 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.setFontSize(6);
   doc.text(`Page 1 of 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-  const fileName = `Prescription_${patientName.replace(/\s/g, '_')}_${rxDate.replace(/\s/g, '')}.pdf`;
-  doc.save(fileName);
+  const sanitizeFileName = (name: string) => {
+    return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  };
+
+  const safePatientName = sanitizeFileName(patientName);
+  const fileName = `Prescription_${safePatientName}_${new Date().getTime()}.pdf`;
+  
+  try {
+    doc.save(fileName);
+  } catch (saveError) {
+    console.error('Final PDF save failed:', saveError);
+    // Fallback filename if the complex one fails
+    doc.save('Prescription_Download.pdf');
+  }
 };

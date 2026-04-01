@@ -27,6 +27,12 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   const tests = parseJsonField(prescriptionData?.tests);
   const suggestions = parseJsonField(prescriptionData?.suggestions);
 
+  const safeNum = (val: any): number => {
+    if (!val) return 0;
+    const parsed = parseInt(String(val));
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
   const doctor = appointmentData?.doctor;
   const patient = appointmentData?.patient;
   const user = doctor?.user;
@@ -194,7 +200,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
                     </div>
                     <div className="flex gap-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-4 font-sans">
                       <span className="flex items-center gap-1.5">ROUTE: {med.route || 'PO'}</span>
-                      <span className="flex items-center gap-1.5">DISP: {med.quantity || (parseInt(med.morning || 0) + parseInt(med.lunch || 0) + parseInt(med.dinner || 0)) * (parseInt(med.duration || 0))} UNITS</span>
+                      <span className="flex items-center gap-1.5 font-bold text-blue-700">DISP: {med.quantity || (safeNum(med.morning) + safeNum(med.lunch) + safeNum(med.dinner)) * (safeNum(med.duration))} UNITS</span>
                     </div>
                     {med.notes && <p className="text-[11px] text-gray-400 italic mt-2 pl-4 font-sans">Instructions: {med.notes}</p>}
                   </div>
