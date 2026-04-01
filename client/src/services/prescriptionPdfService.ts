@@ -63,12 +63,17 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   let y = margin + 5;
   
   // App Logo/Name
-  doc.setFillColor(41, 98, 180);
-  doc.roundedRect(margin, margin, 12, 12, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('L', margin + 6, margin + 8.5, { align: 'center' });
+  try {
+    doc.addImage('/logo.png', 'PNG', margin, margin, 12, 12);
+  } catch (e) {
+    // Fallback if image fails to load
+    doc.setFillColor(41, 98, 180);
+    doc.roundedRect(margin, margin, 12, 12, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('L', margin + 6, margin + 8.5, { align: 'center' });
+  }
 
   doc.setTextColor(41, 50, 100);
   doc.setFontSize(18);
@@ -119,8 +124,20 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.text('WEIGHT', margin + 100, y + 5);
   doc.text('DATE', pageWidth - margin - 3, y + 5, { align: 'right' });
 
+  const calculateAge = (dob: string | Date | null) => {
+    if (!dob) return '—';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return `${age} Y`;
+  };
+
   const patientName = `${appointmentData?.patient?.user?.firstName || ''} ${appointmentData?.patient?.user?.lastName || ''}`.trim() || 'N/A';
-  const patientAge = appointmentData?.patient?.age || '—';
+  const patientAge = calculateAge(appointmentData?.patient?.user?.dateOfBirth || appointmentData?.patient?.dateOfBirth);
   const patientGender = (appointmentData?.patient?.user?.gender || appointmentData?.patient?.gender || '—').charAt(0).toUpperCase();
   const patientWeight = appointmentData?.patient?.weight ? `${appointmentData.patient.weight} kg` : '—';
   const rxDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -128,7 +145,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.setFontSize(9);
   doc.setTextColor(20, 20, 20);
   doc.text(patientName, margin + 3, y + 10);
-  doc.text(`${patientAge} Y / ${patientGender}`, margin + 60, y + 10);
+  doc.text(`${patientAge} / ${patientGender}`, margin + 60, y + 10);
   doc.text(patientWeight, margin + 100, y + 10);
   doc.text(rxDate, pageWidth - margin - 3, y + 10, { align: 'right' });
 

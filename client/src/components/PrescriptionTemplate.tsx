@@ -52,49 +52,75 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
     generateQR();
   }, [prescriptionData?.id, appointmentData?.id]);
 
+  const calculateAge = (dob: string | Date | null) => {
+    if (!dob) return '—';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return `${age} Y`;
+  };
+
+  const patient = appointmentData?.patient;
+  const doctor = appointmentData?.doctor;
+  const user = doctor?.user;
+
   return (
-    <div className="bg-white p-8 shadow-2xl border border-gray-200 w-full max-w-[800px] mx-auto min-h-[1100px] relative font-serif text-gray-800">
-      {/* Watermark */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
-        <h1 className="text-9xl font-bold -rotate-45 whitespace-nowrap">DIGITALLY GENERATED</h1>
+    <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative overflow-hidden">
+      {/* Background Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
+        <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
+          DIGITALLY GENERATED
+        </h1>
       </div>
 
-      {/* Header Area */}
-      <div className="flex justify-between items-start border-b-2 border-blue-600 pb-6 mb-8">
-        <div className="flex items-center gap-4 border-l-4 border-blue-800 pl-4">
-          <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-            L
+      <div className="relative z-10">
+        {/* Prescription Header */}
+        <div className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-8">
+          <div className="flex items-center gap-6">
+            <div className="bg-white p-1 rounded-2xl shadow-sm border border-blue-100">
+               <img src="/logo.png" className="h-20 w-20 object-contain" alt="Livora Logo" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-blue-900 tracking-tighter">LIVORA</h1>
+              <p className="text-xs text-blue-600 font-bold uppercase tracking-[0.2em] opacity-80">Premium Healthcare Network</p>
+              <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-500 font-medium">
+                <span>WWW.LIVORA-HEALTH.APP</span>
+                <span className="w-1 h-1 bg-blue-300 rounded-full"></span>
+                <span>SUPPORT@LIVORA-HEALTH.APP</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <h2 className="text-2xl font-bold text-gray-900 leading-tight">Dr. {user?.firstName} {user?.lastName}</h2>
+            <p className="text-sm font-bold text-blue-600">{doctor?.qualifications || 'MBBS, MD'}</p>
+            <p className="text-xs font-black text-gray-400 mt-1 uppercase tracking-widest">{doctor?.department || 'Specialist'}</p>
+            <p className="text-[10px] text-gray-400 font-bold mt-2">BMDC REG: {doctor?.bmdcRegistrationNumber || 'N/A'}</p>
+          </div>
+        </div>
+
+        {/* Patient Info Bar */}
+        <div className="grid grid-cols-4 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-10">
+          <div>
+            <p className="text-[9px] text-gray-400 font-bold uppercase">Patient Name</p>
+            <p className="font-bold text-gray-900 text-lg leading-tight">
+              {patient?.user?.firstName} {patient?.user?.lastName || 'N/A'}
+            </p>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-blue-900 tracking-tight">LIVORA</h1>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest font-sans">Premium Healthcare Network</p>
-            <p className="text-[11px] text-gray-500 mt-1 max-w-[200px] font-sans">123 Wellness Avenue, Medical District, Suite 500, Dhaka</p>
+            <p className="text-[9px] text-gray-400 font-bold uppercase">Age / Sex</p>
+            <p className="font-bold text-gray-900">
+              {calculateAge(patient?.user?.dateOfBirth || patient?.dateOfBirth)} / {(patient?.user?.gender || patient?.gender || 'M').charAt(0).toUpperCase()}
+            </p>
           </div>
-        </div>
-        <div className="text-right">
-          <h2 className="text-lg font-bold text-gray-900 italic">Dr. {doctorName}</h2>
-          <p className="text-sm text-blue-700 font-semibold">{doctor?.qualifications || 'MBBS, MD'}</p>
-          <p className="text-xs text-gray-600 font-medium">BMDC Reg: {doctor?.bmdcRegistrationNumber || 'N/A'}</p>
-          <p className="text-xs text-gray-600">Specialist: {doctor?.department || 'General Physician'}</p>
-        </div>
-      </div>
-
-      {/* Patient Info Bar */}
-      <div className="bg-blue-50/40 border border-blue-100 rounded-lg p-4 mb-8 grid grid-cols-4 gap-4 text-sm font-sans">
-        <div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase">Patient Name</p>
-          <p className="font-bold text-gray-900 truncate">{patientName || 'N/A'}</p>
-        </div>
-        <div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase">Age / Sex</p>
-          <p className="font-bold text-gray-900 font-sans tracking-tighter">
-            {patient?.age || '—'} Y / {patient?.user?.gender?.charAt(0).toUpperCase() || patient?.gender?.charAt(0).toUpperCase() || '—'}
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase">Weight</p>
-          <p className="font-bold text-gray-900">{patient?.weight ? `${patient.weight} kg` : '—'}</p>
-        </div>
+          <div>
+            <p className="text-[9px] text-gray-400 font-bold uppercase">Weight</p>
+            <p className="font-bold text-gray-900">{patient?.weight ? `${patient.weight} kg` : '—'}</p>
+          </div>
         <div className="text-right">
           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Date</p>
           <p className="font-bold text-gray-900">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
