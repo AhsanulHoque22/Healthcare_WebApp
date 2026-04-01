@@ -427,80 +427,73 @@ const extractMedicinesFromPrescription = async (prescriptionId) => {
         }
       });
 
-      if (existingMedicine) {
-        // Update existing medicine instead of creating duplicate
-        await existingMedicine.update({
-          dosage: medicineData.dosage,
-          frequency: medicineData.schedule,
-          instructions: medicineData.instructions,
-          endDate: null // Reset end date for active medicine
-        });
-        createdMedicines.push(existingMedicine);
-        continue;
+      // Format dosage
+      let dosageDisplay = medicineData.dosage || 'Not specified';
+      if (medicineData.strength) {
+        dosageDisplay = medicineData.strength;
+      }
+      if (medicineData.route) {
+        dosageDisplay = `${dosageDisplay} (${medicineData.route})`;
       }
 
-      // Format dosage with unit
-      let dosageWithUnit = medicineData.dosage || 'Not specified';
-      
-      if (medicineData.dosage && medicineData.unit) {
-        // If unit is provided, use it
-        dosageWithUnit = `${medicineData.dosage}${medicineData.unit}`;
-      } else if (medicineData.dosage) {
-        // If no unit provided, add default units based on common medicine types
-        const medicineName = medicineData.name.toLowerCase();
-        if (medicineName.includes('syrup') || medicineName.includes('liquid') || medicineName.includes('drops')) {
-          dosageWithUnit = `${medicineData.dosage}ml`;
-        } else {
-          // Default to mg for tablets/capsules
-          dosageWithUnit = `${medicineData.dosage}mg`;
-        }
-      }
-
-      // Format frequency based on morning/lunch/dinner values
-      let frequency = 'As directed';
+      // Format frequency string for clinical standards (OD, BD, TDS, etc.)
+      let frequencyStr = 'As directed';
       if (medicineData.morning !== undefined && medicineData.lunch !== undefined && medicineData.dinner !== undefined) {
-        const times = [];
-        if (medicineData.morning > 0) times.push('morning');
-        if (medicineData.lunch > 0) times.push('lunch');
-        if (medicineData.dinner > 0) times.push('dinner');
+        const m = parseInt(medicineData.morning) || 0;
+        const l = parseInt(medicineData.lunch) || 0;
+        const d = parseInt(medicineData.dinner) || 0;
+        const total = m + l + d;
         
-        if (times.length > 0) {
-          frequency = times.join(' + ');
-          if (medicineData.mealTiming) {
-            frequency += ` (${medicineData.mealTiming} meal)`;
-          }
+        if (total === 1 && m === 1) frequencyStr = 'OD (Morning)';
+        else if (total === 1 && l === 1) frequencyStr = 'OD (Afternoon)';
+        else if (total === 1 && d === 1) frequencyStr = 'OD (Night)';
+        else if (total === 2 && m === 1 && d === 1) frequencyStr = 'BD (Morning + Night)';
+        else if (total === 3 && m === 1 && l === 1 && d === 1) frequencyStr = 'TDS (Three times daily)';
+        else if (total === 4) frequencyStr = 'QID (Four times daily)';
+        else frequencyStr = `${m}-${l}-${d}`;
+
+        if (medicineData.mealTiming) {
+          frequencyStr += ` [${medicineData.mealTiming} meal]`;
         }
+      } else if (medicineData.schedule) {
+        frequencyStr = medicineData.schedule;
       }
 
-      // Calculate end date based on duration
-      let endDate = null;
-      if (medicineData.duration && medicineData.duration > 0) {
-        const startDate = new Date();
-        endDate = new Date(startDate.getTime() + (medicineData.duration * 24 * 60 * 60 * 1000));
-      }
-
-      // Create new medicine
-      const medicine = await Medicine.create({
-        patientId: prescription.appointment.patient.id,
-        prescriptionId: prescription.id,
-        medicineName: medicineData.name,
-        dosage: dosageWithUnit,
-        frequency: frequency,
+      const updateData = {
+        genericName: medicineData.genericName || medicineData.generic_name || null,
+        dosage: dosageDisplay,
+        frequency: frequencyStr,
+        strength: medicineData.strength || null,
+        route: medicineData.route || null,
         duration: medicineData.duration || null,
         instructions: medicineData.notes || medicineData.instructions || '',
-        startDate: new Date(),
-        endDate: endDate,
-        isActive: true,
-        doctorId: prescription.appointment.doctor.id
-      });
+        totalQuantity: medicineData.quantity || null,
+        endDate: medicineData.duration ? new Date(Date.now() + (medicineData.duration * 24 * 60 * 60 * 1000)) : null
+      };
 
-      // Create reminders based on frequency
-      if (medicineData.schedule) {
-        const reminders = createRemindersFromSchedule(medicineData.schedule, medicine.id, prescription.appointment.patient.id);
-        await MedicineReminder.bulkCreate(reminders);
+      if (existingMedicine) {
+        await existingMedicine.update(updateData);
+        createdMedicines.push(existingMedicine);
+      } else {
+        // Create new medicine
+        const medicine = await Medicine.create({
+          patientId: prescription.appointment.patient.id,
+          prescriptionId: prescription.id,
+          medicineName: medicineData.name,
+          startDate: new Date(),
+          isActive: true,
+          doctorId: prescription.appointment.doctor.id,
+          ...updateData
+        });
+
+        // Create reminders based on frequency
+        if (medicineData.schedule || medicineData.morning !== undefined) {
+          const reminders = createRemindersFromSchedule(medicineData.schedule || `${medicineData.morning}-${medicineData.lunch}-${medicineData.dinner}`, medicine.id, prescription.appointment.patient.id);
+          await MedicineReminder.bulkCreate(reminders);
+        }
+
+        createdMedicines.push(medicine);
       }
-
-      createdMedicines.push(medicine);
     }
 
     return { success: true, data: createdMedicines };

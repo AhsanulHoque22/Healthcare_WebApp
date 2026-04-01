@@ -175,7 +175,7 @@ const MedicalRecords: React.FC = () => {
       const prescriptionData = response.data.data.prescription;
       
       if (prescriptionData) {
-        generatePrescriptionPdf({ prescriptionData, appointmentData: appointment });
+        await generatePrescriptionPdf({ prescriptionData, appointmentData: appointment });
       } else {
         // Fallback to basic record if no structured prescription exists
         toast.error('No structured prescription found for this record.');

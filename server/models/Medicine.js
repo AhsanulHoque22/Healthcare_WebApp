@@ -27,6 +27,10 @@ const Medicine = sequelize.define('Medicine', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  genericName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   dosage: {
     type: DataTypes.STRING,
     allowNull: false
@@ -34,6 +38,15 @@ const Medicine = sequelize.define('Medicine', {
   frequency: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  route: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'PO, IV, IM, etc.'
+  },
+  strength: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   duration: {
     type: DataTypes.INTEGER,
