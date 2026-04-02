@@ -451,19 +451,30 @@ const AdminDoctors: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-6">
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-4 py-2 inline-flex text-xs font-bold rounded-xl backdrop-blur-sm border ${
-                              doctor.isVerified
-                                ? 'bg-emerald-100/80 text-emerald-800 border-emerald-300/50'
-                                : 'bg-amber-100/80 text-amber-800 border-amber-300/50'
-                            }`}>
-                              {doctor.isVerified ? 'Verified' : 'Pending'}
-                            </span>
-                            {doctor.isVerified ? (
-                              <CheckBadgeIcon className="h-5 w-5 text-emerald-500" title="Verified" />
-                            ) : (
-                              <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" title="Pending Verification" />
-                            )}
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-4 py-2 inline-flex text-xs font-bold rounded-xl backdrop-blur-sm border ${
+                                doctor.isVerified
+                                  ? 'bg-emerald-100/80 text-emerald-800 border-emerald-300/50'
+                                  : 'bg-amber-100/80 text-amber-800 border-amber-300/50'
+                              }`}>
+                                {doctor.isVerified ? 'Verified' : 'Pending'}
+                              </span>
+                              {doctor.isVerified ? (
+                                <CheckBadgeIcon className="h-5 w-5 text-emerald-500" title="Verified" />
+                              ) : (
+                                <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" title="Pending Verification" />
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-4 py-1.5 inline-flex text-[10px] font-black uppercase tracking-widest rounded-lg border ${
+                                doctor.user.isActive
+                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                  : 'bg-red-50 text-red-700 border-red-100'
+                              }`}>
+                                {doctor.user.isActive ? 'Active User' : 'Inactive'}
+                              </span>
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-6">

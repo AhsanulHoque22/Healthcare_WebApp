@@ -180,6 +180,11 @@ const PublicDoctors: React.FC = () => {
             Browse through our network of top-tier healthcare professionals. 
             Real-time availability, verified qualifications, and genuine patient reviews.
           </p>
+          {!isLoading && (
+            <p className="mt-4 text-indigo-600 font-bold bg-indigo-50 inline-block px-4 py-1 rounded-full text-sm">
+              Currently showing {doctors?.length || 0} verified experts
+            </p>
+          )}
         </section>
 
         {/* Search and Filters */}
