@@ -375,7 +375,7 @@ const PublicDoctors: React.FC = () => {
                   <div className="p-6 flex-1 flex flex-col">
                     <p className="inline-flex items-center text-indigo-600 font-bold text-sm uppercase tracking-widest mb-4">
                       <AcademicCapIcon className="h-4 w-4 mr-2" />
-                      {doctor.specialization}
+                      {getDepartmentLabel(doctor.department)}
                     </p>
                     
                     <div className="space-y-3 mb-6">
@@ -481,7 +481,7 @@ const PublicDoctors: React.FC = () => {
 
                   <div className="bg-gray-50/50 rounded-[32px] p-8 border border-gray-100 text-center">
                     <h2 className="text-3xl font-black text-gray-900 mb-2 leading-tight">Dr. {selectedDoctor.user?.firstName} {selectedDoctor.user?.lastName}</h2>
-                    <p className="text-indigo-600 font-black text-sm uppercase tracking-[4px] mb-6">{selectedDoctor.specialization}</p>
+                    <p className="text-indigo-600 font-black text-sm uppercase tracking-[4px] mb-6">{getDepartmentLabel(selectedDoctor.department)}</p>
                     
                     <div className="flex flex-col gap-4">
                        <div className="flex items-center justify-between bg-white px-6 py-4 rounded-2xl border border-gray-100">

@@ -30,12 +30,12 @@ const getAllDoctors = async (req, res, next) => {
         return {
           [Op.or]: [
             { department: { [Op.like]: `%${keyword}%` } },
-            { specialization: { [Op.like]: `%${keyword}%` } },
             { hospital: { [Op.like]: `%${keyword}%` } },
             { bmdcRegistrationNumber: { [Op.like]: `%${keyword}%` } },
             { bio: { [Op.like]: `%${keyword}%` } },
             { '$user.firstName$': { [Op.like]: `%${keyword}%` } },
             { '$user.lastName$': { [Op.like]: `%${keyword}%` } },
+            // Search for full name match in case user enters "First Last"
             Doctor.sequelize.where(
               Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.firstName'), ' ', Doctor.sequelize.col('user.lastName')),
               { [Op.like]: `%${keyword}%` }
