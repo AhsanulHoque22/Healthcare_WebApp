@@ -84,7 +84,7 @@ const PublicDoctors: React.FC = () => {
     });
     
     // Final client-side sort
-    return filtered.sort((a, b) => {
+    return filtered.sort((a: any, b: any) => {
       const ratingA = a.calculatedRating || 0;
       const ratingB = b.calculatedRating || 0;
       const countA = a.totalRatings || 0;
@@ -205,7 +205,7 @@ const PublicDoctors: React.FC = () => {
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none group-focus-within:text-indigo-600 z-10">
                     <AdjustmentsVerticalIcon className="h-6 w-6 text-gray-400" />
                   </div>
-                  <Combobox value={specialization} onChange={setSpecialization}>
+                  <Combobox value={specialization} onChange={(val: string | null) => val && setSpecialization(val)}>
                     <div className="relative h-full">
                       <Combobox.Input
                         className="w-full pl-12 pr-10 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-700 font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-lg outline-none"
