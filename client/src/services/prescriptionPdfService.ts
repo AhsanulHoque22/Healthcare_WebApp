@@ -182,7 +182,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setTextColor(60, 60, 60);
     const list = Array.isArray(symptoms) ? symptoms : [symptoms];
     list.forEach(s => {
-      const desc = s.description || s;
+      const desc = (s && typeof s === 'object' ? s.description : s) || '';
       const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
       doc.text(lines, margin + 2, leftY);
       leftY += lines.length * 4.5;
@@ -197,7 +197,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setTextColor(20, 20, 40);
     const list = Array.isArray(diagnoses) ? diagnoses : [diagnoses];
     list.forEach(d => {
-      const desc = d.description || d;
+      const desc = (d && typeof d === 'object' ? d.description : d) || '';
       const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
       doc.text(lines, margin + 2, leftY);
       leftY += lines.length * 4.5;
@@ -212,7 +212,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setTextColor(60, 60, 60);
     const list = Array.isArray(tests) ? tests : [tests];
     list.forEach((t, i) => {
-      const tName = t.name || t;
+      const tName = (t && typeof t === 'object' ? t.name : t) || '';
       const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
       doc.text(lines, margin + 2, leftY);
       leftY += lines.length * 4.5;
@@ -248,12 +248,15 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     (doc as any).autoTable({
       startY: rightY,
       head: [['Medicine', 'Dosage', 'Duration', 'Instructions']],
-      body: medicines.map((m: any) => [
-        `${m.name || 'Unknown'} ${m.strength || ''}`,
-        `${m.morning || 0}-${m.lunch || 0}-${m.dinner || 0}`,
-        `${m.duration || 0} Days`,
-        m.notes || '—'
-      ]),
+      body: medicines.map((m: any) => {
+        if (!m) return ['Unknown', '-', '-', '-'];
+        return [
+          `${m.name || 'Unknown'} ${m.strength || ''}`,
+          `${m.morning || 0}-${m.lunch || 0}-${m.dinner || 0}`,
+          `${m.duration || 0} Days`,
+          m.notes || '—'
+        ];
+      }),
       theme: 'grid',
       headStyles: { fillColor: [41, 98, 180], textColor: 255, fontStyle: 'bold' },
       styles: { fontSize: 8 },
@@ -277,11 +280,10 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    
     const adviceText = typeof suggestions === 'string' ? suggestions : 
-      `${suggestions.exercises || ''}\n${suggestions.followUps?.map((f:any)=>f.description).join(', ') || ''}`;
-    
-    const lines = doc.splitTextToSize(adviceText, rightColWidth - 5);
+      `${suggestions.exercises || ''}\n${suggestions.followUps?.map((f:any)=>f?.description || f || '').filter(Boolean).join(', ') || ''}\n${suggestions.emergencyInstructions?.map((e:any)=>e?.description || e || '').filter(Boolean).join(', ') || ''}`;
+      
+    const lines = doc.splitTextToSize(adviceText.trim() || 'No specific advice', rightColWidth - 5);
     doc.text(lines, rightColX + 2, rightY);
   }
 

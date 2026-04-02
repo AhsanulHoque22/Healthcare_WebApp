@@ -130,7 +130,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Chief Complaints</h3>
               <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
                 {(Array.isArray(symptoms) ? symptoms : [symptoms]).map((s: any, i: number) => (
-                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{s.description || s}</span></li>
+                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{s?.description || s || ''}</span></li>
                 ))}
               </ul>
             </div>
@@ -141,7 +141,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Diagnosis</h3>
               <ul className="text-[13px] space-y-1.5 text-blue-950 font-bold list-inside font-sans uppercase tracking-tight">
                 {(Array.isArray(diagnoses) ? diagnoses : [diagnoses]).map((d: any, i: number) => (
-                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{d.description || d}</span></li>
+                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{d?.description || d || ''}</span></li>
                 ))}
               </ul>
             </div>
@@ -152,7 +152,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Investigations</h3>
               <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
                 {(Array.isArray(tests) ? tests : [tests]).map((t: any, i: number) => (
-                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{t.name || t}</span></li>
+                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{t?.name || t || ''}</span></li>
                 ))}
               </ul>
             </div>
@@ -208,10 +208,10 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
                     <>
                       {suggestions.exercises && <p className="font-medium">• Lifestyle/Exercises: <span className="text-gray-600">{suggestions.exercises}</span></p>}
                       {suggestions.followUps && Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0 && (
-                        <p className="font-medium">• Follow-up visit: <span className="text-gray-600">{suggestions.followUps.map((f: any) => f.description || f).join(', ')}</span></p>
+                        <p className="font-medium">• Follow-up visit: <span className="text-gray-600">{suggestions.followUps.map((f: any) => f?.description || f || '').filter(Boolean).join(', ')}</span></p>
                       )}
                       {suggestions.emergencyInstructions && Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0 && (
-                        <p className="text-red-700 font-bold bg-red-50 p-2 rounded border border-red-100">• ⚠ EMERGENCY: {suggestions.emergencyInstructions.map((e: any) => e.description || e).join(', ')}</p>
+                        <p className="text-red-700 font-bold bg-red-50 p-2 rounded border border-red-100">• ⚠ EMERGENCY: {suggestions.emergencyInstructions.map((e: any) => e?.description || e || '').filter(Boolean).join(', ')}</p>
                       )}
                     </>
                   )}
