@@ -219,8 +219,11 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Enforce email verification (for logging in with email)
-    if (email && !user.emailVerified) {
+    // Check if user is a legacy account created before April 2, 2026 verification rollout
+    const isLegacyUser = new Date(user.createdAt) < new Date('2026-04-03T00:00:00.000Z');
+
+    // Enforce email verification (for logging in with email, blocking only new unverified users)
+    if (email && !user.emailVerified && !isLegacyUser) {
       return res.status(401).json({
         success: false,
         message: 'Please verify your email address before logging in. Check your inbox for the verification link.'
@@ -236,8 +239,16 @@ const login = async (req, res, next) => {
       });
     }
 
+    // If a legacy user successfully authenticates with their password, auto-verify their email to migrate them
+    if (email && !user.emailVerified && isLegacyUser) {
+      user.emailVerified = true;
+    }
+
     // Update last login
-    await user.update({ lastLogin: new Date() });
+    await user.update({ 
+      lastLogin: new Date(),
+      emailVerified: user.emailVerified
+    });
 
     // Generate token
     const token = generateToken(user.id);
