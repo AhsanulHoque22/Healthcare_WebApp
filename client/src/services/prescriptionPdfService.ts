@@ -19,7 +19,19 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     if (typeof field === 'object') return field; // already parsed
     if (typeof field !== 'string') return null;  // not a parseable type
     try {
-      return JSON.parse(field);
+      let parsed = JSON.parse(field);
+      // Handle double-encoded JSON
+      if (typeof parsed === 'string') {
+        try {
+          const deeper = JSON.parse(parsed);
+          if (typeof deeper === 'object' && deeper !== null) {
+            return deeper;
+          }
+        } catch {
+          // single-encoded string value
+        }
+      }
+      return parsed;
     } catch {
       return field; // return raw string
     }
@@ -36,8 +48,12 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   const getItemText = (item: any, field: string = 'description'): string => {
     if (!item) return '';
     if (typeof item === 'string') return item;
-    if (typeof item === 'object' && item[field]) return String(item[field]);
-    if (typeof item === 'object' && item.name) return String(item.name);
+    if (typeof item === 'object') {
+      if (item[field] !== undefined && item[field] !== null) return String(item[field]);
+      if (item.name !== undefined && item.name !== null) return String(item.name);
+      if (item.description !== undefined && item.description !== null) return String(item.description);
+      return '';
+    }
     return String(item);
   };
 

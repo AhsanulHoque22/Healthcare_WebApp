@@ -7,16 +7,27 @@ interface PrescriptionTemplateProps {
   appointmentData: any;
 }
 
-// Safe JSON parser that NEVER throws
+// Safe JSON parser that NEVER throws - handles double-encoded JSON
 const safeParseJson = (field: any): any => {
   if (field === null || field === undefined) return null;
   if (typeof field === 'object') return field; // already parsed
   if (typeof field !== 'string') return null;  // not a string, can't parse
   try {
-    const parsed = JSON.parse(field);
+    let parsed = JSON.parse(field);
+    // Handle double-encoded JSON: if the result is still a string that looks like JSON, parse again
+    if (typeof parsed === 'string') {
+      try {
+        const deeper = JSON.parse(parsed);
+        if (typeof deeper === 'object' && deeper !== null) {
+          return deeper;
+        }
+      } catch {
+        // single-encoded string value, return as-is
+      }
+    }
     return parsed;
   } catch {
-    // Return the raw string wrapped so it can be displayed
+    // Return the raw string so it can be displayed
     return field;
   }
 };
@@ -39,8 +50,14 @@ const toSafeArray = (val: any): any[] => {
 const getItemText = (item: any, field: string = 'description'): string => {
   if (!item) return '';
   if (typeof item === 'string') return item;
-  if (typeof item === 'object' && item[field]) return String(item[field]);
-  if (typeof item === 'object' && item.name) return String(item.name);
+  if (typeof item === 'object') {
+    // Check known fields in priority order - use !== undefined to handle empty strings
+    if (item[field] !== undefined && item[field] !== null) return String(item[field]);
+    if (item.name !== undefined && item.name !== null) return String(item.name);
+    if (item.description !== undefined && item.description !== null) return String(item.description);
+    // Last resort: don't return [object Object]
+    return '';
+  }
   return String(item);
 };
 
@@ -199,11 +216,11 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       <div className="grid grid-cols-12 gap-8 min-h-[500px]">
         {/* Left Sidebar (Clinical findings) */}
         <div className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6">
-          {symptoms && symptoms.length > 0 && (
+          {symptoms && symptoms.filter((s: any) => getItemText(s)).length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Chief Complaints</h3>
               <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
-                {symptoms.map((s: any, i: number) => (
+                {symptoms.filter((s: any) => getItemText(s)).map((s: any, i: number) => (
                   <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{getItemText(s)}</span></li>
                 ))}
               </ul>
