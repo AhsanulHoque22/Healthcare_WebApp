@@ -232,12 +232,11 @@ const AdminDashboard: React.FC = () => {
             <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Active Doctors</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats?.totalDoctors || 0}</p>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Verified Doctors</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.verifiedDoctors || 0}</p>
                   <div className="flex items-center mt-2">
-                    <ArrowTrendingUpIcon className="h-4 w-4 text-green-500 mr-1 animate-pulse" />
-                    <span className="text-sm text-green-600 font-medium">+8%</span>
-                    <span className="text-sm text-gray-500 ml-1">vs last month</span>
+                    <UserGroupIcon className="h-4 w-4 text-emerald-500 mr-1" />
+                    <span className="text-sm text-emerald-600 font-medium">{stats?.totalDoctors || 0} Total Profiles</span>
                   </div>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
