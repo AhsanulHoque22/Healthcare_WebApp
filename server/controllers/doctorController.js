@@ -10,12 +10,9 @@ const getAllDoctors = async (req, res, next) => {
     const { page = 1, limit = 10, department, specialization, search } = req.query;
     const targetDept = specialization || department;
 
-    const whereClause = {
-      role: 'doctor'
-    };
-
     const doctorWhereClause = {
-      isVerified: true // Only show verified doctors to patients
+      isVerified: true,
+      '$user.role$': 'doctor'
     };
     
     if (targetDept && targetDept !== 'All') {
@@ -40,8 +37,7 @@ const getAllDoctors = async (req, res, next) => {
       include: [
         {
           association: 'user',
-          attributes: { exclude: ['password'] },
-          where: whereClause
+          attributes: { exclude: ['password'] }
         }
       ],
       order: [['rating', 'DESC'], ['createdAt', 'DESC']],
