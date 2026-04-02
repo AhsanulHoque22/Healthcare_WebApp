@@ -1,4 +1,4 @@
-const { User } = require('./server/models');
+const { User } = require('./models');
 
 async function autoVerifyExistingUsers() {
   try {

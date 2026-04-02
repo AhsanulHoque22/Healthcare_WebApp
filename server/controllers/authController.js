@@ -88,6 +88,10 @@ const register = async (req, res, next) => {
       clientUrl = clientUrls.length > 1 ? clientUrls[1].trim() : clientUrls[0].trim();
     }
     const verifyUrl = `${clientUrl}/verify-email?token=${verifyToken}`;
+    console.log(`\n======================================================`);
+    console.log(`[DEV/QA] 📧 Email Verification Link For New Account:`);
+    console.log(`-> ${verifyUrl}`);
+    console.log(`======================================================\n`);
 
     // Send verification email
     sendEmail({
