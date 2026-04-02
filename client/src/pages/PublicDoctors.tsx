@@ -35,7 +35,7 @@ const PublicDoctors: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [specialization, setSpecialization] = useState('All');
   const [pageLoaded, setPageLoaded] = useState(false);
-  const [sortBy, setSortBy] = useState('rating_desc');
+  const [sortBy, setSortBy] = useState('all');
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [minRating, setMinRating] = useState(0);
@@ -262,6 +262,7 @@ const PublicDoctors: React.FC = () => {
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                   >
+                    <option value="all">All Ratings</option>
                     <option value="rating_desc">Highest Rated</option>
                     <option value="rating_asc">Lowest Rated</option>
                     <option value="reviews_desc">Most Reviews</option>

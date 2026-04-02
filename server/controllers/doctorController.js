@@ -37,7 +37,7 @@ const getAllDoctors = async (req, res, next) => {
             { '$user.firstName$': { [Op.like]: `%${keyword}%` } },
             { '$user.lastName$': { [Op.like]: `%${keyword}%` } },
             Doctor.sequelize.where(
-              Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.first_name'), ' ', Doctor.sequelize.col('user.last_name')),
+              Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.firstName'), ' ', Doctor.sequelize.col('user.lastName')),
               { [Op.like]: `%${keyword}%` }
             )
           ]

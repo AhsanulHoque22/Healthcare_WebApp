@@ -8,11 +8,11 @@
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║    Healthcare Web App - Complete Startup              ║"
-echo "║         Backend: 5001 | Frontend: 3000                ║"
+echo "║    Healthcare Web App - Complete Startup               ║"
+echo "║         Backend: 5001 | Frontend: 3000                 ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
-
+ 
 # Check if running from project root
 if [ ! -f "package.json" ] && [ ! -d "server" ] && [ ! -d "client" ]; then
     echo "❌ Error: This script must be run from the project root directory"
@@ -49,16 +49,16 @@ sleep 8
 
 echo ""
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║           🎉 All Services Started! 🎉                 ║"
+echo "║           🎉 All Services Started! 🎉                  ║"
 echo "╠════════════════════════════════════════════════════════╣"
-echo "║  Backend Server:  http://localhost:5001               ║"
-echo "║  Frontend Client: http://localhost:3000               ║"
-echo "║  Database:        localhost:3306                      ║"
+echo "║  Backend Server:  http://localhost:5001                ║"
+echo "║  Frontend Client: http://localhost:3000                ║"
+echo "║  Database:        localhost:3306                       ║"
 echo "║                                                        ║"
-echo "║  Backend Health:  http://localhost:5001/api/health    ║"
-echo "║  API Base:        http://localhost:5001/api           ║"
+echo "║  Backend Health:  http://localhost:5001/api/health     ║"
+echo "║  API Base:        http://localhost:5001/api            ║"
 echo "║                                                        ║"
-echo "║  Press Ctrl+C to stop all services                    ║"
+echo "║  Press Ctrl+C to stop all services                     ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo ""
 
