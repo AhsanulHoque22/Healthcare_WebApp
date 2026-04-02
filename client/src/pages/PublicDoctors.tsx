@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
+import { Combobox, Transition } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import API from '../api/api';
@@ -37,6 +38,9 @@ const PublicDoctors: React.FC = () => {
   const [sortBy, setSortBy] = useState('rating_desc');
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [minRating, setMinRating] = useState(0);
+  const [minReviews, setMinReviews] = useState(0);
+  const [deptQuery, setDeptQuery] = useState('');
 
   const getDashboardUrl = () => {
     switch (user?.role) {
@@ -63,11 +67,21 @@ const PublicDoctors: React.FC = () => {
     }
   });
 
+  const filteredDepartments = deptQuery === ''
+    ? MEDICAL_DEPARTMENTS
+    : MEDICAL_DEPARTMENTS.filter((dept) =>
+        dept.label.toLowerCase().includes(deptQuery.toLowerCase())
+      );
+
   // Sophisticated filtering and sorting
   const doctors = React.useMemo(() => {
     if (!doctorsRaw) return [];
     
-    let filtered = [...doctorsRaw];
+    let filtered = doctorsRaw.filter((d: any) => {
+      const rating = d.calculatedRating || 0;
+      const count = d.totalRatings || 0;
+      return rating >= minRating && count >= minReviews;
+    });
     
     // Final client-side sort
     return filtered.sort((a, b) => {
@@ -84,7 +98,7 @@ const PublicDoctors: React.FC = () => {
         default: return 0;
       }
     });
-  }, [doctorsRaw, sortBy]);
+  }, [doctorsRaw, sortBy, minRating, minReviews]);
 
   const specializations = [
     { value: 'All', label: 'All Categories' },
@@ -188,21 +202,55 @@ const PublicDoctors: React.FC = () => {
                 </div>
                 
                 <div className="md:w-64 relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none group-focus-within:text-indigo-600">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none group-focus-within:text-indigo-600 z-10">
                     <AdjustmentsVerticalIcon className="h-6 w-6 text-gray-400" />
                   </div>
-                  <select
-                    className="w-full pl-12 pr-10 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-700 font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-lg cursor-pointer outline-none"
-                    value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
-                  >
-                    {specializations.map((spec) => (
-                      <option key={spec.value} value={spec.value}>{spec.label}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                    <ChevronRightIcon className="h-5 w-5 text-gray-400 rotate-90" />
-                  </div>
+                  <Combobox value={specialization} onChange={setSpecialization}>
+                    <div className="relative h-full">
+                      <Combobox.Input
+                        className="w-full pl-12 pr-10 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-700 font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-lg outline-none"
+                        displayValue={(val: string) => val === 'All' ? 'All Categories' : val}
+                        onChange={(event) => setDeptQuery(event.target.value)}
+                        placeholder="Search Dept..."
+                      />
+                      <Combobox.Button className="absolute inset-y-0 right-4 flex items-center">
+                        <ChevronDownIcon className="h-5 w-5 text-gray-400 transition-transform group-focus-within:rotate-180" aria-hidden="true" />
+                      </Combobox.Button>
+                      <Transition
+                        as={Fragment}
+                        leave="transition ease-in duration-100"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                        afterLeave={() => setDeptQuery('')}
+                      >
+                        <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-2xl ring-1 ring-black/5 focus:outline-none z-[60] backdrop-blur-xl">
+                          <Combobox.Option
+                            value="All"
+                            className={({ active }) =>
+                              `relative cursor-pointer select-none py-3 px-6 font-bold ${
+                                active ? 'bg-indigo-600 text-white' : 'text-gray-900'
+                              }`
+                            }
+                          >
+                            All Categories
+                          </Combobox.Option>
+                          {filteredDepartments.map((dept) => (
+                            <Combobox.Option
+                              key={dept.value}
+                              value={dept.value}
+                              className={({ active }) =>
+                                `relative cursor-pointer select-none py-3 px-6 font-bold ${
+                                  active ? 'bg-indigo-600 text-white' : 'text-gray-900'
+                                }`
+                              }
+                            >
+                              {dept.label}
+                            </Combobox.Option>
+                          ))}
+                        </Combobox.Options>
+                      </Transition>
+                    </div>
+                  </Combobox>
                 </div>
 
                 <div className="md:w-64 relative group">
@@ -223,6 +271,57 @@ const PublicDoctors: React.FC = () => {
                     <ChevronRightIcon className="h-5 w-5 text-gray-400 rotate-90" />
                   </div>
                 </div>
+            </div>
+
+            {/* Rating and Review Filters */}
+            <div className="mt-6 flex flex-wrap items-center gap-6 pt-6 border-t border-gray-50">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Min Rating</span>
+                  <div className="flex items-center bg-gray-50 rounded-2xl p-1 gap-1">
+                    {[0, 3, 4, 4.5].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setMinRating(val)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                          minRating === val 
+                            ? 'bg-white shadow-sm text-indigo-600' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                      >
+                        {val === 0 ? 'All' : `${val}+`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Min Reviews</span>
+                  <div className="flex items-center bg-gray-50 rounded-2xl p-1 gap-1">
+                    {[0, 5, 10, 25].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setMinReviews(val)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                          minReviews === val 
+                            ? 'bg-white shadow-sm text-indigo-600' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                      >
+                        {val === 0 ? 'Any' : `${val}+`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {(minRating > 0 || minReviews > 0) && (
+                  <button
+                    onClick={() => { setMinRating(0); setMinReviews(0); }}
+                    className="flex items-center gap-2 text-red-500 hover:text-red-600 font-bold text-sm transition-colors"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                    Reset Filters
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -335,7 +434,7 @@ const PublicDoctors: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">No Doctors Found</h3>
                 <p className="text-gray-600">Try adjusting your search criteria or specialization filter.</p>
                 <button 
-                  onClick={() => { setSearchTerm(''); setSpecialization('All'); }}
+                  onClick={() => { setSearchTerm(''); setSpecialization('All'); setMinRating(0); setMinReviews(0); }}
                   className="mt-6 text-indigo-600 font-bold hover:underline"
                 >
                   Clear all filters

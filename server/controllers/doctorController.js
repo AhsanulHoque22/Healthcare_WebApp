@@ -24,25 +24,27 @@ const getAllDoctors = async (req, res, next) => {
     }
 
     if (search) {
-      // Use a more relaxed search that works across both models
-      // We'll put name search in the user where clause and other details in doctor where clause
-      // But we should ensure it doesn't filter out results if searching for just a name
-      delete whereClause[Op.or];
-      delete doctorWhereClause[Op.or];
+      const keywords = search.trim().split(/\s+/);
+      
+      const searchConditions = keywords.map(keyword => {
+        return {
+          [Op.or]: [
+            { department: { [Op.like]: `%${keyword}%` } },
+            { specialization: { [Op.like]: `%${keyword}%` } },
+            { hospital: { [Op.like]: `%${keyword}%` } },
+            { bmdcRegistrationNumber: { [Op.like]: `%${keyword}%` } },
+            { bio: { [Op.like]: `%${keyword}%` } },
+            { '$user.firstName$': { [Op.like]: `%${keyword}%` } },
+            { '$user.lastName$': { [Op.like]: `%${keyword}%` } },
+            Doctor.sequelize.where(
+              Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.first_name'), ' ', Doctor.sequelize.col('user.last_name')),
+              { [Op.like]: `%${keyword}%` }
+            )
+          ]
+        };
+      });
 
-      doctorWhereClause[Op.or] = [
-        { department: { [Op.like]: `%${search}%` } },
-        { hospital: { [Op.like]: `%${search}%` } },
-        { bmdcRegistrationNumber: { [Op.like]: `%${search}%` } },
-        { bio: { [Op.like]: `%${search}%` } },
-        { '$user.firstName$': { [Op.like]: `%${search}%` } },
-        { '$user.lastName$': { [Op.like]: `%${search}%` } },
-        // Full name search using concatenation
-        Doctor.sequelize.where(
-          Doctor.sequelize.fn('concat', Doctor.sequelize.col('user.first_name'), ' ', Doctor.sequelize.col('user.last_name')),
-          { [Op.like]: `%${search}%` }
-        )
-      ];
+      doctorWhereClause[Op.and] = searchConditions;
     }
 
     const doctors = await Doctor.findAndCountAll({
