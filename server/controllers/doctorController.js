@@ -25,13 +25,13 @@ const getAllDoctors = async (req, res, next) => {
     if (search) {
       const searchRef = `%${search}%`;
       doctorWhereClause[Op.or] = [
+        { '$user.firstName$': { [Op.like]: searchRef } },
+        { '$user.lastName$': { [Op.like]: searchRef } },
+        { '$user.email$': { [Op.like]: searchRef } },
         { department: { [Op.like]: searchRef } },
         { hospital: { [Op.like]: searchRef } },
         { bmdcRegistrationNumber: { [Op.like]: searchRef } },
-        { bio: { [Op.like]: searchRef } },
-        { '$user.firstName$': { [Op.like]: searchRef } },
-        { '$user.lastName$': { [Op.like]: searchRef } },
-        { '$user.email$': { [Op.like]: searchRef } }
+        { bio: { [Op.like]: searchRef } }
       ];
     }
 
@@ -48,7 +48,7 @@ const getAllDoctors = async (req, res, next) => {
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit),
       distinct: true,
-      subQuery: false // This allows referencing nested $user.fields$ safely inside the main findAndCountAll count query
+      subQuery: false
     });
 
     // Calculate average ratings for each doctor
