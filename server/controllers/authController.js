@@ -59,25 +59,50 @@ const register = async (req, res, next) => {
       dateOfBirth,
       gender,
       address,
-      role: role || 'patient'
+      role: role || 'patient',
+      emailVerified: false
     });
     console.log(`[Registration] User record created with ID: ${user.id}`);
 
     // Create role-specific profile
     if (user.role === 'patient') {
-      console.log('[Registration] Creating Patient profile...');
       await Patient.create({ userId: user.id });
-      console.log('[Registration] Patient profile created.');
     } else if (user.role === 'doctor') {
-      console.log('[Registration] Creating Doctor profile...');
       await Doctor.create({ 
         userId: user.id,
         bmdcRegistrationNumber,
         department,
         experience: experience ? parseInt(experience) : null
       });
-      console.log('[Registration] Doctor profile created.');
     }
+
+    // Generate email verification token
+    const verifyToken = jwt.sign({ userId: user.id, purpose: 'email-verification' }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    
+    // Construct frontend URL (similar to forgot password logic)
+    let clientUrl = req.headers.origin || req.headers.referer;
+    if (clientUrl) {
+      clientUrl = clientUrl.replace(/\/$/, '');
+    } else {
+      const clientUrls = (process.env.CLIENT_URL || 'https://livoracu48.vercel.app').split(',');
+      clientUrl = clientUrls.length > 1 ? clientUrls[1].trim() : clientUrls[0].trim();
+    }
+    const verifyUrl = `${clientUrl}/verify-email?token=${verifyToken}`;
+
+    // Send verification email
+    sendEmail({
+      to: user.email,
+      subject: 'Verify Your Email Address - Livora',
+      html: buildEmailHtml('Welcome to Livora - Verify Your Email', `
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${user.firstName},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Thank you for registering at Livora! Please verify your email address to activate your account and securely log in.</p>
+        <div style="margin: 20px 0;">
+          <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify Email Address</a>
+        </div>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">This link will expire in 24 hours.</p>
+        <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
+      `)
+    }).catch(err => console.error('[authController] Verification email failed:', err.message));
 
     // Remove password from response
     const userResponse = user.toJSON();
@@ -103,7 +128,7 @@ const register = async (req, res, next) => {
     console.log('[Registration] Registration successful, sending response.');
     res.status(201).json({
       success: true,
-      message: 'User registered successfully. Please login to continue.',
+      message: 'User registered successfully. Please check your email to verify your account.',
       data: {
         user: userResponse
       }
@@ -111,6 +136,48 @@ const register = async (req, res, next) => {
   } catch (error) {
     console.error(`[Registration] ERROR: ${error.message}`);
     if (error.stack) console.error(error.stack);
+    next(error);
+  }
+};
+
+// Verify Email
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Verification token is missing' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      if (decoded.purpose !== 'email-verification') {
+        return res.status(400).json({ success: false, message: 'Invalid token purpose' });
+      }
+
+      const user = await User.findByPk(decoded.userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      if (user.emailVerified) {
+        return res.status(200).json({ success: true, message: 'Email is already verified' });
+      }
+
+      await user.update({ emailVerified: true });
+
+      return res.status(200).json({ success: true, message: 'Email verified successfully' });
+
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification link' });
+    }
+
+  } catch (error) {
     next(error);
   }
 };
@@ -145,6 +212,14 @@ const login = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Account is deactivated'
+      });
+    }
+
+    // Enforce email verification (for logging in with email)
+    if (email && !user.emailVerified) {
+      return res.status(401).json({
+        success: false,
+        message: 'Please verify your email address before logging in. Check your inbox for the verification link.'
       });
     }
 
@@ -530,5 +605,6 @@ module.exports = {
   changePassword,
   forgotPassword,
   verifyResetToken,
-  resetPassword
+  resetPassword,
+  verifyEmail
 };
