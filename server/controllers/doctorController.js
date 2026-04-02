@@ -11,7 +11,6 @@ const getAllDoctors = async (req, res, next) => {
     const targetDept = specialization || department;
 
     const whereClause = {
-      isActive: true, // Only show active users
       role: 'doctor'
     };
 
@@ -24,23 +23,16 @@ const getAllDoctors = async (req, res, next) => {
     }
 
     if (search) {
-      const keywords = search.trim().split(/\s+/);
-      
-      const searchConditions = keywords.map(keyword => {
-        return {
-          [Op.or]: [
-            { department: { [Op.like]: `%${keyword}%` } },
-            { hospital: { [Op.like]: `%${keyword}%` } },
-            { bmdcRegistrationNumber: { [Op.like]: `%${keyword}%` } },
-            { bio: { [Op.like]: `%${keyword}%` } },
-            { '$user.firstName$': { [Op.like]: `%${keyword}%` } },
-            { '$user.lastName$': { [Op.like]: `%${keyword}%` } },
-            { '$user.email$': { [Op.like]: `%${keyword}%` } }
-          ]
-        };
-      });
-
-      doctorWhereClause[Op.and] = searchConditions;
+      const searchRef = `%${search}%`;
+      doctorWhereClause[Op.or] = [
+        { department: { [Op.like]: searchRef } },
+        { hospital: { [Op.like]: searchRef } },
+        { bmdcRegistrationNumber: { [Op.like]: searchRef } },
+        { bio: { [Op.like]: searchRef } },
+        { '$user.firstName$': { [Op.like]: searchRef } },
+        { '$user.lastName$': { [Op.like]: searchRef } },
+        { '$user.email$': { [Op.like]: searchRef } }
+      ];
     }
 
     const doctors = await Doctor.findAndCountAll({
