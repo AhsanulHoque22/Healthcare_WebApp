@@ -27,7 +27,11 @@ const getAllDoctors = async (req, res, next) => {
       whereClause[Op.or] = [
         { firstName: { [Op.like]: `%${search}%` } },
         { lastName: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } }
+        { email: { [Op.like]: `%${search}%` } },
+        { department: { [Op.like]: `%${search}%` } },
+        { hospital: { [Op.like]: `%${search}%` } },
+        { bmdcRegistrationNumber: { [Op.like]: `%${search}%` } },
+        { bio: { [Op.like]: `%${search}%` } }
       ];
     }
 
