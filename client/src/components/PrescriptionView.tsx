@@ -10,6 +10,44 @@ interface PrescriptionViewProps {
   userRole?: 'doctor' | 'patient' | 'admin';
 }
 
+// Error Boundary to prevent white screen crashes
+class PrescriptionErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[PrescriptionView] Render crash caught by Error Boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <DocumentArrowDownIcon className="h-8 w-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-bold text-amber-900 mb-2">Prescription Preview Unavailable</h3>
+          <p className="text-amber-700 text-sm mb-4">
+            The prescription data for this appointment could not be displayed in the preview.
+            You can still try downloading the PDF.
+          </p>
+          <p className="text-xs text-amber-500 font-mono">{this.state.error}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const PrescriptionView: React.FC<PrescriptionViewProps> = ({ 
   prescriptionData,
   appointmentData,
@@ -67,13 +105,15 @@ const PrescriptionView: React.FC<PrescriptionViewProps> = ({
         </div>
       </div>
 
-      {/* The Actual Prescription Form */}
+      {/* The Actual Prescription Form - wrapped in Error Boundary */}
       <div className="overflow-x-auto pb-6">
         <div className="min-w-[800px] mx-auto">
-          <PrescriptionTemplate 
-            prescriptionData={prescriptionData} 
-            appointmentData={appointmentData} 
-          />
+          <PrescriptionErrorBoundary>
+            <PrescriptionTemplate 
+              prescriptionData={prescriptionData} 
+              appointmentData={appointmentData} 
+            />
+          </PrescriptionErrorBoundary>
         </div>
       </div>
 

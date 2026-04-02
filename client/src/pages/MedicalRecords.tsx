@@ -173,29 +173,32 @@ const MedicalRecords: React.FC = () => {
 
   const handleDownload = async (appointment: AppointmentMedicalRecord | null) => {
     if (!appointment) return;
+    setIsDownloading(appointment.id);
     try {
       // Attempt to fetch prescription data for high-fidelity PDF
-      const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
-      const prescriptionData = response.data.data.prescription;
+      let prescriptionForPdf: any = null;
+      try {
+        const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
+        prescriptionForPdf = response.data?.data?.prescription || null;
+      } catch (fetchError: any) {
+        console.warn('[MedicalRecords] No prescription found for appointment:', appointment.id, fetchError?.response?.status);
+        // Not a fatal error - we can still generate a basic PDF
+      }
       
-      if (prescriptionData) {
-        await generatePrescriptionPdf({ prescriptionData, appointmentData: appointment });
+      if (prescriptionForPdf) {
+        await generatePrescriptionPdf({ prescriptionData: prescriptionForPdf, appointmentData: appointment });
       } else {
         // Fallback to basic record if no structured prescription exists
-        toast.error('No structured prescription found for this record.');
-      }
-    } catch (error: any) {
-      console.error('PDF generation error:', error);
-      if (error.response?.status === 404) {
-        // Fallback: Generate basic PDF from appointment notes if prescription is missing
         try {
           await generatePrescriptionPdf({ prescriptionData: null, appointmentData: appointment });
         } catch (fallbackError) {
-          toast.error('No prescription found, and failed to generate basic summary.');
+          console.error('[MedicalRecords] Fallback PDF generation failed:', fallbackError);
+          toast.error('No prescription data available to generate a PDF for this appointment.');
         }
-      } else {
-        toast.error('Failed to generate high-fidelity prescription PDF. Please try again.');
       }
+    } catch (error: any) {
+      console.error('[MedicalRecords] PDF generation error:', error);
+      toast.error('Failed to download prescription. Please try again.');
     } finally {
       setIsDownloading(null);
     }

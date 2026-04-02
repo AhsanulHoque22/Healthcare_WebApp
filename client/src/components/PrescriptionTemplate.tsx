@@ -7,38 +7,86 @@ interface PrescriptionTemplateProps {
   appointmentData: any;
 }
 
+// Safe JSON parser that NEVER throws
+const safeParseJson = (field: any): any => {
+  if (field === null || field === undefined) return null;
+  if (typeof field === 'object') return field; // already parsed
+  if (typeof field !== 'string') return null;  // not a string, can't parse
+  try {
+    const parsed = JSON.parse(field);
+    return parsed;
+  } catch {
+    // Return the raw string wrapped so it can be displayed
+    return field;
+  }
+};
+
+// Safe number parser
+const safeNum = (val: any): number => {
+  if (!val) return 0;
+  const parsed = parseInt(String(val));
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+// Safe array converter - ensures we always get an array
+const toSafeArray = (val: any): any[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return [val];
+};
+
+// Safe string extractor from an item that could be string or object
+const getItemText = (item: any, field: string = 'description'): string => {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  if (typeof item === 'object' && item[field]) return String(item[field]);
+  if (typeof item === 'object' && item.name) return String(item.name);
+  return String(item);
+};
+
 const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   prescriptionData,
   appointmentData
 }) => {
   const [qrCodeData, setQrCodeData] = useState<string>('');
 
-  const parseJsonField = (field: string) => {
-    if (!field) return null;
-    try {
-      return typeof field === 'string' ? JSON.parse(field) : field;
-    } catch {
-      return field;
-    }
-  };
+  // Safely parse ALL fields upfront
+  const medicines = (() => {
+    const parsed = safeParseJson(prescriptionData?.medicines);
+    if (Array.isArray(parsed)) return parsed;
+    return null;
+  })();
 
-  const medicines = parseJsonField(prescriptionData?.medicines);
-  const symptoms = parseJsonField(prescriptionData?.symptoms);
-  const diagnoses = parseJsonField(prescriptionData?.diagnosis || prescriptionData?.diagnoses);
-  const tests = parseJsonField(prescriptionData?.tests);
-  const suggestions = parseJsonField(prescriptionData?.suggestions);
+  const symptoms = (() => {
+    const parsed = safeParseJson(prescriptionData?.symptoms);
+    if (!parsed) return null;
+    return toSafeArray(parsed);
+  })();
 
-  const safeNum = (val: any): number => {
-    if (!val) return 0;
-    const parsed = parseInt(String(val));
-    return isNaN(parsed) ? 0 : parsed;
-  };
+  const diagnoses = (() => {
+    const parsed = safeParseJson(prescriptionData?.diagnosis || prescriptionData?.diagnoses);
+    if (!parsed) return null;
+    return toSafeArray(parsed);
+  })();
+
+  const tests = (() => {
+    const parsed = safeParseJson(prescriptionData?.tests);
+    if (!parsed) return null;
+    return toSafeArray(parsed);
+  })();
+
+  const suggestions: any = (() => {
+    const parsed = safeParseJson(prescriptionData?.suggestions);
+    if (!parsed) return null;
+    if (typeof parsed === 'string') return parsed; // plain string advice
+    if (typeof parsed === 'object') return parsed;  // structured object
+    return null;
+  })();
 
   const doctor = appointmentData?.doctor;
   const patient = appointmentData?.patient;
   const user = doctor?.user;
   const doctorName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-  const patientName = `${patient?.user?.firstName || ''} ${patient?.user?.lastName || ''}`.trim();
 
   useEffect(() => {
     const generateQR = async () => {
@@ -60,7 +108,33 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
     generateQR();
   }, [prescriptionData?.id, appointmentData?.id]);
 
-  // Patient and doctor variables are already declared at the top of the component
+  // Helper to safely render suggestions section
+  const renderSuggestions = () => {
+    if (!suggestions) return null;
+
+    try {
+      if (typeof suggestions === 'string') {
+        return <p className="font-medium">• {suggestions}</p>;
+      }
+
+      return (
+        <>
+          {suggestions.dietaryChanges && <p className="font-medium">• Dietary Modifications: <span className="text-gray-600">{String(suggestions.dietaryChanges)}</span></p>}
+          {suggestions.lifestyleModifications && <p className="font-medium">• Lifestyle Modifications: <span className="text-gray-600">{String(suggestions.lifestyleModifications)}</span></p>}
+          {suggestions.exercises && <p className="font-medium">• Exercise Recommendations: <span className="text-gray-600">{String(suggestions.exercises)}</span></p>}
+          {Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0 && (
+            <p className="font-medium">• Follow-up visit: <span className="text-gray-600">{suggestions.followUps.map((f: any) => getItemText(f)).filter(Boolean).join(', ')}</span></p>
+          )}
+          {Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0 && (
+            <p className="text-red-700 font-bold bg-red-50 p-2 rounded border border-red-100">• ⚠ EMERGENCY: {suggestions.emergencyInstructions.map((e: any) => getItemText(e)).filter(Boolean).join(', ')}</p>
+          )}
+        </>
+      );
+    } catch (e) {
+      console.error('[PrescriptionTemplate] Error rendering suggestions:', e);
+      return <p className="text-gray-400 italic">Unable to display suggestions.</p>;
+    }
+  };
 
   return (
     <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative overflow-hidden">
@@ -125,34 +199,34 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       <div className="grid grid-cols-12 gap-8 min-h-[500px]">
         {/* Left Sidebar (Clinical findings) */}
         <div className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6">
-          {symptoms && (
+          {symptoms && symptoms.length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Chief Complaints</h3>
               <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
-                {(Array.isArray(symptoms) ? symptoms : [symptoms]).map((s: any, i: number) => (
-                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{s?.description || s || ''}</span></li>
+                {symptoms.map((s: any, i: number) => (
+                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{getItemText(s)}</span></li>
                 ))}
               </ul>
             </div>
           )}
           
-          {diagnoses && (
+          {diagnoses && diagnoses.length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Diagnosis</h3>
               <ul className="text-[13px] space-y-1.5 text-blue-950 font-bold list-inside font-sans uppercase tracking-tight">
-                {(Array.isArray(diagnoses) ? diagnoses : [diagnoses]).map((d: any, i: number) => (
-                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{d?.description || d || ''}</span></li>
+                {diagnoses.map((d: any, i: number) => (
+                  <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{getItemText(d)}</span></li>
                 ))}
               </ul>
             </div>
           )}
 
-          {tests && (
+          {tests && tests.length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Investigations</h3>
               <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
-                {(Array.isArray(tests) ? tests : [tests]).map((t: any, i: number) => (
-                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{t?.name || t || ''}</span></li>
+                {tests.map((t: any, i: number) => (
+                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{getItemText(t, 'name')}</span></li>
                 ))}
               </ul>
             </div>
@@ -167,15 +241,17 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           </div>
 
           <div className="space-y-10 flex-grow">
-            {medicines && Array.isArray(medicines) && medicines.length > 0 ? (
-              medicines.map((med: any, idx: number) => (
+            {medicines && medicines.length > 0 ? (
+              medicines.map((med: any, idx: number) => {
+                if (!med) return null;
+                return (
                 <div key={idx} className="relative pl-1">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
                         <span className="text-sm font-bold text-gray-300 italic select-none">{idx + 1}.</span>
                         <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight">
-                          {med.form || 'Tab.'} {med.name} {med.strength || med.dosage}
+                          {med.form || 'Tab.'} {med.name || 'Unknown'} {med.strength || med.dosage || ''}
                         </h4>
                       </div>
                       <p className="text-[11px] text-blue-600/60 font-bold italic ml-7 uppercase tracking-wider font-sans">({med.genericName || 'No generic name listed'})</p>
@@ -194,7 +270,8 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
                     {med.notes && <p className="text-[11px] text-gray-400 italic mt-2 pl-4 font-sans">Instructions: {med.notes}</p>}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-gray-400 italic">No medication data available for this prescription.</p>
             )}
@@ -204,19 +281,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
              <div className="mt-16 pt-8 border-t-2 border-blue-50 font-sans">
                 <h3 className="text-xs font-bold text-blue-800 uppercase mb-4 tracking-widest border-l-4 border-blue-800 pl-3">Clinical Advice & Follow-up</h3>
                 <div className="text-[13px] text-gray-700 space-y-3 whitespace-pre-wrap leading-relaxed">
-                  {typeof suggestions === 'string' ? `• ${suggestions}` : (
-                    <>
-                      {suggestions.dietaryChanges && <p className="font-medium">• Dietary Modifications: <span className="text-gray-600">{suggestions.dietaryChanges}</span></p>}
-                      {suggestions.lifestyleModifications && <p className="font-medium">• Lifestyle Modifications: <span className="text-gray-600">{suggestions.lifestyleModifications}</span></p>}
-                      {suggestions.exercises && <p className="font-medium">• Exercise Recommendations: <span className="text-gray-600">{suggestions.exercises}</span></p>}
-                      {suggestions.followUps && Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0 && (
-                        <p className="font-medium">• Follow-up visit: <span className="text-gray-600">{suggestions.followUps.map((f: any) => f?.description || f || '').filter(Boolean).join(', ')}</span></p>
-                      )}
-                      {suggestions.emergencyInstructions && Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0 && (
-                        <p className="text-red-700 font-bold bg-red-50 p-2 rounded border border-red-100">• ⚠ EMERGENCY: {suggestions.emergencyInstructions.map((e: any) => e?.description || e || '').filter(Boolean).join(', ')}</p>
-                      )}
-                    </>
-                  )}
+                  {renderSuggestions()}
                 </div>
              </div>
           )}

@@ -16,19 +16,46 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   
   const parseJsonField = (field: any) => {
     if (!field) return null;
-    if (typeof field === 'object') return field;
+    if (typeof field === 'object') return field; // already parsed
+    if (typeof field !== 'string') return null;  // not a parseable type
     try {
       return JSON.parse(field);
     } catch {
-      return null;
+      return field; // return raw string
     }
   };
 
-  const medicines = parseJsonField(prescriptionData?.medicines);
-  const symptoms = parseJsonField(prescriptionData?.symptoms) || appointmentData?.symptoms;
-  const diagnoses = parseJsonField(prescriptionData?.diagnosis) || appointmentData?.diagnosis;
-  const suggestions = parseJsonField(prescriptionData?.suggestions) || appointmentData?.notes;
-  const tests = parseJsonField(prescriptionData?.tests);
+  // Safe array converter - always returns an array or null
+  const toSafeArray = (val: any): any[] | null => {
+    if (!val) return null;
+    if (Array.isArray(val)) return val.length > 0 ? val : null;
+    return [val]; // wrap single item
+  };
+
+  // Safe text extractor from an item
+  const getItemText = (item: any, field: string = 'description'): string => {
+    if (!item) return '';
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object' && item[field]) return String(item[field]);
+    if (typeof item === 'object' && item.name) return String(item.name);
+    return String(item);
+  };
+
+  const rawMedicines = parseJsonField(prescriptionData?.medicines);
+  const medicines = Array.isArray(rawMedicines) ? rawMedicines : null;
+
+  const rawSymptoms = parseJsonField(prescriptionData?.symptoms) || appointmentData?.symptoms;
+  const symptoms = toSafeArray(rawSymptoms);
+
+  const rawDiagnoses = parseJsonField(prescriptionData?.diagnosis) || appointmentData?.diagnosis;
+  const diagnoses = toSafeArray(rawDiagnoses);
+
+  const rawSuggestions = parseJsonField(prescriptionData?.suggestions) || appointmentData?.notes;
+  const suggestions = rawSuggestions; // can be string, object, or null
+
+  const rawTests = parseJsonField(prescriptionData?.tests);
+  const tests = toSafeArray(rawTests);
+  
   const basicPrescription = appointmentData?.prescription;
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -175,47 +202,50 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     return currentY + 6;
   };
 
-  if (symptoms && (Array.isArray(symptoms) ? symptoms.length > 0 : symptoms)) {
+  if (symptoms && symptoms.length > 0) {
     leftY = drawSectionTitle('CHIEF COMPLAINTS', leftY);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    const list = Array.isArray(symptoms) ? symptoms : [symptoms];
-    list.forEach(s => {
-      const desc = (s && typeof s === 'object' ? s.description : s) || '';
-      const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-      doc.text(lines, margin + 2, leftY);
-      leftY += lines.length * 4.5;
+    symptoms.forEach((s: any) => {
+      const desc = getItemText(s);
+      if (desc) {
+        const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
+        doc.text(lines, margin + 2, leftY);
+        leftY += lines.length * 4.5;
+      }
     });
     leftY += 4;
   }
 
-  if (diagnoses && (Array.isArray(diagnoses) ? diagnoses.length > 0 : diagnoses)) {
+  if (diagnoses && diagnoses.length > 0) {
     leftY = drawSectionTitle('DIAGNOSIS', leftY);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(20, 20, 40);
-    const list = Array.isArray(diagnoses) ? diagnoses : [diagnoses];
-    list.forEach(d => {
-      const desc = (d && typeof d === 'object' ? d.description : d) || '';
-      const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-      doc.text(lines, margin + 2, leftY);
-      leftY += lines.length * 4.5;
+    diagnoses.forEach((d: any) => {
+      const desc = getItemText(d);
+      if (desc) {
+        const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
+        doc.text(lines, margin + 2, leftY);
+        leftY += lines.length * 4.5;
+      }
     });
     leftY += 4;
   }
 
-  if (tests && (Array.isArray(tests) ? tests.length > 0 : tests)) {
+  if (tests && tests.length > 0) {
     leftY = drawSectionTitle('INVESTIGATIONS', leftY);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    const list = Array.isArray(tests) ? tests : [tests];
-    list.forEach((t, i) => {
-      const tName = (t && typeof t === 'object' ? t.name : t) || '';
-      const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
-      doc.text(lines, margin + 2, leftY);
-      leftY += lines.length * 4.5;
+    tests.forEach((t: any, i: number) => {
+      const tName = getItemText(t, 'name');
+      if (tName) {
+        const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
+        doc.text(lines, margin + 2, leftY);
+        leftY += lines.length * 4.5;
+      }
     });
     leftY += 4;
   }
@@ -280,18 +310,18 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    const adviceComponents = [];
+    const adviceComponents: string[] = [];
     if (typeof suggestions === 'string') {
       adviceComponents.push(suggestions);
-    } else {
-      if (suggestions.dietaryChanges) adviceComponents.push(`• Dietary Modifications: ${suggestions.dietaryChanges}`);
-      if (suggestions.lifestyleModifications) adviceComponents.push(`• Lifestyle Modifications: ${suggestions.lifestyleModifications}`);
-      if (suggestions.exercises) adviceComponents.push(`• Exercise Recommendations: ${suggestions.exercises}`);
-      if (suggestions.followUps && Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0) {
-        adviceComponents.push(`• Follow-up visit: ${suggestions.followUps.map((f:any)=>f?.description || f || '').filter(Boolean).join(', ')}`);
+    } else if (typeof suggestions === 'object' && suggestions !== null) {
+      if (suggestions.dietaryChanges) adviceComponents.push(`• Dietary Modifications: ${String(suggestions.dietaryChanges)}`);
+      if (suggestions.lifestyleModifications) adviceComponents.push(`• Lifestyle Modifications: ${String(suggestions.lifestyleModifications)}`);
+      if (suggestions.exercises) adviceComponents.push(`• Exercise Recommendations: ${String(suggestions.exercises)}`);
+      if (Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0) {
+        adviceComponents.push(`• Follow-up visit: ${suggestions.followUps.map((f:any)=>getItemText(f)).filter(Boolean).join(', ')}`);
       }
-      if (suggestions.emergencyInstructions && Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0) {
-        adviceComponents.push(`• ⚠ EMERGENCY: ${suggestions.emergencyInstructions.map((e:any)=>e?.description || e || '').filter(Boolean).join(', ')}`);
+      if (Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0) {
+        adviceComponents.push(`• EMERGENCY: ${suggestions.emergencyInstructions.map((e:any)=>getItemText(e)).filter(Boolean).join(', ')}`);
       }
     }
     
