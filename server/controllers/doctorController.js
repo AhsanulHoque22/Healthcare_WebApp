@@ -22,16 +22,16 @@ const getAllDoctors = async (req, res, next) => {
       doctorWhereClause.department = targetDept;
     }
 
-    // Using exact admin implementation to fix Sequelize findAndCountAll crash
     if (search) {
-      whereClause[Op.or] = [
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } },
-        { department: { [Op.like]: `%${search}%` } },
-        { hospital: { [Op.like]: `%${search}%` } },
-        { bmdcRegistrationNumber: { [Op.like]: `%${search}%` } },
-        { bio: { [Op.like]: `%${search}%` } }
+      const searchRef = `%${search}%`;
+      doctorWhereClause[Op.or] = [
+        { department: { [Op.like]: searchRef } },
+        { hospital: { [Op.like]: searchRef } },
+        { bmdcRegistrationNumber: { [Op.like]: searchRef } },
+        { bio: { [Op.like]: searchRef } },
+        { '$user.firstName$': { [Op.like]: searchRef } },
+        { '$user.lastName$': { [Op.like]: searchRef } },
+        { '$user.email$': { [Op.like]: searchRef } }
       ];
     }
 
@@ -47,7 +47,8 @@ const getAllDoctors = async (req, res, next) => {
       order: [['rating', 'DESC'], ['createdAt', 'DESC']],
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit),
-      distinct: true
+      distinct: true,
+      subQuery: false // This allows referencing nested $user.fields$ safely inside the main findAndCountAll count query
     });
 
     // Calculate average ratings for each doctor
