@@ -10,25 +10,24 @@ const getAllDoctors = async (req, res, next) => {
     const { page = 1, limit = 10, department, specialization, search } = req.query;
     const targetDept = specialization || department;
 
+    const whereClause = {
+      role: 'doctor'
+    };
+
     const doctorWhereClause = {
-      isVerified: true,
-      '$user.role$': 'doctor'
+      isVerified: true
     };
     
     if (targetDept && targetDept !== 'All') {
       doctorWhereClause.department = targetDept;
     }
 
+    // Using exact admin implementation to fix Sequelize findAndCountAll crash
     if (search) {
-      const searchRef = `%${search}%`;
-      doctorWhereClause[Op.or] = [
-        { department: { [Op.like]: searchRef } },
-        { hospital: { [Op.like]: searchRef } },
-        { bmdcRegistrationNumber: { [Op.like]: searchRef } },
-        { bio: { [Op.like]: searchRef } },
-        { '$user.firstName$': { [Op.like]: searchRef } },
-        { '$user.lastName$': { [Op.like]: searchRef } },
-        { '$user.email$': { [Op.like]: searchRef } }
+      whereClause[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
       ];
     }
 
@@ -37,7 +36,8 @@ const getAllDoctors = async (req, res, next) => {
       include: [
         {
           association: 'user',
-          attributes: { exclude: ['password'] }
+          attributes: { exclude: ['password'] },
+          where: whereClause
         }
       ],
       order: [['rating', 'DESC'], ['createdAt', 'DESC']],
