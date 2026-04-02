@@ -258,7 +258,24 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         if (prescription) {
           form.setValue('symptoms', prescription.symptoms || '');
           form.setValue('diagnosis', prescription.diagnosis || '');
-          form.setValue('suggestions', prescription.suggestions || '');
+          
+          if (prescription.suggestions) {
+            try {
+              const parsedSuggestions = JSON.parse(prescription.suggestions);
+              form.setValue('exercises', parsedSuggestions.exercises || '');
+              form.setValue('dietaryChanges', parsedSuggestions.dietaryChanges || '');
+              form.setValue('suggestions', parsedSuggestions.lifestyleModifications || '');
+              
+              if (parsedSuggestions.followUps && Array.isArray(parsedSuggestions.followUps)) {
+                setFollowUps(parsedSuggestions.followUps);
+              }
+              if (parsedSuggestions.emergencyInstructions && Array.isArray(parsedSuggestions.emergencyInstructions)) {
+                setEmergencyInstructions(parsedSuggestions.emergencyInstructions);
+              }
+            } catch (e) {
+              form.setValue('suggestions', prescription.suggestions);
+            }
+          }
           
           // Parse medicines and tests from JSON strings
           if (prescription.medicines) {
@@ -540,7 +557,9 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         suggestions: JSON.stringify({
           exercises: data.exercises,
           dietaryChanges: data.dietaryChanges,
-          lifestyleModifications: data.suggestions
+          lifestyleModifications: data.suggestions,
+          followUps,
+          emergencyInstructions
         }),
         tests: tests.length > 0 ? JSON.stringify(tests) : data.tests,
         testReports: data.reports
@@ -566,9 +585,11 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         symptoms: symptoms.length > 0 ? JSON.stringify(symptoms) : formData.symptoms,
         diagnosis: diagnoses.length > 0 ? JSON.stringify(diagnoses) : formData.diagnosis,
         suggestions: JSON.stringify({
+          exercises: formData.exercises,
+          dietaryChanges: formData.dietaryChanges,
+          lifestyleModifications: formData.suggestions,
           followUps,
-          emergencyInstructions,
-          exercises: formData.suggestions
+          emergencyInstructions
         }),
         tests: tests.length > 0 ? JSON.stringify(tests) : formData.tests,
         testReports: formData.reports

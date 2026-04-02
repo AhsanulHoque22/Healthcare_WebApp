@@ -206,7 +206,9 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
                 <div className="text-[13px] text-gray-700 space-y-3 whitespace-pre-wrap leading-relaxed">
                   {typeof suggestions === 'string' ? `• ${suggestions}` : (
                     <>
-                      {suggestions.exercises && <p className="font-medium">• Lifestyle/Exercises: <span className="text-gray-600">{suggestions.exercises}</span></p>}
+                      {suggestions.dietaryChanges && <p className="font-medium">• Dietary Modifications: <span className="text-gray-600">{suggestions.dietaryChanges}</span></p>}
+                      {suggestions.lifestyleModifications && <p className="font-medium">• Lifestyle Modifications: <span className="text-gray-600">{suggestions.lifestyleModifications}</span></p>}
+                      {suggestions.exercises && <p className="font-medium">• Exercise Recommendations: <span className="text-gray-600">{suggestions.exercises}</span></p>}
                       {suggestions.followUps && Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0 && (
                         <p className="font-medium">• Follow-up visit: <span className="text-gray-600">{suggestions.followUps.map((f: any) => f?.description || f || '').filter(Boolean).join(', ')}</span></p>
                       )}

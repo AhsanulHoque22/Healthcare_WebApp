@@ -280,9 +280,22 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    const adviceText = typeof suggestions === 'string' ? suggestions : 
-      `${suggestions.exercises || ''}\n${suggestions.followUps?.map((f:any)=>f?.description || f || '').filter(Boolean).join(', ') || ''}\n${suggestions.emergencyInstructions?.map((e:any)=>e?.description || e || '').filter(Boolean).join(', ') || ''}`;
-      
+    const adviceComponents = [];
+    if (typeof suggestions === 'string') {
+      adviceComponents.push(suggestions);
+    } else {
+      if (suggestions.dietaryChanges) adviceComponents.push(`• Dietary Modifications: ${suggestions.dietaryChanges}`);
+      if (suggestions.lifestyleModifications) adviceComponents.push(`• Lifestyle Modifications: ${suggestions.lifestyleModifications}`);
+      if (suggestions.exercises) adviceComponents.push(`• Exercise Recommendations: ${suggestions.exercises}`);
+      if (suggestions.followUps && Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0) {
+        adviceComponents.push(`• Follow-up visit: ${suggestions.followUps.map((f:any)=>f?.description || f || '').filter(Boolean).join(', ')}`);
+      }
+      if (suggestions.emergencyInstructions && Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0) {
+        adviceComponents.push(`• ⚠ EMERGENCY: ${suggestions.emergencyInstructions.map((e:any)=>e?.description || e || '').filter(Boolean).join(', ')}`);
+      }
+    }
+    
+    const adviceText = adviceComponents.join('\n');
     const lines = doc.splitTextToSize(adviceText.trim() || 'No specific advice', rightColWidth - 5);
     doc.text(lines, rightColX + 2, rightY);
   }
