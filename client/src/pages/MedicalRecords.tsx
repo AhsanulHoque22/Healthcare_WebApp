@@ -23,6 +23,7 @@ import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
 import PrescriptionView from '../components/PrescriptionView';
 import MedicineHistory from '../components/MedicineHistory';
 import { getDepartmentLabel } from '../utils/departments';
+import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 
 interface AppointmentMedicalRecord {
   id: number;
@@ -527,6 +528,12 @@ const MedicalRecords: React.FC = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-500">Email</label>
                       <p className="text-gray-900">{selectedRecord.patient?.user?.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Age / Sex</label>
+                      <p className="text-gray-900">
+                        {formatAge(calculateAge(selectedRecord.patient?.user?.dateOfBirth))} / {formatGender(selectedRecord.patient?.user?.gender)}
+                      </p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500">Phone</label>

@@ -27,6 +27,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 import PrescriptionInterface from '../components/PrescriptionInterface';
 import PrescriptionView from '../components/PrescriptionView';
 
@@ -880,6 +881,12 @@ Do you want to proceed?`;
                       <div className="bg-white/70 rounded-xl p-4">
                         <label className="text-sm font-semibold text-blue-800">Email</label>
                         <p className="text-gray-900 font-medium">{selectedAppointment.patient.user.email}</p>
+                      </div>
+                      <div className="bg-white/70 rounded-xl p-4">
+                        <label className="text-sm font-semibold text-blue-800">Age / Sex</label>
+                        <p className="text-gray-900 font-medium">
+                          {formatAge(calculateAge(selectedAppointment.patient.user.dateOfBirth))} / {formatGender(selectedAppointment.patient.user.gender)}
+                        </p>
                       </div>
                       <div className="bg-white/70 rounded-xl p-4">
                         <label className="text-sm font-semibold text-blue-800">Phone</label>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
+import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 
 interface PrescriptionTemplateProps {
   prescriptionData: any;
@@ -59,18 +60,6 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
     generateQR();
   }, [prescriptionData?.id, appointmentData?.id]);
 
-  const calculateAge = (dob: string | Date | null) => {
-    if (!dob) return '—';
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return `${age} Y`;
-  };
-
   // Patient and doctor variables are already declared at the top of the component
 
   return (
@@ -119,7 +108,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           <div>
             <p className="text-[9px] text-gray-400 font-bold uppercase">Age / Sex</p>
             <p className="font-bold text-gray-900">
-              {calculateAge(patient?.user?.dateOfBirth || patient?.dateOfBirth)} / {(patient?.user?.gender || patient?.gender || 'M').charAt(0).toUpperCase()}
+              {formatAge(calculateAge(patient?.user?.dateOfBirth || patient?.dateOfBirth))} / {formatGender(patient?.user?.gender || patient?.gender)}
             </p>
           </div>
           <div>

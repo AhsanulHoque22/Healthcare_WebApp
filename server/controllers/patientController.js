@@ -133,7 +133,7 @@ const getMedicalRecords = async (req, res, next) => {
       include: [
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'dateOfBirth', 'gender'] }]
         },
         {
           association: 'appointment',
@@ -239,7 +239,7 @@ const createMedicalRecord = async (req, res, next) => {
       include: [
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'dateOfBirth', 'gender'] }]
         },
         {
           association: 'appointment',

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 import QRCode from 'qrcode';
 import { getDepartmentLabel } from '../utils/departments';
 
@@ -139,21 +140,10 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.text('WEIGHT', margin + 100, y + 5);
   doc.text('DATE', pageWidth - margin - 3, y + 5, { align: 'right' });
 
-  const calculateAge = (dob: string | Date | null) => {
-    if (!dob) return '—';
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return `${age} Y`;
-  };
 
   const patientName = `${appointmentData?.patient?.user?.firstName || ''} ${appointmentData?.patient?.user?.lastName || ''}`.trim() || 'N/A';
-  const patientAge = calculateAge(appointmentData?.patient?.user?.dateOfBirth || appointmentData?.patient?.dateOfBirth);
-  const patientGender = (appointmentData?.patient?.user?.gender || appointmentData?.patient?.gender || '—').charAt(0).toUpperCase();
+  const patientAge = formatAge(calculateAge(appointmentData?.patient?.user?.dateOfBirth || appointmentData?.patient?.dateOfBirth));
+  const patientGender = formatGender(appointmentData?.patient?.user?.gender || appointmentData?.patient?.gender);
   const patientWeight = appointmentData?.patient?.weight ? `${appointmentData.patient.weight} kg` : '—';
   const rxDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 

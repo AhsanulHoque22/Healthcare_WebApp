@@ -95,7 +95,7 @@ const createAppointment = async (req, res, next) => {
       include: [
         {
           association: 'patient',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'phone'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'gender'] }]
         },
         {
           association: 'doctor',
@@ -210,7 +210,7 @@ const getAppointments = async (req, res, next) => {
       include: [
         {
           association: 'patient',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'phone'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'gender'] }]
         },
         {
           association: 'doctor',
@@ -459,7 +459,7 @@ const approveAppointment = async (req, res, next) => {
       include: [
         {
           association: 'patient',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email', 'dateOfBirth', 'gender'] }]
         },
         {
           association: 'doctor',

@@ -55,7 +55,7 @@ const getPrescriptionByAppointment = async (req, res) => {
               include: [{
                 model: User,
                 as: 'user',
-                attributes: ['firstName', 'lastName', 'email', 'phone']
+                attributes: ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'gender']
               }]
             },
             {

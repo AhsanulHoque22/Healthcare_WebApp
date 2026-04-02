@@ -4,6 +4,7 @@ import API from '../api/api';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '../services/paymentService';
+import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 import { 
   PlusIcon, 
   XMarkIcon, 
@@ -620,6 +621,58 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           </div>
         </div>
       </div>
+      {/* Patient Quick Info Bar */}
+      {appointmentData && (
+        <div className="bg-emerald-50/50 border-b border-emerald-100 p-4">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-emerald-100">
+                <UserIcon className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Patient Name</p>
+                <p className="font-bold text-gray-900">
+                  {appointmentData.patient?.user?.firstName} {appointmentData.patient?.user?.lastName}
+                </p>
+              </div>
+            </div>
+            
+            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+
+            <div>
+              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Age / Sex</p>
+              <p className="font-bold text-gray-900">
+                {formatAge(calculateAge(appointmentData.patient?.user?.dateOfBirth))} / {formatGender(appointmentData.patient?.user?.gender)}
+              </p>
+            </div>
+
+            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+
+            <div>
+              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Weight</p>
+              <p className="font-bold text-gray-900">
+                {appointmentData.patient?.weight ? `${appointmentData.patient.weight} kg` : '—'}
+              </p>
+            </div>
+
+            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+
+            <div>
+              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Blood Type</p>
+              <p className="font-bold text-gray-900">
+                {appointmentData.patient?.bloodType || '—'}
+              </p>
+            </div>
+            
+            <div className="ml-auto flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm font-medium text-emerald-700">
+                {new Date(appointmentData.appointmentDate).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modern Tab Navigation */}
       <div className="bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-200/50">

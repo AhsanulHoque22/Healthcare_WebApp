@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
 import { getDepartmentLabel } from '../utils/departments';
+import { calculateAge, formatAge } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
 
 interface Patient {
@@ -635,8 +636,11 @@ const Patients: React.FC = () => {
                         <p className="text-gray-900 font-medium">{selectedPatient.user.phone || 'Not provided'}</p>
                       </div>
                       <div className="bg-white/70 rounded-xl p-4">
-                        <label className="text-sm font-semibold text-blue-800">Date of Birth</label>
-                        <p className="text-gray-900 font-medium">{selectedPatient.user.dateOfBirth || 'Not provided'}</p>
+                        <label className="text-sm font-semibold text-blue-800">Date of Birth / Age</label>
+                        <p className="text-gray-900 font-medium">
+                          {selectedPatient.user.dateOfBirth || 'Not provided'} 
+                          {selectedPatient.user.dateOfBirth && ` (${formatAge(calculateAge(selectedPatient.user.dateOfBirth))})`}
+                        </p>
                       </div>
                       <div className="bg-white/70 rounded-xl p-4">
                         <label className="text-sm font-semibold text-blue-800">Gender</label>
