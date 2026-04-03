@@ -125,17 +125,15 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   let y = margin + 5;
   
   // App Logo/Name
-  try {
-    doc.addImage('/logo.png', 'PNG', margin, margin, 12, 12);
-  } catch (e) {
-    // Fallback if image fails to load
-    doc.setFillColor(41, 98, 180);
-    doc.roundedRect(margin, margin, 12, 12, 2, 2, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('L', margin + 6, margin + 8.5, { align: 'center' });
-  }
+  // Note: We deliberately avoid using doc.addImage('/logo.png') because jsPDF's internal XHR 
+  // fails catastrophically when it encounters HTTP 304 (Not Modified) caching responses,
+  // causing unhandled promise rejections that break the entire PDF download process.
+  doc.setFillColor(41, 98, 180);
+  doc.roundedRect(margin, margin, 12, 12, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('L', margin + 6, margin + 8.5, { align: 'center' });
 
   doc.setTextColor(41, 50, 100);
   doc.setFontSize(18);
