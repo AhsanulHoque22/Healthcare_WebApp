@@ -29,7 +29,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
       
       // We pass userRole "patient" so UI knows how to render
       root.render(
-        <div id="pdf-export-wrapper" style={{ padding: '0px' }}>
+        <div id="pdf-export-wrapper" style={{ padding: '0px', width: '800px' }}>
           <PrescriptionTemplate 
             prescriptionData={prescriptionData} 
             appointmentData={appointmentData} 
@@ -46,7 +46,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
           const rxId = `RX-${prescriptionData?.id || 'APT'}-${appointmentData?.id || ''}`;
           
           const opt = {
-            margin:       [0.5, 0.5, 0.5, 0.5] as [number, number, number, number], // half inch margin
+            margin:       [0, 0, 0, 0] as [number, number, number, number], // ZERO MARGIN
             filename:     `Prescription_${rxId}.pdf`,
             image:        { type: 'jpeg' as const, quality: 1.0 },
             html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },

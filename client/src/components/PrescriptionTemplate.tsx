@@ -162,7 +162,8 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   };
 
   return (
-    <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative print:overflow-visible">
+  return (
+    <div className="bg-white p-10 max-w-[800px] mx-auto relative print:p-0">
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
         <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
@@ -255,7 +256,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       </div>
 
       {/* Prescription Content Section */}
-      <div className="grid grid-cols-12 gap-8 min-h-[500px]">
+      <div className="grid grid-cols-12 gap-8 min-h-[300px]">
         {/* Left Sidebar (Clinical findings) */}
         <div className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6">
           <div>
@@ -356,7 +357,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       </div>
 
       {/* Footer Area */}
-      <div className="mt-auto pt-12 border-t-2 border-gray-100 flex justify-between items-end pb-4">
+      <div className="mt-8 pt-6 border-t-2 border-gray-100 flex justify-between items-end pb-2">
         <div className="flex gap-8 items-center">
             {/* QR Code */}
             <div className="p-1 bg-white border-2 border-blue-50 shadow-inner rounded-xl overflow-hidden">
