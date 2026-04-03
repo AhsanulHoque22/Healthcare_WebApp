@@ -723,7 +723,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
             <div className="ml-auto flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => window.open(`/patient/${appointmentData.patient?.id}/medical-records`, '_blank')}
+                onClick={() => window.open(`/app/patients?patientId=${appointmentData.patient?.id}&view=records`, '_blank')}
                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
               >
                 <ClipboardDocumentListIcon className="h-4 w-4" />
