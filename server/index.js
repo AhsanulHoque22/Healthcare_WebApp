@@ -220,10 +220,12 @@ const startServer = async () => {
       await syncTable(WebsiteReview, 'WebsiteReview');
       await syncTable(Appointment, 'Appointment');
       await syncTable(LabTestOrder, 'LabTestOrder');
-      const { Medicine, MedicineReminder, MedicineDosage } = require('./models');
+      const { Medicine, MedicineReminder, MedicineDosage, Prescription, MedicineLog } = require('./models');
       await syncTable(Medicine, 'Medicine');
       await syncTable(MedicineReminder, 'MedicineReminder');
       await syncTable(MedicineDosage, 'MedicineDosage');
+      await syncTable(Prescription, 'Prescription');
+      await syncTable(MedicineLog, 'MedicineLog');
       
     } catch (err) {
       console.error('[Database] Critical error during table synchronization loop:', err.message);

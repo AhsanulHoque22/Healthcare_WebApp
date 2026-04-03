@@ -61,6 +61,14 @@ const Prescription = sequelize.define('Prescription', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  vitalSigns: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
+  clinicalFindings: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   status: {
     type: DataTypes.ENUM('draft', 'completed', 'cancelled'),
     defaultValue: 'draft'

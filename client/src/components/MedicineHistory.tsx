@@ -44,6 +44,19 @@ interface Medicine {
   }>;
 }
 
+interface MedicineLog {
+  id: number;
+  medicineName: string;
+  action: 'Prescribed' | 'Discontinued';
+  createdAt: string;
+  doctor: {
+    user: {
+      firstName: string;
+      lastName: string;
+    }
+  }
+}
+
 interface MedicineStats {
   totalMedicines: number;
   activeMedicines: number;
@@ -57,6 +70,17 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [medicineFilter, setMedicineFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'history' | 'logs'>('history');
+
+  // Fetch medicine logs
+  const { data: medicineLogs, isLoading: logsLoading } = useQuery<MedicineLog[]>({
+    queryKey: ['medicine-logs', patientId],
+    queryFn: async () => {
+      const response = await API.get(`/medicines/patients/${patientId}/logs`);
+      return response.data.data;
+    },
+    enabled: !!patientId,
+  });
 
   // Fetch medicine history and stats
   const { data: medicineStats, isLoading } = useQuery<MedicineStats>({
@@ -253,12 +277,29 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
       {/* Filter Section */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Medicine History</h3>
+          <h3 className="text-lg font-medium text-gray-900">Medicine Management</h3>
           <p className="text-sm text-gray-600">
             Showing {filteredStats.totalMedicines} of {medicineStats.totalMedicines} medicines
             {medicineFilter !== 'all' && ` (${medicineFilter} only)`}
           </p>
         </div>
+        
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button 
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'history' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            Current Medicines
+          </button>
+          <button 
+            onClick={() => setActiveTab('logs')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'logs' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            Audit Logs
+          </button>
+        </div>
+
+        {activeTab === 'history' && (
         <div className="flex items-center gap-2">
           <FunnelIcon className="h-4 w-4 text-gray-500" />
           <select 
@@ -271,8 +312,62 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
             <option value="completed">Completed Medicines</option>
           </select>
         </div>
+        )}
       </div>
 
+      {activeTab === 'logs' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h4 className="text-lg font-semibold text-gray-900">Medicine Logs</h4>
+            <p className="text-sm text-gray-500">Audit trail of medications prescribed and discontinued</p>
+          </div>
+          {logsLoading ? (
+            <div className="p-8 text-center text-gray-500">Loading logs...</div>
+          ) : !medicineLogs || medicineLogs.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">No medicine logs found for this patient.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medicine Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {medicineLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          log.action === 'Prescribed' 
+                            ? 'bg-emerald-100 text-emerald-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {log.medicineName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        Dr. {log.doctor?.user?.firstName} {log.doctor?.user?.lastName}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <>
       {/* Quick Filter Buttons */}
       <div className="flex flex-wrap gap-3">
         <button
@@ -645,6 +740,8 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-const { Prescription, Appointment, Patient, Doctor, User, Medicine, MedicineReminder } = require('../models');
+const { Prescription, Appointment, Patient, Doctor, User, Medicine, MedicineReminder, MedicineLog } = require('../models');
 const { Op } = require('sequelize');
 const multer = require('multer');
 const path = require('path');
@@ -484,6 +484,14 @@ const extractMedicinesFromPrescription = async (prescriptionId) => {
           isActive: true,
           doctorId: prescription.appointment.doctor.id,
           ...updateData
+        });
+
+        // Add MedicineLog
+        await MedicineLog.create({
+          patientId: prescription.appointment.patient.id,
+          doctorId: prescription.appointment.doctor.id,
+          medicineName: medicineData.name,
+          action: 'Prescribed'
         });
 
         // Create reminders based on frequency

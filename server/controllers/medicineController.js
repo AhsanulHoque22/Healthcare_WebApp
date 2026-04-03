@@ -1,4 +1,4 @@
-const { Medicine, MedicineReminder, MedicineDosage, Patient, Doctor, Prescription, PatientReminderSettings } = require('../models');
+const { Medicine, MedicineReminder, MedicineDosage, Patient, Doctor, Prescription, PatientReminderSettings, MedicineLog } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper function to auto-complete medicines when end date passes
@@ -802,6 +802,18 @@ const discontinueMedicine = async (req, res) => {
       { where: { medicineId } }
     );
 
+    // Record discontinuation
+    try {
+      await MedicineLog.create({
+        patientId: medicine.patientId,
+        doctorId: req.user.doctorId || medicine.doctorId, // Fallback to prescribing doctor if req.user.doctorId is not available
+        medicineName: medicine.medicineName,
+        action: 'Discontinued'
+      });
+    } catch (logErr) {
+      console.error('Failed to log discontinuation:', logErr);
+    }
+
     res.json({
       success: true,
       message: 'Medicine discontinued successfully',
@@ -1516,6 +1528,41 @@ const testReminderNotification = async (req, res) => {
   }
 };
 
+// Get Medicine Logs
+const getMedicineLogs = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    
+    const logs = await MedicineLog.findAll({
+      where: { patientId: parseInt(patientId) },
+      include: [
+        {
+          model: Doctor,
+          as: 'doctor',
+          include: [{
+            model: require('../models').User,
+            as: 'user',
+            attributes: ['firstName', 'lastName']
+          }]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: logs
+    });
+  } catch (error) {
+    console.error('Error fetching medicine logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching medicine logs',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPatientMedicines,
   addMedicineFromPrescription,
@@ -1535,5 +1582,6 @@ module.exports = {
   autoCompleteExpiredMedicines,
   getReminderSettings,
   saveReminderSettings,
-  testReminderNotification
+  testReminderNotification,
+  getMedicineLogs
 };

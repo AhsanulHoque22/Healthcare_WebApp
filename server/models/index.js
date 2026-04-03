@@ -15,6 +15,7 @@ const MedicineDosage = require('./MedicineDosage');
 const PatientReminderSettings = require('./PatientReminderSettings');
 const Notification = require('./Notification');
 const WebsiteReview = require('./WebsiteReview');
+const MedicineLog = require('./MedicineLog');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
@@ -32,6 +33,7 @@ Patient.hasMany(Medicine, { foreignKey: 'patientId', as: 'medicines' });
 Patient.hasMany(MedicineReminder, { foreignKey: 'patientId', as: 'medicineReminders' });
 Patient.hasMany(MedicineDosage, { foreignKey: 'patientId', as: 'medicineDosages' });
 Patient.hasOne(PatientReminderSettings, { foreignKey: 'patientId', as: 'reminderSettings' });
+Patient.hasMany(MedicineLog, { foreignKey: 'patientId', as: 'medicineLogs' });
 
 // Doctor associations
 Doctor.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -40,6 +42,7 @@ Doctor.hasMany(MedicalRecord, { foreignKey: 'doctorId', as: 'medicalRecords' });
 Doctor.hasMany(Prescription, { foreignKey: 'doctorId', as: 'prescriptions' });
 Doctor.hasMany(DoctorRating, { foreignKey: 'doctorId', as: 'ratings' });
 Doctor.hasMany(Medicine, { foreignKey: 'doctorId', as: 'prescribedMedicines' });
+Doctor.hasMany(MedicineLog, { foreignKey: 'doctorId', as: 'medicineLogs' });
 
 // Appointment associations
 Appointment.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
@@ -100,6 +103,10 @@ MedicineReminder.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 MedicineDosage.belongsTo(Medicine, { foreignKey: 'medicineId', as: 'medicine' });
 MedicineDosage.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 
+// Medicine Log associations
+MedicineLog.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
+MedicineLog.belongsTo(Doctor, { foreignKey: 'doctorId', as: 'doctor' });
+
 // Patient Reminder Settings associations
 PatientReminderSettings.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 
@@ -126,5 +133,6 @@ module.exports = {
   MedicineDosage,
   PatientReminderSettings,
   Notification,
-  WebsiteReview
+  WebsiteReview,
+  MedicineLog
 };

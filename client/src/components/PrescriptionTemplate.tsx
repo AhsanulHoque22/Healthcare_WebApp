@@ -100,6 +100,14 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
     return null;
   })();
 
+  const clinicalFindings = prescriptionData?.clinicalFindings?.trim() || '';
+  
+  const vitalSigns = (() => {
+    const parsed = safeParseJson(prescriptionData?.vitalSigns);
+    if (!parsed) return null;
+    return parsed;
+  })();
+
   const doctor = appointmentData?.doctor;
   const patient = appointmentData?.patient;
   const user = doctor?.user;
@@ -154,7 +162,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   };
 
   return (
-    <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative overflow-hidden">
+    <div className="bg-white p-12 shadow-2xl border border-gray-100 max-w-4xl mx-auto my-8 relative print:overflow-visible">
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
         <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
@@ -212,10 +220,52 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
         </div>
       </div>
 
+      {/* Vital Signs Bar */}
+      <div className="grid grid-cols-5 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-100 mb-8 font-sans">
+        <div>
+          <p className="text-[9px] text-gray-500 font-bold uppercase">Blood Pressure</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {vitalSigns?.bloodPressure ? `${vitalSigns.bloodPressure} mmHg` : 'N/A'}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] text-gray-500 font-bold uppercase">Heart Rate</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {vitalSigns?.heartRate ? `${vitalSigns.heartRate} bpm` : 'N/A'}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] text-gray-500 font-bold uppercase">Temperature</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {vitalSigns?.temperature ? `${vitalSigns.temperature} °F/°C` : 'N/A'}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] text-gray-500 font-bold uppercase">Resp. Rate</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {vitalSigns?.respiratoryRate ? `${vitalSigns.respiratoryRate} /min` : 'N/A'}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] text-gray-500 font-bold uppercase">O2 Saturation</p>
+          <p className="font-bold text-gray-900 text-sm">
+            {vitalSigns?.oxygenSaturation ? `${vitalSigns.oxygenSaturation} %` : 'N/A'}
+          </p>
+        </div>
+      </div>
+
       {/* Prescription Content Section */}
       <div className="grid grid-cols-12 gap-8 min-h-[500px]">
         {/* Left Sidebar (Clinical findings) */}
         <div className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6">
+          <div>
+            <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Clinical Findings</h3>
+            {clinicalFindings ? (
+              <p className="text-[13px] text-gray-700 font-sans whitespace-pre-wrap leading-relaxed">{clinicalFindings}</p>
+            ) : (
+              <p className="text-[13px] text-gray-400 font-sans italic">N/A</p>
+            )}
+          </div>
           {symptoms && symptoms.filter((s: any) => getItemText(s)).length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Chief Complaints</h3>

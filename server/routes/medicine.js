@@ -23,8 +23,9 @@ router.post('/medicines/:medicineId/discontinue', authenticateToken, medicineCon
 router.get('/patients/:patientId/reminders', authenticateToken, medicineController.getMedicineReminders);
 router.put('/reminders/:reminderId', authenticateToken, medicineController.updateReminder);
 
-// Statistics routes
+// Statistics and logs routes
 router.get('/patients/:patientId/stats', authenticateToken, medicineController.getMedicineStats);
+router.get('/patients/:patientId/logs', authenticateToken, medicineController.getMedicineLogs);
 
 // Habit tracker routes
 router.get('/patients/:patientId/schedule/today', authenticateToken, medicineController.getTodayMedicineSchedule);

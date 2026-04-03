@@ -46,6 +46,15 @@ interface PrescriptionFormData {
   reports?: string;
   exercises?: string;
   dietaryChanges?: string;
+  clinicalFindings?: string;
+}
+
+interface VitalSigns {
+  bloodPressure: string;
+  heartRate: string;
+  temperature: string;
+  respiratoryRate: string;
+  oxygenSaturation: string;
 }
 
 interface Medicine {
@@ -135,10 +144,19 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   const [existingMedicines, setExistingMedicines] = useState<ExistingMedicine[]>([]);
   const [testReports, setTestReports] = useState<TestReport[]>([]);
   const [showAllPrescriptions, setShowAllPrescriptions] = useState(false);
-  const [activeTab, setActiveTab] = useState<'medicines' | 'symptoms' | 'diagnosis' | 'suggestions' | 'tests' | 'reports'>('medicines');
   const [testSearchTerm, setTestSearchTerm] = useState('');
   const [showTestSearch, setShowTestSearch] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  
+  const [vitalSigns, setVitalSigns] = useState<VitalSigns>({
+    bloodPressure: '',
+    heartRate: '',
+    temperature: '',
+    respiratoryRate: '',
+    oxygenSaturation: ''
+  });
+
+  const [activeTab, setActiveTab] = useState<'medicines' | 'symptoms' | 'diagnosis' | 'suggestions' | 'tests' | 'reports' | 'clinical'>('medicines');
 
   const form = useForm<PrescriptionFormData>({
     defaultValues: {
@@ -149,7 +167,8 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       tests: '',
       reports: '',
       exercises: '',
-      dietaryChanges: ''
+      dietaryChanges: '',
+      clinicalFindings: ''
     }
   });
 
@@ -258,7 +277,19 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         if (prescription) {
           form.setValue('symptoms', prescription.symptoms || '');
           form.setValue('diagnosis', prescription.diagnosis || '');
+          form.setValue('clinicalFindings', prescription.clinicalFindings || '');
           
+          if (prescription.vitalSigns) {
+            try {
+              const parsedVitals = typeof prescription.vitalSigns === 'string' 
+                ? JSON.parse(prescription.vitalSigns) 
+                : prescription.vitalSigns;
+              setVitalSigns(parsedVitals);
+            } catch (e) {
+              console.error('Error parsing vital signs', e);
+            }
+          }
+
           if (prescription.suggestions) {
             try {
               const parsedSuggestions = JSON.parse(prescription.suggestions);
@@ -562,7 +593,9 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           emergencyInstructions
         }),
         tests: tests.length > 0 ? JSON.stringify(tests) : data.tests,
-        testReports: data.reports
+        testReports: data.reports,
+        clinicalFindings: data.clinicalFindings,
+        vitalSigns: vitalSigns
       };
 
       await API.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
@@ -592,7 +625,9 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           emergencyInstructions
         }),
         tests: tests.length > 0 ? JSON.stringify(tests) : formData.tests,
-        testReports: formData.reports
+        testReports: formData.reports,
+        clinicalFindings: formData.clinicalFindings,
+        vitalSigns: vitalSigns
       };
 
       await API.post(`/prescriptions/appointment/${appointmentId}`, prescriptionData);
@@ -611,6 +646,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
 
   const tabs = [
     { id: 'medicines', name: 'Medicines', icon: DocumentTextIcon },
+    { id: 'clinical', name: 'Clinical', icon: HeartIcon },
     { id: 'symptoms', name: 'Symptoms', icon: ClipboardDocumentListIcon },
     { id: 'diagnosis', name: 'Diagnosis', icon: BeakerIcon },
     { id: 'suggestions', name: 'Recommendations', icon: CheckIcon },
@@ -684,12 +720,21 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                 {appointmentData.patient?.bloodType || '—'}
               </p>
             </div>
-            
-            <div className="ml-auto flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-emerald-500" />
-              <span className="text-sm font-medium text-emerald-700">
-                {new Date(appointmentData.appointmentDate).toLocaleDateString()}
-              </span>
+            <div className="ml-auto flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => window.open(`/patient/${appointmentData.patient?.id}/medical-records`, '_blank')}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
+              >
+                <ClipboardDocumentListIcon className="h-4 w-4" />
+                View Medical History
+              </button>
+              <div className="flex items-center gap-2 text-emerald-700 border-l border-emerald-200/50 pl-4">
+                <CalendarIcon className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-medium">
+                  {new Date(appointmentData.appointmentDate).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -724,6 +769,127 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-8">
+        {/* Clinical Tab */}
+        {activeTab === 'clinical' && (
+          <div className="space-y-8 fade-in">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl flex items-center justify-center shadow-sm">
+                <HeartIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900">Vital Signs & Clinical Findings</h4>
+                <p className="text-sm text-gray-500">Record baseline vitals and clinical examination findings</p>
+              </div>
+            </div>
+
+            {/* Vital Signs Grid */}
+            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+              <h5 className="text-md font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <HeartIcon className="h-4 w-4 text-rose-500" /> Vital Signs
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Blood Pressure</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="block w-full pl-3 pr-16 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="120/80"
+                      value={vitalSigns.bloodPressure}
+                      onChange={(e) => setVitalSigns({...vitalSigns, bloodPressure: e.target.value})}
+                      disabled={isReadOnly}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">mmHg</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Heart Rate</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      className="block w-full pl-3 pr-12 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="72"
+                      value={vitalSigns.heartRate}
+                      onChange={(e) => setVitalSigns({...vitalSigns, heartRate: e.target.value})}
+                      disabled={isReadOnly}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">bpm</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="block w-full pl-3 pr-10 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="98.6"
+                      value={vitalSigns.temperature}
+                      onChange={(e) => setVitalSigns({...vitalSigns, temperature: e.target.value})}
+                      disabled={isReadOnly}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">°F/°C</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Respiratory Rate</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      className="block w-full pl-3 pr-24 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="16"
+                      value={vitalSigns.respiratoryRate}
+                      onChange={(e) => setVitalSigns({...vitalSigns, respiratoryRate: e.target.value})}
+                      disabled={isReadOnly}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">breaths/min</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Oxygen Saturation</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      className="block w-full pl-3 pr-12 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="98"
+                      value={vitalSigns.oxygenSaturation}
+                      onChange={(e) => setVitalSigns({...vitalSigns, oxygenSaturation: e.target.value})}
+                      disabled={isReadOnly}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinical Findings Text Area */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Examination Findings</label>
+              <textarea
+                {...form.register('clinicalFindings')}
+                rows={5}
+                className="w-full rounded-xl border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors"
+                placeholder="Enter detailed clinical findings from examination..."
+                disabled={isReadOnly}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Medicines Tab */}
         {activeTab === 'medicines' && (
           <div className="space-y-6">
