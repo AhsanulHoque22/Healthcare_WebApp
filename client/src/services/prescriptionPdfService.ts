@@ -72,6 +72,9 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   const rawTests = parseJsonField(prescriptionData?.tests);
   const tests = toSafeArray(rawTests);
   
+  const clinicalFindings = prescriptionData?.clinicalFindings || '';
+  const vitalSigns = parseJsonField(prescriptionData?.vitalSigns);
+  
   const basicPrescription = appointmentData?.prescription;
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -197,7 +200,40 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
   doc.text(patientWeight, margin + 100, y + 10);
   doc.text(rxDate, pageWidth - margin - 3, y + 10, { align: 'right' });
 
-  y += 22;
+  y += 20;
+
+  // ─────────────────────────────────────────────────────────
+  // VITAL SIGNS BAR
+  if (vitalSigns && Object.keys(vitalSigns).length > 0) {
+    doc.setFillColor(250, 250, 250);
+    doc.roundedRect(margin, y, contentWidth, 12, 1, 1, 'F');
+    doc.setDrawColor(230, 230, 230);
+    doc.roundedRect(margin, y, contentWidth, 12, 1, 1, 'S');
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    
+    // Header row
+    doc.text('BLOOD PRESSURE', margin + 5, y + 4);
+    doc.text('HEART RATE', margin + 40, y + 4);
+    doc.text('TEMPERATURE', margin + 75, y + 4);
+    doc.text('RESP. RATE', margin + 110, y + 4);
+    doc.text('O2 SATURATION', margin + 145, y + 4);
+
+    // Value row
+    doc.setFontSize(8);
+    doc.setTextColor(20, 20, 20);
+    doc.text(vitalSigns.bloodPressure ? `${vitalSigns.bloodPressure} mmHg` : 'N/A', margin + 5, y + 9);
+    doc.text(vitalSigns.heartRate ? `${vitalSigns.heartRate} bpm` : 'N/A', margin + 40, y + 9);
+    doc.text(vitalSigns.temperature ? `${vitalSigns.temperature} °F/°C` : 'N/A', margin + 75, y + 9);
+    doc.text(vitalSigns.respiratoryRate ? `${vitalSigns.respiratoryRate} /min` : 'N/A', margin + 110, y + 9);
+    doc.text(vitalSigns.oxygenSaturation ? `${vitalSigns.oxygenSaturation} %` : 'N/A', margin + 145, y + 9);
+    
+    y += 18;
+  } else {
+    y += 2;
+  }
 
   // ─────────────────────────────────────────────────────────
   // CONTENT GRID (Chief Complaints | Medicines)
@@ -218,6 +254,20 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     return currentY + 6;
   };
 
+  if (clinicalFindings) {
+    leftY = drawSectionTitle('CLINICAL FINDINGS', leftY);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    try {
+      const lines = doc.splitTextToSize(String(clinicalFindings), leftColWidth - 8);
+      doc.text(lines, margin + 2, leftY);
+      leftY += lines.length * 4.5 + 4;
+    } catch(e) {
+      console.warn("Failed to split clinicalFindings text:", e);
+    }
+  }
+
   if (symptoms && symptoms.length > 0) {
     leftY = drawSectionTitle('CHIEF COMPLAINTS', leftY);
     doc.setFontSize(8);
@@ -226,9 +276,11 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     symptoms.forEach((s: any) => {
       const desc = getItemText(s);
       if (desc) {
-        const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-        doc.text(lines, margin + 2, leftY);
-        leftY += lines.length * 4.5;
+        try {
+          const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
+          doc.text(lines, margin + 2, leftY);
+          leftY += lines.length * 4.5;
+        } catch(e) {}
       }
     });
     leftY += 4;
@@ -242,9 +294,11 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     diagnoses.forEach((d: any) => {
       const desc = getItemText(d);
       if (desc) {
-        const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-        doc.text(lines, margin + 2, leftY);
-        leftY += lines.length * 4.5;
+        try {
+          const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
+          doc.text(lines, margin + 2, leftY);
+          leftY += lines.length * 4.5;
+        } catch(e) {}
       }
     });
     leftY += 4;
@@ -258,9 +312,11 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     tests.forEach((t: any, i: number) => {
       const tName = getItemText(t, 'name');
       if (tName) {
-        const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
-        doc.text(lines, margin + 2, leftY);
-        leftY += lines.length * 4.5;
+        try {
+          const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
+          doc.text(lines, margin + 2, leftY);
+          leftY += lines.length * 4.5;
+        } catch(e) {}
       }
     });
     leftY += 4;
@@ -285,9 +341,13 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(60, 60, 60);
-    const lines = doc.splitTextToSize(basicPrescription, rightColWidth - 5);
-    doc.text(lines, rightColX, rightY);
-    rightY += lines.length * 4.5 + 5;
+    try {
+      const lines = doc.splitTextToSize(String(basicPrescription), rightColWidth - 5);
+      doc.text(lines, rightColX, rightY);
+      rightY += lines.length * 4.5 + 5;
+    } catch(e) {
+      console.warn("Failed to split basicPrescription text", e);
+    }
   }
 
   if (Array.isArray(medicines) && medicines.length > 0) {
