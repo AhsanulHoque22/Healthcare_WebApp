@@ -14,17 +14,14 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
     console.log('[PDF] Generating high-fidelity PDF from component for:', prescriptionData?.id);
 
     try {
-      // 1. Create a container that is part of the document flow but hidden
+      // 1. Create a container that is part of the document flow but off-screen
       const container = document.createElement('div');
-      container.id = `pdf-gen-container-${Date.now()}`;
-      container.style.position = 'fixed';
+      container.id = `pdf-generator-${Date.now()}`;
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.left = '0';
-      container.style.width = '794px'; // Standard A4 pixel width at 96dpi
-      container.style.height = 'auto';
-      container.style.zIndex = '-9999';
-      container.style.visibility = 'hidden';
-      container.style.overflow = 'hidden';
+      container.style.width = '794px'; 
+      container.style.height = 'auto'; // allow the container to grow to fit the prescription
       container.style.backgroundColor = 'white';
       
       document.body.appendChild(container);
@@ -33,7 +30,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
       const root = createRoot(container);
       
       root.render(
-        <div id="pdf-export-wrapper" className="bg-white">
+        <div id="pdf-export-wrapper" style={{ width: '794px', backgroundColor: 'white' }}>
           <PrescriptionTemplate 
             prescriptionData={prescriptionData} 
             appointmentData={appointmentData} 
@@ -42,8 +39,12 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
         </div>
       );
 
-      // 3. Wait for render to commit, images to load, and fonts to settle
-      // Use a generous timeout to ensure all assets are ready for high-fidelity capture
+      // 3. Wait for render, images, and fonts to settle
+      // Ensure fonts are ready before PDF generation
+      if (typeof (document as any).fonts?.ready !== 'undefined') {
+        await (document as any).fonts.ready;
+      }
+      
       setTimeout(async () => {
         try {
           const exportWrapper = container.querySelector('#pdf-export-wrapper');
@@ -56,43 +57,43 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
             filename:     `Prescription_${rxId}.pdf`,
             image:        { type: 'jpeg' as const, quality: 1.0 },
             html2canvas:  { 
-              scale: 2, 
+              scale: 3, // higher scale for sharper results
               useCORS: true, 
+              logging: false, // minimize noise
               letterRendering: true,
               backgroundColor: '#ffffff',
               scrollY: 0,
-              windowWidth: 794
+              windowWidth: 794 // Lock window width for Tailwind consistency
             },
             jsPDF: { 
-              unit: 'px' as const, 
-              format: [794, 1123] as [number, number], 
+              unit: 'mm' as const, 
+              format: 'a4' as const, 
               orientation: 'portrait' as const,
-              compress: true
-            }
+              compress: true,
+              precision: 16 // Increase precision to avoid rounding errors
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
           // Generate and save
           await html2pdf().set(opt).from(exportWrapper as HTMLElement).save();
           
-          // 4. Cleanup
+          // 4. Final Cleanup
           setTimeout(() => {
             root.unmount();
             if (document.body.contains(container)) {
               document.body.removeChild(container);
             }
-          }, 500);
+          }, 1000);
           
           resolve();
         } catch (pdfError) {
-          console.error('[PDF] html2pdf generation failed:', pdfError);
-          // Cleanup on fail
+          console.error('[PDF] High-fidelity generation failed:', pdfError);
           root.unmount();
-          if (document.body.contains(container)) {
-            document.body.removeChild(container);
-          }
+          if (document.body.contains(container)) document.body.removeChild(container);
           reject(pdfError);
         }
-      }, 1500);
+      }, 2000); // Increased timeout significantly to ensure complex layouts stabilize
     } catch (error) {
       console.error('[PDF] Setup wrapper failed:', error);
       reject(error);

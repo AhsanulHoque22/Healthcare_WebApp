@@ -164,12 +164,17 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   };
 
   return (
-    <div className={`bg-white relative mx-auto ${isPdf ? 'w-[794px] min-h-[1123px]' : 'w-full max-w-[794px] border border-gray-200 shadow-md'}`}>
-      {/* Background Watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
-        <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
-          DIGITALLY GENERATED
-        </h1>
+    <div 
+      id="prescription-container"
+      className={`bg-white relative mx-auto overflow-hidden ${isPdf ? 'w-[794px] min-h-[1123px]' : 'w-full max-w-[794px] border border-gray-200 shadow-md'}`}
+    >
+      {/* Background Watermarks - Clipped and restricted to prevent layout shifts */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+        <div className="absolute inset-0 flex items-center justify-center transform -rotate-45 opacity-[0.03]">
+          <h1 className="text-[120px] font-black text-blue-900 tracking-tighter uppercase whitespace-nowrap">
+            PRESCRIBED • VERIFIED
+          </h1>
+        </div>
       </div>
 
       <div className="relative z-10 p-10">
