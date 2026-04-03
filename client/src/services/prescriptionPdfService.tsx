@@ -46,15 +46,15 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
           const rxId = `RX-${prescriptionData?.id || 'APT'}-${appointmentData?.id || ''}`;
           
           const opt = {
-            margin:       [0.5, 0.5, 0.5, 0.5], // half inch margin
+            margin:       [0.5, 0.5, 0.5, 0.5] as [number, number, number, number], // half inch margin
             filename:     `Prescription_${rxId}.pdf`,
-            image:        { type: 'jpeg', quality: 1.0 },
+            image:        { type: 'jpeg' as const, quality: 1.0 },
             html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            jsPDF:        { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
           };
 
           // Generate and save
-          await html2pdf().set(opt).from(exportWrapper).save();
+          await html2pdf().set(opt).from(exportWrapper as HTMLElement).save();
           
           // 4. Cleanup
           root.unmount();
