@@ -77,6 +77,11 @@ const Doctor = sequelize.define('Doctor', {
     allowNull: true,
     comment: 'URL or path to doctor profile image'
   },
+  signature: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'URL or path to doctor digital signature'
+  },
   degrees: {
     type: DataTypes.JSON,
     allowNull: true,

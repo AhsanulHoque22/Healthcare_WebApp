@@ -23,6 +23,7 @@
     "@types/yup": "^0.32.0",
     "axios": "^1.12.2",
     "cors": "^2.8.6",
+    "html2pdf.js": "^0.14.0",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.7",
     "qrcode": "^1.5.4",

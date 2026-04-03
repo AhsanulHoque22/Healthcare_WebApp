@@ -22,12 +22,14 @@ import {
   PhoneIcon,
   HomeIcon,
   CalendarIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import DoctorRatings from '../components/DoctorRatings';
 
 interface DoctorProfileData {
   profileImage?: string;
+  signature?: string;
   bmdcRegistrationNumber?: string;
   department?: string | null | undefined;
   experience?: number | null | undefined;
@@ -52,9 +54,11 @@ const DoctorProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingSignature, setIsUploadingSignature] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signatureFileInputRef = useRef<HTMLInputElement>(null);
   const [profileData, setProfileData] = useState<DoctorProfileData>({
     department: '',
     experience: 0,
@@ -108,6 +112,7 @@ const DoctorProfile: React.FC = () => {
       setDoctorId(data.id);
       setProfileData({
         profileImage: data.profileImage || '',
+        signature: data.signature || '',
         bmdcRegistrationNumber: data.bmdcRegistrationNumber || '',
         department: data.department || '',
         experience: data.experience || 0,
@@ -162,7 +167,8 @@ const DoctorProfile: React.FC = () => {
         chamberTimes: profileData.chamberTimes,
         languages: profileData.languages,
         services: profileData.services,
-        profileImage: profileData.profileImage
+        profileImage: profileData.profileImage,
+        signature: profileData.signature
       };
 
       await API.put('/doctors/profile', updateData);
@@ -338,6 +344,58 @@ const DoctorProfile: React.FC = () => {
     }
   };
 
+  // Handle signature upload
+  const handleSignatureUpload = () => {
+    signatureFileInputRef.current?.click();
+  };
+
+  const handleSignatureFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (JPG, PNG, GIF)');
+      return;
+    }
+
+    // Validate file size (max 2MB for signature)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Signature size must be less than 2MB');
+      return;
+    }
+
+    setIsUploadingSignature(true);
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file); // Use same image upload endpoint
+
+      const response = await API.post('/doctors/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setProfileData(prev => ({
+          ...prev,
+          signature: response.data.data.imageUrl
+        }));
+        toast.success('Signature uploaded successfully!');
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+    } catch (error: any) {
+      console.error('Signature Upload error:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload signature');
+    } finally {
+      setIsUploadingSignature(false);
+      if (signatureFileInputRef.current) {
+        signatureFileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="space-y-8 p-6">
@@ -430,6 +488,60 @@ const DoctorProfile: React.FC = () => {
                     </button>
                     <p className="text-xs text-gray-500 mt-2">
                       JPG, PNG, GIF up to 5MB
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Signature Upload Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 mt-6">
+              <div className="flex items-center mb-6">
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg p-3 text-white mr-3">
+                  <PencilSquareIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Digital Signature</h3>
+                  <p className="text-sm text-gray-600">For printing on prescriptions</p>
+                </div>
+              </div>
+              <div className="text-center">
+                {profileData.signature ? (
+                  <div className="relative inline-block bg-gray-50 rounded-xl p-4 border-2 border-dashed border-gray-200 mb-6">
+                    <img
+                      src={profileData.signature}
+                      alt="Signature"
+                      className="h-20 w-auto max-w-[200px] object-contain mx-auto mix-blend-multiply"
+                    />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircleIcon className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-24 w-full max-w-[240px] rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mx-auto mb-6 shadow-sm border-2 border-dashed border-gray-200">
+                    <PencilSquareIcon className="h-10 w-10 text-gray-300" />
+                  </div>
+                )}
+                {isEditing && (
+                  <>
+                    <input
+                      ref={signatureFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSignatureFileChange}
+                      className="hidden"
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleSignatureUpload}
+                      disabled={isUploadingSignature}
+                      className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 hover:scale-105 shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      <CameraIcon className="h-4 w-4" />
+                      {isUploadingSignature ? 'Uploading...' : 'Upload Signature'}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Transparent PNG works best
                     </p>
                   </>
                 )}

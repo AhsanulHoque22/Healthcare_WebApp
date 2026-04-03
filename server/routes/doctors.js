@@ -63,6 +63,13 @@ const updateDoctorValidation = [
   body('chamberTimes').optional().isObject().withMessage('Chamber times must be an object'),
   body('languages').optional().isArray().withMessage('Languages must be an array'),
   body('services').optional().isArray().withMessage('Services must be an array'),
+  body('signature').optional().custom((value) => {
+    if (!value) return true;
+    if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('data:image/') || value.startsWith('/uploads/'))) {
+      return true;
+    }
+    throw new Error('Signature must be a valid URL, base64 data URL, or upload path');
+  }),
   body('profileImage').optional().custom((value) => {
     if (!value) return true; // Allow empty values
     // Allow URLs, base64 data URLs, and relative paths

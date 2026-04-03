@@ -382,8 +382,16 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
               </div>
            </div>
 
-           <div className="inline-block border-b-2 border-black/10 pb-2 mb-4 px-16">
-              <p className="text-gray-200 text-[11px] uppercase font-bold tracking-[0.3em] italic select-none">Signed Digitally</p>
+           <div className="inline-block border-b-2 border-black/10 pb-2 mb-4 px-16 min-h-[60px] flex items-end justify-center relative">
+              {doctor?.signature ? (
+                <img 
+                  src={doctor.signature} 
+                  alt="Doctor Signature" 
+                  className="h-16 w-auto mix-blend-multiply absolute bottom-1 right-1/2 translate-x-1/2" 
+                />
+              ) : (
+                <p className="text-gray-200 text-[11px] uppercase font-bold tracking-[0.3em] italic select-none">Signed Digitally</p>
+              )}
            </div>
            <p className="text-xl font-bold text-gray-900 italic font-serif leading-none tracking-tight">Dr. {doctorName}</p>
            <p className="text-sm font-bold text-blue-800 mt-2">{doctor?.qualifications || 'Consultant Physician'}</p>
