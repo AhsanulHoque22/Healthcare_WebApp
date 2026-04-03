@@ -27,12 +27,13 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
       // 2. Render the React component synchronously 
       const root = createRoot(container);
       
-      // We pass userRole "patient" so UI knows how to render
+      // We pass isPdf true so component knows to skip web-only shadows/borders
       root.render(
-        <div id="pdf-export-wrapper" style={{ padding: '0px', width: '800px' }}>
+        <div id="pdf-export-wrapper" style={{ margin: '0px', padding: '0px', width: '794px' }}>
           <PrescriptionTemplate 
             prescriptionData={prescriptionData} 
             appointmentData={appointmentData} 
+            isPdf={true}
           />
         </div>
       );
@@ -49,8 +50,8 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
             margin:       [0, 0, 0, 0] as [number, number, number, number], // ZERO MARGIN
             filename:     `Prescription_${rxId}.pdf`,
             image:        { type: 'jpeg' as const, quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-            jsPDF:        { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },
+            jsPDF:        { unit: 'px' as const, format: [794, 1123] as [number, number], orientation: 'portrait' as const }
           };
 
           // Generate and save

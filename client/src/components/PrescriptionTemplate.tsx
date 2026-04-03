@@ -5,6 +5,7 @@ import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
 interface PrescriptionTemplateProps {
   prescriptionData: any;
   appointmentData: any;
+  isPdf?: boolean;
 }
 
 // Safe JSON parser that NEVER throws - handles double-encoded JSON
@@ -63,7 +64,8 @@ const getItemText = (item: any, field: string = 'description'): string => {
 
 const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   prescriptionData,
-  appointmentData
+  appointmentData,
+  isPdf = false
 }) => {
   const [qrCodeData, setQrCodeData] = useState<string>('');
 
@@ -162,8 +164,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   };
 
   return (
-  return (
-    <div className="bg-white p-10 max-w-[800px] mx-auto relative print:p-0">
+    <div className={`bg-white relative ${isPdf ? 'w-[794px] min-h-[1123px] p-14' : 'p-10 max-w-[800px] mx-auto shadow-2xl border border-gray-100 my-8'}`}>
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
         <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
