@@ -166,23 +166,44 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   return (
     <div 
       id="prescription-container"
-      className={`bg-white relative mx-auto overflow-hidden ${isPdf ? 'w-[794px] min-h-[1123px]' : 'w-full max-w-[794px] border border-gray-200 shadow-md'}`}
+      className={`bg-white relative mx-auto overflow-hidden ${isPdf ? '' : 'w-full max-w-[794px] border border-gray-200 shadow-md'}`}
+      style={isPdf ? { width: '794px', minHeight: '1123px', margin: '0 auto', position: 'relative' } : {}}
     >
       {/* Background Watermarks - Clipped and restricted to prevent layout shifts */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
-        <div className="absolute inset-0 flex items-center justify-center transform -rotate-45 opacity-[0.03]">
-          <h1 className="text-[120px] font-black text-blue-900 tracking-tighter uppercase whitespace-nowrap">
-            PRESCRIBED • VERIFIED
+      <div 
+        className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0"
+        style={{ width: '794px', height: '1123px' }}
+      >
+        <div 
+          className="absolute inset-0 flex items-center justify-center opacity-[0.03]"
+          style={{ transform: 'rotate(-45deg)' }}
+        >
+          <h1 
+            className="font-black text-blue-900 tracking-tighter uppercase whitespace-nowrap"
+            style={{ fontSize: '100px' }}
+          >
+            DIGITALLY GENERATED
           </h1>
         </div>
       </div>
 
-      <div className="relative z-10 p-10">
+      <div className="relative z-10 p-10" style={isPdf ? { padding: '40px' } : {}}>
         {/* Prescription Header */}
-        <div className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-8">
-          <div className="flex items-center gap-6">
-            <div className="bg-white p-1 rounded-2xl shadow-sm border border-blue-100">
-               <img src="/logo.png" className="h-20 w-20 object-contain" alt="Livora Logo" />
+        <div 
+          className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-8"
+          style={isPdf ? { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #2563eb' } : {}}
+        >
+          <div className="flex items-center gap-6" style={isPdf ? { display: 'flex', alignItems: 'center', gap: '24px' } : {}}>
+            <div 
+              className="bg-white p-1 rounded-2xl shadow-sm border border-blue-100"
+              style={isPdf ? { padding: '4px', borderRadius: '16px', border: '1px solid #dbeafe', width: '88px', height: '88px' } : {}}
+            >
+               <img 
+                src="/logo.png" 
+                className="h-20 w-20 object-contain" 
+                alt="Livora Logo" 
+                style={isPdf ? { width: '80px', height: '80px' } : {}}
+               />
             </div>
             <div>
               <h1 className="text-4xl font-black text-blue-900 tracking-tighter">LIVORA</h1>
@@ -204,7 +225,19 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
         </div>
 
         {/* Patient Info Bar */}
-        <div className="grid grid-cols-4 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-10">
+        <div 
+          className="grid grid-cols-4 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-10"
+          style={isPdf ? { 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr 1fr 1fr', 
+            gap: '24px', 
+            backgroundColor: 'rgba(239, 246, 255, 0.5)',
+            padding: '24px',
+            borderRadius: '16px',
+            border: '1px solid #dbeafe',
+            marginBottom: '40px'
+          } : {}}
+        >
           <div>
             <p className="text-[9px] text-gray-400 font-bold uppercase">Patient Name</p>
             <p className="font-bold text-gray-900 text-lg leading-tight">
@@ -228,55 +261,73 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       </div>
 
       {/* Vital Signs Bar */}
-      <div className="grid grid-cols-5 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-100 mb-8 font-sans">
+      <div 
+        className="grid grid-cols-5 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-100 mb-8 font-sans"
+        style={isPdf ? { 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(5, 1fr)', 
+          gap: '16px', 
+          backgroundColor: '#f9fafb', 
+          padding: '16px',
+          borderRadius: '12px',
+          border: '1px solid #f3f4f6',
+          marginBottom: '32px'
+        } : {}}
+      >
         <div>
-          <p className="text-[9px] text-gray-500 font-bold uppercase">Blood Pressure</p>
-          <p className="font-bold text-gray-900 text-sm">
+          <p className="text-[9px] text-gray-500 font-bold uppercase" style={isPdf ? { fontSize: '9px', marginBottom: '4px' } : {}}>Blood Pressure</p>
+          <p className="font-bold text-gray-900 text-sm" style={isPdf ? { fontSize: '14px' } : {}}>
             {vitalSigns?.bloodPressure ? `${vitalSigns.bloodPressure} mmHg` : 'N/A'}
           </p>
         </div>
         <div>
-          <p className="text-[9px] text-gray-500 font-bold uppercase">Heart Rate</p>
-          <p className="font-bold text-gray-900 text-sm">
+          <p className="text-[9px] text-gray-500 font-bold uppercase" style={isPdf ? { fontSize: '9px', marginBottom: '4px' } : {}}>Heart Rate</p>
+          <p className="font-bold text-gray-900 text-sm" style={isPdf ? { fontSize: '14px' } : {}}>
             {vitalSigns?.heartRate ? `${vitalSigns.heartRate} bpm` : 'N/A'}
           </p>
         </div>
         <div>
-          <p className="text-[9px] text-gray-500 font-bold uppercase">Temperature</p>
-          <p className="font-bold text-gray-900 text-sm">
+          <p className="text-[9px] text-gray-500 font-bold uppercase" style={isPdf ? { fontSize: '9px', marginBottom: '4px' } : {}}>Temperature</p>
+          <p className="font-bold text-gray-900 text-sm" style={isPdf ? { fontSize: '14px' } : {}}>
             {vitalSigns?.temperature ? `${vitalSigns.temperature} °F/°C` : 'N/A'}
           </p>
         </div>
         <div>
-          <p className="text-[9px] text-gray-500 font-bold uppercase">Resp. Rate</p>
-          <p className="font-bold text-gray-900 text-sm">
+          <p className="text-[9px] text-gray-500 font-bold uppercase" style={isPdf ? { fontSize: '9px', marginBottom: '4px' } : {}}>Resp. Rate</p>
+          <p className="font-bold text-gray-900 text-sm" style={isPdf ? { fontSize: '14px' } : {}}>
             {vitalSigns?.respiratoryRate ? `${vitalSigns.respiratoryRate} /min` : 'N/A'}
           </p>
         </div>
         <div>
-          <p className="text-[9px] text-gray-500 font-bold uppercase">O2 Saturation</p>
-          <p className="font-bold text-gray-900 text-sm">
+          <p className="text-[9px] text-gray-500 font-bold uppercase" style={isPdf ? { fontSize: '9px', marginBottom: '4px' } : {}}>O2 Saturation</p>
+          <p className="font-bold text-gray-900 text-sm" style={isPdf ? { fontSize: '14px' } : {}}>
             {vitalSigns?.oxygenSaturation ? `${vitalSigns.oxygenSaturation} %` : 'N/A'}
           </p>
         </div>
       </div>
 
       {/* Prescription Content Section */}
-      <div className="grid grid-cols-12 gap-8 min-h-[300px]">
+      <div 
+        className="grid grid-cols-12 gap-8 min-h-[300px]"
+        style={isPdf ? { display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '32px', minHeight: '300px' } : {}}
+      >
         {/* Left Sidebar (Clinical findings) */}
-        <div className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6">
+        <div 
+            className="col-span-4 border-r-2 border-blue-50 pr-6 space-y-6"
+            style={isPdf ? { gridColumn: 'span 4', borderRight: '2px solid #eff6ff', paddingRight: '24px', display: 'flex', flexDirection: 'column', gap: '24px' } : {}}
+        >
           <div>
             <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Clinical Findings</h3>
             {clinicalFindings ? (
-              <p className="text-[13px] text-gray-700 font-sans whitespace-pre-wrap leading-relaxed">{clinicalFindings}</p>
+              <p className="text-[13px] text-gray-700 font-sans whitespace-pre-wrap leading-relaxed" style={isPdf ? { fontSize: '12px' } : {}}>{clinicalFindings}</p>
             ) : (
-              <p className="text-[13px] text-gray-400 font-sans italic">N/A</p>
+              <p className="text-[13px] text-gray-400 font-sans italic" style={isPdf ? { fontSize: '12px' } : {}}>N/A</p>
             )}
           </div>
           {symptoms && symptoms.filter((s: any) => getItemText(s)).length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Chief Complaints</h3>
-              <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
+              <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans" style={isPdf ? { fontSize: '12px' } : {}}>
                 {symptoms.filter((s: any) => getItemText(s)).map((s: any, i: number) => (
                   <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{getItemText(s)}</span></li>
                 ))}
@@ -287,7 +338,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           {diagnoses && diagnoses.length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Diagnosis</h3>
-              <ul className="text-[13px] space-y-1.5 text-blue-950 font-bold list-inside font-sans uppercase tracking-tight">
+              <ul className="text-[13px] space-y-1.5 text-blue-950 font-bold list-inside font-sans uppercase tracking-tight" style={isPdf ? { fontSize: '12px' } : {}}>
                 {diagnoses.map((d: any, i: number) => (
                   <li key={i} className="flex gap-2 leading-tight"><span>•</span> <span>{getItemText(d)}</span></li>
                 ))}
@@ -298,9 +349,9 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           {tests && tests.length > 0 && (
             <div>
               <h3 className="text-xs font-bold text-blue-800 uppercase mb-2 border-b border-blue-50 pb-1 font-sans">Investigations</h3>
-              <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans">
+              <ul className="text-[13px] space-y-1.5 text-gray-700 list-inside font-sans" style={isPdf ? { fontSize: '12px' } : {}}>
                 {tests.map((t: any, i: number) => (
-                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{getItemText(t, 'name')}</span></li>
+                  <li key={i} className="flex gap-2"><span>{i+1}.</span> <span>{getItemText(t)}</span></li>
                 ))}
               </ul>
             </div>
@@ -308,13 +359,16 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
         </div>
 
         {/* Right Content (Medicines) */}
-        <div className="col-span-8 flex flex-col">
-          <div className="flex items-baseline mb-6">
-            <span className="text-7xl font-serif text-blue-900 font-bold italic mr-6 leading-none select-none">℞</span>
-            <div className="h-[2px] bg-blue-900/10 flex-grow rounded-full"></div>
+        <div 
+            className="col-span-8 flex flex-col"
+            style={isPdf ? { gridColumn: 'span 8', display: 'flex', flexDirection: 'column' } : {}}
+        >
+          <div className="flex items-baseline mb-6" style={isPdf ? { display: 'flex', alignItems: 'baseline', marginBottom: '24px' } : {}}>
+            <span className="text-7xl font-serif text-blue-900 font-bold italic mr-6 leading-none select-none" style={isPdf ? { fontSize: '64px', marginRight: '24px' } : {}}>℞</span>
+            <div className="h-[2px] bg-blue-900/10 flex-grow rounded-full" style={isPdf ? { height: '2px', backgroundColor: 'rgba(30,58,138,0.1)', flexGrow: 1 } : {}}></div>
           </div>
 
-          <div className="space-y-10 flex-grow">
+          <div className="space-y-10 flex-grow" style={isPdf ? { display: 'flex', flexDirection: 'column', gap: '40px', flexGrow: 1 } : {}}>
             {medicines && medicines.length > 0 ? (
               medicines.map((med: any, idx: number) => {
                 if (!med) return null;
@@ -324,18 +378,21 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
                         <span className="text-sm font-bold text-gray-300 italic select-none">{idx + 1}.</span>
-                        <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight">
-                          {med.form || 'Tab.'} {med.name || 'Unknown'} {med.strength || med.dosage || ''}
+                        <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight" style={isPdf ? { fontSize: '16px' } : {}}>
+                          {(med.form || med.type) || 'Tab.'} {med.name} {med.strength || med.dosage || ''}
                         </h4>
                       </div>
                       <p className="text-[11px] text-blue-600/60 font-bold italic ml-7 uppercase tracking-wider font-sans">({med.genericName || 'No generic name listed'})</p>
                     </div>
                   </div>
                   <div className="ml-7 space-y-2 text-[14px]">
-                    <div className="flex items-center gap-4 border-l-4 border-blue-100 pl-4 py-1.5 bg-blue-50/20 rounded-r">
-                       <span className="font-extrabold text-blue-950 font-sans tracking-widest text-[15px]">Sig: {med.morning || 0} - {med.lunch || 0} - {med.dinner || 0}</span>
+                    <div 
+                        className="flex items-center gap-4 border-l-4 border-blue-100 pl-4 py-1.5 bg-blue-50/20 rounded-r"
+                        style={isPdf ? { display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #dbeafe', paddingLeft: '16px', paddingTop: '6px', paddingBottom: '6px', backgroundColor: 'rgba(219,234,254,0.2)' } : {}}
+                    >
+                       <span className="font-extrabold text-blue-950 font-sans tracking-widest text-[15px]" style={isPdf ? { fontSize: '14px' } : {}}>Sig: {med.morning || 0} - {med.lunch || 0} - {med.dinner || 0}</span>
                        <span className="text-gray-500 font-medium lowercase">({med.mealTiming || 'after meal'})</span>
-                       <span className="text-blue-800 font-bold bg-blue-100 px-2 rounded tracking-tighter">× {med.duration || 0} Days</span>
+                       <span className="text-blue-800 font-bold bg-blue-100 px-2 rounded tracking-tighter" style={isPdf ? { backgroundColor: '#dbeafe', paddingLeft: '8px', paddingRight: '8px' } : {}}>× {med.duration || 0} Days</span>
                     </div>
                     <div className="flex gap-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-4 font-sans">
                       <span className="flex items-center gap-1.5">ROUTE: {med.route || 'PO'}</span>
@@ -352,9 +409,9 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
           </div>
           
           {suggestions && (
-             <div className="mt-16 pt-8 border-t-2 border-blue-50 font-sans">
+             <div className="mt-16 pt-8 border-t-2 border-blue-50 font-sans" style={isPdf ? { marginTop: '64px', paddingTop: '32px', borderTop: '2px solid #eff6ff' } : {}}>
                 <h3 className="text-xs font-bold text-blue-800 uppercase mb-4 tracking-widest border-l-4 border-blue-800 pl-3">Clinical Advice & Follow-up</h3>
-                <div className="text-[13px] text-gray-700 space-y-3 whitespace-pre-wrap leading-relaxed">
+                <div className="text-[13px] text-gray-700 space-y-3 whitespace-pre-wrap leading-relaxed" style={isPdf ? { fontSize: '12px' } : {}}>
                   {renderSuggestions()}
                 </div>
              </div>
@@ -363,18 +420,24 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
       </div>
 
       {/* Footer Area */}
-      <div className="mt-8 pt-6 border-t-2 border-gray-100 flex justify-between items-end pb-2">
-        <div className="flex gap-8 items-center">
+      <div 
+        className="mt-8 pt-6 border-t-2 border-gray-100 flex justify-between items-end pb-2"
+        style={isPdf ? { marginTop: '32px', paddingTop: '24px', borderTop: '2px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '8px' } : {}}
+      >
+        <div className="flex gap-8 items-center" style={isPdf ? { display: 'flex', gap: '32px', alignItems: 'center' } : {}}>
             {/* QR Code */}
-            <div className="p-1 bg-white border-2 border-blue-50 shadow-inner rounded-xl overflow-hidden">
+            <div 
+                className="p-1 bg-white border-2 border-blue-50 shadow-inner rounded-xl overflow-hidden"
+                style={isPdf ? { padding: '4px', backgroundColor: 'white', border: '2px solid #eff6ff', borderRadius: '12px', width: '104px', height: '104px' } : {}}
+            >
                 {qrCodeData ? (
-                    <img src={qrCodeData} alt="QR" className="w-24 h-24" />
+                    <img src={qrCodeData} alt="QR" className="w-24 h-24" style={isPdf ? { width: '96px', height: '96px' } : {}} />
                 ) : (
                     <div className="w-24 h-24 bg-gray-50 flex items-center justify-center text-[10px] text-gray-400">Loading...</div>
                 )}
             </div>
-            <div className="text-[10px] text-gray-400 leading-relaxed font-sans">
-                <p className="font-extrabold text-blue-900 tracking-tighter text-[11px]">DIGITAL VERIFICATION</p>
+            <div className="text-[10px] text-gray-400 leading-relaxed font-sans" style={isPdf ? { fontSize: '10px' } : {}}>
+                <p className="font-extrabold text-blue-900 tracking-tighter text-[11px]" style={isPdf ? { fontSize: '12px' } : {}}>DIGITAL VERIFICATION</p>
                 <p>Prescription ID: <span className="font-bold text-gray-800 font-mono tracking-tight">RX-{prescriptionData?.id || '24'}-APT-{appointmentData?.id || '001'}</span></p>
                 <p>Status: <span className="text-green-600 font-bold uppercase">Medically Signed</span></p>
                 <p className="mt-1">Generated: {new Date(prescriptionData?.createdAt || Date.now()).toLocaleString()}</p>
@@ -382,32 +445,32 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
         </div>
         
         <div className="text-right relative">
-           {/* Seal effect */}
-           <div className="absolute -top-16 -left-12 opacity-10 pointer-events-none select-none">
-              <div className="w-32 h-32 border-4 border-blue-900 rounded-full flex items-center justify-center text-blue-900 font-extrabold text-[10px] text-center rotate-12 p-4">
-                LIVORA HEALTH<br/>STAMPED & VERIFIED
-              </div>
-           </div>
-
-           <div className="inline-block border-b-2 border-black/10 pb-2 mb-4 px-16 min-h-[60px] flex items-end justify-center relative">
+           <div 
+            className="inline-block border-b-2 border-black/10 pb-2 mb-4 px-16 min-h-[60px] flex items-end justify-center relative"
+            style={isPdf ? { display: 'inline-block', borderBottom: '2px solid rgba(0,0,0,0.1)', paddingBottom: '8px', marginBottom: '16px', paddingLeft: '64px', paddingRight: '64px', minHeight: '60px', textAlign: 'center' } : {}}
+           >
               {doctor?.signature ? (
                 <img 
                   src={doctor.signature} 
                   alt="Doctor Signature" 
-                  className="h-16 w-auto mix-blend-multiply absolute bottom-1 right-1/2 translate-x-1/2" 
+                  className="h-20 w-auto mix-blend-multiply absolute bottom-2 left-1/2 -translate-x-1/2" 
+                  style={isPdf ? { height: '80px', width: 'auto', position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)' } : {}}
                 />
               ) : (
                 <p className="text-gray-200 text-[11px] uppercase font-bold tracking-[0.3em] italic select-none">Signed Digitally</p>
               )}
            </div>
-           <p className="text-xl font-bold text-gray-900 italic font-serif leading-none tracking-tight">Dr. {doctorName}</p>
+           <p className="text-2xl font-bold text-gray-900 italic font-serif leading-none tracking-tight">Dr. {doctorName}</p>
            <p className="text-sm font-bold text-blue-800 mt-2">{doctor?.qualifications || 'Consultant Physician'}</p>
            <p className="text-[10px] text-gray-500 uppercase tracking-[0.25em] font-sans mt-1 font-bold">{doctor?.department || 'Medical Services'}</p>
         </div>
       </div>
 
-      <div className="mt-8 text-left border-l-8 border-blue-900 bg-blue-900/5 p-4 rounded-r-lg">
-        <p className="text-[10px] text-gray-600 italic leading-relaxed font-sans">
+      <div 
+        className="mt-12 text-left border-l-8 border-blue-900 bg-blue-900/5 p-4 rounded-r-lg"
+        style={isPdf ? { marginTop: '48px', borderLeft: '8px solid #1e3a8a', backgroundColor: 'rgba(30, 58, 138, 0.05)', padding: '16px', borderRadius: '0 8px 8px 0' } : {}}
+      >
+        <p className="text-[10px] text-gray-600 italic leading-relaxed font-sans" style={isPdf ? { fontSize: '10px' } : {}}>
           <span className="font-bold text-blue-950 uppercase not-italic">Statutory Notice:</span> This digital prescription complies with the 
           Digital Health Standards Act. It is a legally valid document. Please present this at any 
           authorized pharmacy. To verify authenticity, scan the QR code or use the verify token: 
