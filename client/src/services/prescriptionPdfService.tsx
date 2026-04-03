@@ -9,7 +9,7 @@ export interface PrescriptionPdfData {
 }
 
 export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promise<void> => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const { prescriptionData, appointmentData } = data;
     console.log('[PDF] Generating high-fidelity PDF from component for:', prescriptionData?.id);
 
