@@ -14,6 +14,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
+import RegistrationSuccess from './pages/RegistrationSuccess';
 import Dashboard from './pages/Dashboard';
 import PatientProfile from './pages/PatientProfile';
 import DoctorDashboard from './pages/DoctorDashboard';
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/registration-success" element={<RegistrationSuccess />} />
                 <Route path="/find-doctors" element={<PublicDoctors />} />
                 
                 {/* Legacy dashboard route - redirect to app */}

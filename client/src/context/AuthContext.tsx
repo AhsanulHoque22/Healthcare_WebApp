@@ -153,13 +153,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await API.post('/auth/register', userData);
       console.log('AuthContext: Registration response:', response.data);
       
-      const { user: newUser, token: newToken } = response.data.data;
+      // Do not automatically set user and token anymore.
+      // The user needs to verify their email before logging in.
       
-      setUser(newUser);
-      setToken(newToken);
-      localStorage.setItem('token', newToken);
-      
-      toast.success('Registration successful!');
+      toast.success('Registration successful! Please check your email.');
+      return response.data;
     } catch (error: any) {
       console.error('AuthContext: Registration error:', error);
       console.error('AuthContext: Error response:', error.response?.data);

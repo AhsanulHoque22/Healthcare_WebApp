@@ -122,10 +122,7 @@ const Register: React.FC = () => {
 
       console.log('Registering user with data:', userData);
       await registerUser(userData);
-
-      // Show success message and redirect to login
-      toast.success('Account created successfully! Please login to continue.');
-      navigate('/login');
+      navigate('/registration-success');
     } catch (error) {
       // Error is handled in the auth context
     } finally {
