@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentArrowDownIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import PrescriptionTemplate from './PrescriptionTemplate';
 import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
 
@@ -87,14 +87,6 @@ const PrescriptionView: React.FC<PrescriptionViewProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => window.print()}
-            className="p-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm"
-            title="Print Prescription"
-          >
-            <PrinterIcon className="h-5 w-5" />
-          </button>
-          
           <button
             onClick={handleInternalDownload}
             className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200"

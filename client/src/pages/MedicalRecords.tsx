@@ -175,30 +175,21 @@ const MedicalRecords: React.FC = () => {
     if (!appointment) return;
     setIsDownloading(appointment.id);
     try {
-      // Attempt to fetch prescription data for high-fidelity PDF
       let prescriptionForPdf: any = null;
       try {
         const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
         prescriptionForPdf = response.data?.data?.prescription || null;
       } catch (fetchError: any) {
-        console.warn('[MedicalRecords] No prescription found for appointment:', appointment.id, fetchError?.response?.status);
-        // Not a fatal error - we can still generate a basic PDF
+        console.warn('[MedicalRecords] No prescription found for appointment:', appointment.id);
       }
-      
-      if (prescriptionForPdf) {
-        await generatePrescriptionPdf({ prescriptionData: prescriptionForPdf, appointmentData: appointment });
-      } else {
-        // Fallback to basic record if no structured prescription exists
-        try {
-          await generatePrescriptionPdf({ prescriptionData: null, appointmentData: appointment });
-        } catch (fallbackError) {
-          console.error('[MedicalRecords] Fallback PDF generation failed:', fallbackError);
-          toast.error('No prescription data available to generate a PDF for this appointment.');
-        }
-      }
+      await generatePrescriptionPdf({ prescriptionData: prescriptionForPdf, appointmentData: appointment });
     } catch (error: any) {
       console.error('[MedicalRecords] PDF generation error:', error);
-      toast.error('Failed to download prescription. Please try again.');
+      if (error.message?.toLowerCase().includes('popup')) {
+        toast.error('Please allow pop-ups for this site, then try downloading again.');
+      } else {
+        toast.error('Failed to generate prescription PDF. Please try again.');
+      }
     } finally {
       setIsDownloading(null);
     }

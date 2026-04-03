@@ -1,7 +1,4 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { calculateAge, formatAge, formatGender } from '../utils/dateUtils';
-import QRCode from 'qrcode';
 import { getDepartmentLabel } from '../utils/departments';
 
 export interface PrescriptionPdfData {
@@ -9,452 +6,304 @@ export interface PrescriptionPdfData {
   appointmentData: any;
 }
 
-export const generatePrescriptionPdf = async (data: PrescriptionPdfData) => {
+// ─── Safe helpers ────────────────────────────────────────────────────────────
+
+const safeParseJson = (field: any): any => {
+  if (!field) return null;
+  if (typeof field === 'object') return field;
+  if (typeof field !== 'string') return null;
   try {
-    const { prescriptionData, appointmentData } = data;
-    console.log('[PDF Service] Starting generation for prescription:', prescriptionData?.id);
-  
-  const parseJsonField = (field: any) => {
-    if (!field) return null;
-    if (typeof field === 'object') return field; // already parsed
-    if (typeof field !== 'string') return null;  // not a parseable type
-    try {
-      let parsed = JSON.parse(field);
-      // Handle double-encoded JSON
-      if (typeof parsed === 'string') {
-        try {
-          const deeper = JSON.parse(parsed);
-          if (typeof deeper === 'object' && deeper !== null) {
-            return deeper;
-          }
-        } catch {
-          // single-encoded string value
-        }
-      }
-      return parsed;
-    } catch {
-      return field; // return raw string
+    let parsed = JSON.parse(field);
+    if (typeof parsed === 'string') {
+      try {
+        const deeper = JSON.parse(parsed);
+        if (typeof deeper === 'object' && deeper !== null) return deeper;
+      } catch { /* single-encoded string */ }
     }
-  };
+    return parsed;
+  } catch {
+    return field;
+  }
+};
 
-  // Safe array converter - always returns an array or null
-  const toSafeArray = (val: any): any[] | null => {
-    if (!val) return null;
-    if (Array.isArray(val)) return val.length > 0 ? val : null;
-    return [val]; // wrap single item
-  };
+const toArray = (val: any): any[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return [val];
+};
 
-  // Safe text extractor from an item
-  const getItemText = (item: any, field: string = 'description'): string => {
-    if (!item) return '';
-    if (typeof item === 'string') return item;
-    if (typeof item === 'object') {
-      if (item[field] !== undefined && item[field] !== null) return String(item[field]);
-      if (item.name !== undefined && item.name !== null) return String(item.name);
-      if (item.description !== undefined && item.description !== null) return String(item.description);
-      return '';
-    }
-    return String(item);
-  };
+const itemText = (item: any, field = 'description'): string => {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  if (typeof item === 'object') {
+    return String(item[field] ?? item.name ?? item.description ?? '');
+  }
+  return String(item);
+};
 
-  const rawMedicines = parseJsonField(prescriptionData?.medicines);
-  const medicines = Array.isArray(rawMedicines) ? rawMedicines : null;
+// ─── HTML builder ─────────────────────────────────────────────────────────────
 
-  const rawSymptoms = parseJsonField(prescriptionData?.symptoms) || appointmentData?.symptoms;
-  const symptoms = toSafeArray(rawSymptoms);
-
-  const rawDiagnoses = parseJsonField(prescriptionData?.diagnosis) || appointmentData?.diagnosis;
-  const diagnoses = toSafeArray(rawDiagnoses);
-
-  const rawSuggestions = parseJsonField(prescriptionData?.suggestions) || appointmentData?.notes;
-  const suggestions = rawSuggestions; // can be string, object, or null
-
-  const rawTests = parseJsonField(prescriptionData?.tests);
-  const tests = toSafeArray(rawTests);
-  
+const buildPrescriptionHtml = (prescriptionData: any, appointmentData: any): string => {
+  const medicines  = toArray(safeParseJson(prescriptionData?.medicines));
+  const symptoms   = toArray(safeParseJson(prescriptionData?.symptoms) || appointmentData?.symptoms);
+  const diagnoses  = toArray(safeParseJson(prescriptionData?.diagnosis || prescriptionData?.diagnoses) || appointmentData?.diagnosis);
+  const tests      = toArray(safeParseJson(prescriptionData?.tests));
+  const suggestions = safeParseJson(prescriptionData?.suggestions) || appointmentData?.notes;
+  const vitalSigns  = safeParseJson(prescriptionData?.vitalSigns);
   const clinicalFindings = prescriptionData?.clinicalFindings || '';
-  const vitalSigns = parseJsonField(prescriptionData?.vitalSigns);
-  
-  const basicPrescription = appointmentData?.prescription;
 
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = pageWidth - margin * 2;
+  const doctor  = appointmentData?.doctor;
+  const patient = appointmentData?.patient;
+  const dUser   = doctor?.user;
+  const pUser   = patient?.user;
 
-  // ─────────────────────────────────────────────────────────
-  // HELPER: draw a horizontal line
-  const hLine = (y: number, color: [number, number, number] = [220, 230, 245], width = 0.3) => {
-    doc.setDrawColor(...color);
-    doc.setLineWidth(width);
-    doc.line(margin, y, pageWidth - margin, y);
-  };
-
-  // ─────────────────────────────────────────────────────────
-  // BACKGROUND WATERMARK (Digitally Generated)
-  try {
-    doc.setTextColor(245, 245, 245);
-    doc.setFontSize(60);
-    doc.setFont('helvetica', 'bold');
-    doc.saveGraphicsState();
-    
-    // Safety check for GState
-    const GState = (doc as any).GState || (jsPDF as any).GState;
-    if (GState) {
-      doc.setGState(new GState({ opacity: 0.1 }));
-    }
-    
-    doc.text('DIGITALLY GENERATED', pageWidth / 2, pageHeight / 2, {
-      align: 'center',
-      angle: 45
-    });
-    doc.restoreGraphicsState();
-  } catch (watermarkError) {
-    console.warn('Failed to render watermark:', watermarkError);
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // PAGE BORDER
-  doc.setDrawColor(41, 98, 180);
-  doc.setLineWidth(0.5);
-  doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
-
-  // ─────────────────────────────────────────────────────────
-  // HEADER SECTION
-  let y = margin + 5;
-  
-  // App Logo/Name
-  // Note: We deliberately avoid using doc.addImage('/logo.png') because jsPDF's internal XHR 
-  // fails catastrophically when it encounters HTTP 304 (Not Modified) caching responses,
-  // causing unhandled promise rejections that break the entire PDF download process.
-  doc.setFillColor(41, 98, 180);
-  doc.roundedRect(margin, margin, 12, 12, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('L', margin + 6, margin + 8.5, { align: 'center' });
-
-  doc.setTextColor(41, 50, 100);
-  doc.setFontSize(18);
-  doc.text('LIVORA', margin + 15, margin + 7);
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(150, 150, 150);
-  doc.text('PREMIUM HEALTHCARE NETWORK', margin + 15, margin + 11);
-
-  // Doctor Info (Right Aligned)
-  const doctorName = `${appointmentData?.doctor?.user?.firstName || 'DOC'} ${appointmentData?.doctor?.user?.lastName || ''}`.trim();
-  const specialization = getDepartmentLabel(appointmentData?.doctor?.department || '') || 'Specialist Physician';
-  const bmdc = appointmentData?.doctor?.bmdcRegistrationNumber ? `BMDC Reg: ${appointmentData.doctor.bmdcRegistrationNumber}` : 'Reg: N/A';
-  
-  doc.setTextColor(20, 20, 20);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Dr. ${doctorName}`, pageWidth - margin, margin + 5, { align: 'right' });
-  
-  doc.setFontSize(8);
-  doc.setTextColor(60, 60, 60);
-  doc.text(appointmentData?.doctor?.qualifications || 'MBBS, MD', pageWidth - margin, margin + 9, { align: 'right' });
-  
-  doc.setFontSize(8);
-  doc.setTextColor(41, 98, 180);
-  doc.setFont('helvetica', 'bold');
-  doc.text(specialization, pageWidth - margin, margin + 13, { align: 'right' });
-  
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(150, 150, 150);
-  doc.text(bmdc, pageWidth - margin, margin + 17, { align: 'right' });
-
-  y = margin + 22;
-  hLine(y, [41, 98, 180], 0.8);
-
-  // ─────────────────────────────────────────────────────────
-  // PATIENT INFO BAR
-  y += 5;
-  doc.setFillColor(248, 250, 255);
-  doc.roundedRect(margin, y, contentWidth, 15, 1, 1, 'F');
-  
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PATIENT NAME', margin + 3, y + 5);
-  doc.text('AGE / SEX', margin + 60, y + 5);
-  doc.text('WEIGHT', margin + 100, y + 5);
-  doc.text('DATE', pageWidth - margin - 3, y + 5, { align: 'right' });
-
-
-  const patientName = `${appointmentData?.patient?.user?.firstName || ''} ${appointmentData?.patient?.user?.lastName || ''}`.trim() || 'N/A';
-  const patientAge = formatAge(calculateAge(appointmentData?.patient?.user?.dateOfBirth || appointmentData?.patient?.dateOfBirth));
-  const patientGender = formatGender(appointmentData?.patient?.user?.gender || appointmentData?.patient?.gender);
-  const patientWeight = appointmentData?.patient?.weight ? `${appointmentData.patient.weight} kg` : '—';
+  const doctorName  = `${dUser?.firstName || ''} ${dUser?.lastName || ''}`.trim() || 'N/A';
+  const patientName = `${pUser?.firstName || ''} ${pUser?.lastName || ''}`.trim() || 'N/A';
+  const patientAge  = formatAge(calculateAge(pUser?.dateOfBirth || patient?.dateOfBirth));
+  const patientGender = formatGender(pUser?.gender || patient?.gender);
+  const patientWeight = patient?.weight ? `${patient.weight} kg` : '—';
   const rxDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const rxId   = `RX-${prescriptionData?.id || '??'}-APT-${appointmentData?.id || '??'}`;
 
-  doc.setFontSize(9);
-  doc.setTextColor(20, 20, 20);
-  doc.text(patientName, margin + 3, y + 10);
-  doc.text(`${patientAge} / ${patientGender}`, margin + 60, y + 10);
-  doc.text(patientWeight, margin + 100, y + 10);
-  doc.text(rxDate, pageWidth - margin - 3, y + 10, { align: 'right' });
+  /* ── Vitals row ── */
+  const vitalsHtml = vitalSigns ? `
+    <div class="vitals-bar">
+      <div class="vital"><span class="vl">BLOOD PRESSURE</span><span class="vv">${vitalSigns.bloodPressure ? vitalSigns.bloodPressure + ' mmHg' : 'N/A'}</span></div>
+      <div class="vital"><span class="vl">HEART RATE</span><span class="vv">${vitalSigns.heartRate ? vitalSigns.heartRate + ' bpm' : 'N/A'}</span></div>
+      <div class="vital"><span class="vl">TEMPERATURE</span><span class="vv">${vitalSigns.temperature ? vitalSigns.temperature + ' °F/°C' : 'N/A'}</span></div>
+      <div class="vital"><span class="vl">RESP. RATE</span><span class="vv">${vitalSigns.respiratoryRate ? vitalSigns.respiratoryRate + ' /min' : 'N/A'}</span></div>
+      <div class="vital"><span class="vl">O₂ SATURATION</span><span class="vv">${vitalSigns.oxygenSaturation ? vitalSigns.oxygenSaturation + ' %' : 'N/A'}</span></div>
+    </div>` : '';
 
-  y += 20;
+  /* ── Left col ── */
+  const clinicalHtml = clinicalFindings ? `
+    <h4 class="sec-title">CLINICAL FINDINGS</h4>
+    <p class="sec-body">${clinicalFindings}</p>` : '';
 
-  // ─────────────────────────────────────────────────────────
-  // VITAL SIGNS BAR
-  if (vitalSigns && Object.keys(vitalSigns).length > 0) {
-    doc.setFillColor(250, 250, 250);
-    doc.roundedRect(margin, y, contentWidth, 12, 1, 1, 'F');
-    doc.setDrawColor(230, 230, 230);
-    doc.roundedRect(margin, y, contentWidth, 12, 1, 1, 'S');
+  const symptomsHtml = symptoms.filter(s => itemText(s)).length > 0 ? `
+    <h4 class="sec-title">CHIEF COMPLAINTS</h4>
+    <ul class="sec-list">${symptoms.map(s => `<li>${itemText(s)}</li>`).join('')}</ul>` : '';
 
-    doc.setFontSize(6);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(100, 100, 100);
-    
-    // Header row
-    doc.text('BLOOD PRESSURE', margin + 5, y + 4);
-    doc.text('HEART RATE', margin + 40, y + 4);
-    doc.text('TEMPERATURE', margin + 75, y + 4);
-    doc.text('RESP. RATE', margin + 110, y + 4);
-    doc.text('O2 SATURATION', margin + 145, y + 4);
+  const diagnosisHtml = diagnoses.filter(d => itemText(d)).length > 0 ? `
+    <h4 class="sec-title">DIAGNOSIS</h4>
+    <ul class="sec-list diag">${diagnoses.map(d => `<li>${itemText(d)}</li>`).join('')}</ul>` : '';
 
-    // Value row
-    doc.setFontSize(8);
-    doc.setTextColor(20, 20, 20);
-    doc.text(vitalSigns.bloodPressure ? `${vitalSigns.bloodPressure} mmHg` : 'N/A', margin + 5, y + 9);
-    doc.text(vitalSigns.heartRate ? `${vitalSigns.heartRate} bpm` : 'N/A', margin + 40, y + 9);
-    doc.text(vitalSigns.temperature ? `${vitalSigns.temperature} °F/°C` : 'N/A', margin + 75, y + 9);
-    doc.text(vitalSigns.respiratoryRate ? `${vitalSigns.respiratoryRate} /min` : 'N/A', margin + 110, y + 9);
-    doc.text(vitalSigns.oxygenSaturation ? `${vitalSigns.oxygenSaturation} %` : 'N/A', margin + 145, y + 9);
-    
-    y += 18;
-  } else {
-    y += 2;
-  }
+  const testsHtml = tests.filter(t => itemText(t, 'name')).length > 0 ? `
+    <h4 class="sec-title">INVESTIGATIONS</h4>
+    <ol class="sec-list">${tests.map(t => `<li>${itemText(t, 'name')}</li>`).join('')}</ol>` : '';
 
-  // ─────────────────────────────────────────────────────────
-  // CONTENT GRID (Chief Complaints | Medicines)
-  const leftColWidth = 55;
-  const rightColX = margin + leftColWidth + 5;
-  const rightColWidth = contentWidth - leftColWidth - 5;
+  /* ── Medicines table ── */
+  const medsRowsHtml = medicines.length > 0
+    ? medicines.map((m, i) => `
+      <tr>
+        <td style="font-weight:700">${i + 1}. ${m.form || 'Tab.'} ${m.name || '?'} ${m.strength || ''}<br>
+          <span style="font-size:9px;color:#6b7280;font-style:italic">${m.genericName || ''}</span></td>
+        <td style="font-weight:900;letter-spacing:1px">${m.morning || 0}-${m.lunch || 0}-${m.dinner || 0}</td>
+        <td>${m.mealTiming || 'After meal'}</td>
+        <td>${m.duration || '?'} days</td>
+        <td>${m.route || 'PO'}</td>
+        <td>${m.notes || '—'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="color:#9ca3af;font-style:italic;text-align:center">No medication data</td></tr>`;
 
-  // Left Column Content
-  let leftY = y;
-  
-  const drawSectionTitle = (title: string, currentY: number) => {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(41, 98, 180);
-    doc.text(title, margin, currentY);
-    doc.setDrawColor(230, 240, 255);
-    doc.line(margin, currentY + 1.5, margin + leftColWidth - 5, currentY + 1.5);
-    return currentY + 6;
-  };
+  const medsHtml = `
+    <table class="rx-table">
+      <thead>
+        <tr>
+          <th>Medicine</th><th>Sig (M-L-D)</th><th>Timing</th><th>Duration</th><th>Route</th><th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>${medsRowsHtml}</tbody>
+    </table>`;
 
-  if (clinicalFindings) {
-    leftY = drawSectionTitle('CLINICAL FINDINGS', leftY);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    try {
-      const lines = doc.splitTextToSize(String(clinicalFindings), leftColWidth - 8);
-      doc.text(lines, margin + 2, leftY);
-      leftY += lines.length * 4.5 + 4;
-    } catch(e) {
-      console.warn("Failed to split clinicalFindings text:", e);
-    }
-  }
-
-  if (symptoms && symptoms.length > 0) {
-    leftY = drawSectionTitle('CHIEF COMPLAINTS', leftY);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    symptoms.forEach((s: any) => {
-      const desc = getItemText(s);
-      if (desc) {
-        try {
-          const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-          doc.text(lines, margin + 2, leftY);
-          leftY += lines.length * 4.5;
-        } catch(e) {}
-      }
-    });
-    leftY += 4;
-  }
-
-  if (diagnoses && diagnoses.length > 0) {
-    leftY = drawSectionTitle('DIAGNOSIS', leftY);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 40);
-    diagnoses.forEach((d: any) => {
-      const desc = getItemText(d);
-      if (desc) {
-        try {
-          const lines = doc.splitTextToSize(`• ${desc}`, leftColWidth - 8);
-          doc.text(lines, margin + 2, leftY);
-          leftY += lines.length * 4.5;
-        } catch(e) {}
-      }
-    });
-    leftY += 4;
-  }
-
-  if (tests && tests.length > 0) {
-    leftY = drawSectionTitle('INVESTIGATIONS', leftY);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    tests.forEach((t: any, i: number) => {
-      const tName = getItemText(t, 'name');
-      if (tName) {
-        try {
-          const lines = doc.splitTextToSize(`${i+1}. ${tName}`, leftColWidth - 8);
-          doc.text(lines, margin + 2, leftY);
-          leftY += lines.length * 4.5;
-        } catch(e) {}
-      }
-    });
-    leftY += 4;
-  }
-
-  // Vertical line separator
-  doc.setDrawColor(240, 245, 255);
-  doc.setLineWidth(0.5);
-  doc.line(margin + leftColWidth, y, margin + leftColWidth, Math.max(leftY, 250));
-
-  // Right Column (℞ Rx Symbol & Medicines)
-  let rightY = y;
-  doc.setTextColor(41, 50, 120);
-  doc.setFontSize(35);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Rx', rightColX, rightY + 5);
-  
-  rightY += 15;
-
-  // Basic fallback if no structured medicines
-  if (!medicines && basicPrescription) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    try {
-      const lines = doc.splitTextToSize(String(basicPrescription), rightColWidth - 5);
-      doc.text(lines, rightColX, rightY);
-      rightY += lines.length * 4.5 + 5;
-    } catch(e) {
-      console.warn("Failed to split basicPrescription text", e);
-    }
-  }
-
-  if (Array.isArray(medicines) && medicines.length > 0) {
-    (doc as any).autoTable({
-      startY: rightY,
-      head: [['Medicine', 'Dosage', 'Duration', 'Instructions']],
-      body: medicines.map((m: any) => {
-        if (!m) return ['Unknown', '-', '-', '-'];
-        return [
-          `${m.name || 'Unknown'} ${m.strength || ''}`,
-          `${m.morning || 0}-${m.lunch || 0}-${m.dinner || 0}`,
-          `${m.duration || 0} Days`,
-          m.notes || '—'
-        ];
-      }),
-      theme: 'grid',
-      headStyles: { fillColor: [41, 98, 180], textColor: 255, fontStyle: 'bold' },
-      styles: { fontSize: 8 },
-      margin: { left: rightColX },
-      tableWidth: rightColWidth - 5
-    });
-    rightY = (doc as any).lastAutoTable.finalY + 10;
-  }
-
-  // Advice/Suggestions at bottom right
+  /* ── Advice ── */
+  let adviceHtml = '';
   if (suggestions) {
-    if (rightY > 220) { doc.addPage(); rightY = 20; }
-    rightY += 5;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(41, 98, 180);
-    doc.text('ADVICE & FOLLOW-UP', rightColX, rightY);
-    doc.line(rightColX, rightY + 1.5, pageWidth - margin, rightY + 1.5);
-    rightY += 6;
-    
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    const adviceComponents: string[] = [];
+    const parts: string[] = [];
     if (typeof suggestions === 'string') {
-      adviceComponents.push(suggestions);
-    } else if (typeof suggestions === 'object' && suggestions !== null) {
-      if (suggestions.dietaryChanges) adviceComponents.push(`• Dietary Modifications: ${String(suggestions.dietaryChanges)}`);
-      if (suggestions.lifestyleModifications) adviceComponents.push(`• Lifestyle Modifications: ${String(suggestions.lifestyleModifications)}`);
-      if (suggestions.exercises) adviceComponents.push(`• Exercise Recommendations: ${String(suggestions.exercises)}`);
-      if (Array.isArray(suggestions.followUps) && suggestions.followUps.length > 0) {
-        adviceComponents.push(`• Follow-up visit: ${suggestions.followUps.map((f:any)=>getItemText(f)).filter(Boolean).join(', ')}`);
-      }
-      if (Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length > 0) {
-        adviceComponents.push(`• EMERGENCY: ${suggestions.emergencyInstructions.map((e:any)=>getItemText(e)).filter(Boolean).join(', ')}`);
-      }
+      parts.push(suggestions);
+    } else if (typeof suggestions === 'object') {
+      if (suggestions.dietaryChanges) parts.push(`<strong>Dietary:</strong> ${suggestions.dietaryChanges}`);
+      if (suggestions.lifestyleModifications) parts.push(`<strong>Lifestyle:</strong> ${suggestions.lifestyleModifications}`);
+      if (suggestions.exercises) parts.push(`<strong>Exercise:</strong> ${suggestions.exercises}`);
+      if (Array.isArray(suggestions.followUps) && suggestions.followUps.length)
+        parts.push(`<strong>Follow-up:</strong> ${suggestions.followUps.map((f: any) => itemText(f)).join(', ')}`);
+      if (Array.isArray(suggestions.emergencyInstructions) && suggestions.emergencyInstructions.length)
+        parts.push(`<strong style="color:#dc2626">⚠ EMERGENCY:</strong> ${suggestions.emergencyInstructions.map((e: any) => itemText(e)).join(', ')}`);
     }
-    
-    const adviceText = adviceComponents.join('\n');
-    const lines = doc.splitTextToSize(adviceText.trim() || 'No specific advice', rightColWidth - 5);
-    doc.text(lines, rightColX + 2, rightY);
+    adviceHtml = parts.length ? `
+      <div class="advice-box">
+        <h4 class="sec-title" style="margin-bottom:6px">CLINICAL ADVICE &amp; FOLLOW-UP</h4>
+        <div>${parts.map(p => `<p style="margin:3px 0">${p}</p>`).join('')}</div>
+      </div>` : '';
   }
 
-  // ─────────────────────────────────────────────────────────
-  // FOOTER (QR, Signature, Validation)
-  const finalY = pageHeight - 35;
-  hLine(finalY, [200, 220, 240]);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Prescription ${rxId}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, Arial, sans-serif; font-size: 11px; color: #111; background: #fff; }
+    .page { width: 210mm; min-height: 297mm; padding: 14mm; position: relative; }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { padding: 10mm; }
+    }
 
-  // QR Code
-  try {
-    const qrText = `RX-${prescriptionData?.id}-VERIFIED-LIVORA`;
-    const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 60 });
-    doc.addImage(qrDataUrl, 'PNG', margin, finalY + 4, 20, 20);
-  } catch (e) {
-    console.error('Failed to add QR to PDF', e);
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 10px; }
+    .brand-name { font-size: 28px; font-weight: 900; color: #1e3a8a; letter-spacing: -1px; }
+    .brand-sub { font-size: 8px; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; }
+    .doctor-info { text-align: right; }
+    .doctor-info h2 { font-size: 14px; font-weight: 700; }
+    .doctor-info p { font-size: 9px; color: #4b5563; margin-top: 2px; }
+    .doctor-info .dept { color: #2563eb; font-weight: 700; }
+
+    /* Patient bar */
+    .patient-bar { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; background: #f0f4ff; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+    .pb-item label { font-size: 8px; color: #9ca3af; font-weight: 700; text-transform: uppercase; display: block; }
+    .pb-item span { font-size: 13px; font-weight: 700; color: #111; }
+
+    /* Vitals bar */
+    .vitals-bar { display: flex; gap: 0; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+    .vital { flex: 1; padding: 5px 7px; border-right: 1px solid #e5e7eb; }
+    .vital:last-child { border-right: none; }
+    .vl { font-size: 7px; color: #9ca3af; font-weight: 700; text-transform: uppercase; display: block; }
+    .vv { font-size: 11px; font-weight: 700; color: #111; }
+
+    /* Two-column layout */
+    .content { display: flex; gap: 0; min-height: 180mm; }
+    .left-col { width: 62mm; padding-right: 10px; border-right: 1.5px solid #dbeafe; }
+    .right-col { flex: 1; padding-left: 12px; }
+
+    .rx-symbol { font-size: 48px; font-weight: 900; color: #1e3a8a; line-height: 1; margin-bottom: 8px; font-style: italic; }
+
+    /* Section titles */
+    .sec-title { font-size: 8px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #dbeafe; padding-bottom: 2px; margin: 8px 0 4px; }
+    .sec-body { font-size: 10px; color: #374151; line-height: 1.5; white-space: pre-wrap; }
+    .sec-list { font-size: 10px; color: #374151; padding-left: 14px; line-height: 1.6; }
+    .sec-list.diag { font-weight: 700; text-transform: uppercase; color: #1e3a8a; }
+
+    /* Rx table */
+    .rx-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
+    .rx-table thead tr { background: #2563eb; color: #fff; }
+    .rx-table th { padding: 5px 6px; text-align: left; font-size: 8px; font-weight: 700; text-transform: uppercase; }
+    .rx-table td { padding: 5px 6px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .rx-table tbody tr:nth-child(even) { background: #f8fafc; }
+
+    /* Advice */
+    .advice-box { margin-top: 14px; border-top: 1.5px solid #dbeafe; padding-top: 10px; }
+
+    /* Footer */
+    .footer { margin-top: 12mm; border-top: 1.5px solid #e5e7eb; padding-top: 8px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .footer-left font-size { font-size: 8px; color: #9ca3af; line-height: 1.6; }
+    .uid { font-family: monospace; font-size: 9px; color: #2563eb; font-weight: 700; }
+    .sig-area { text-align: center; }
+    .sig-line { border-top: 1px solid #9ca3af; width: 120px; margin: 0 auto 4px; }
+    .sig-name { font-size: 11px; font-weight: 700; color: #111; font-style: italic; }
+    .sig-sub { font-size: 8px; color: #6b7280; }
+
+    /* Legal notice */
+    .legal { margin-top: 8px; border-left: 4px solid #1e3a8a; background: #eff6ff; padding: 6px 10px; font-size: 8px; color: #374151; border-radius: 0 4px 4px 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <div class="brand-name">LIVORA</div>
+        <div class="brand-sub">Premium Healthcare Network</div>
+        <div style="font-size:8px;color:#9ca3af;margin-top:3px">www.livora-health.app</div>
+      </div>
+      <div class="doctor-info">
+        <h2>Dr. ${doctorName}</h2>
+        <p>${doctor?.qualifications || 'MBBS, MD'}</p>
+        <p class="dept">${getDepartmentLabel(doctor?.department || '') || 'Specialist'}</p>
+        <p>BMDC Reg: ${doctor?.bmdcRegistrationNumber || 'N/A'}</p>
+      </div>
+    </div>
+
+    <!-- PATIENT BAR -->
+    <div class="patient-bar">
+      <div class="pb-item"><label>Patient Name</label><span>${patientName}</span></div>
+      <div class="pb-item"><label>Age / Sex</label><span>${patientAge} / ${patientGender}</span></div>
+      <div class="pb-item"><label>Weight</label><span>${patientWeight}</span></div>
+      <div class="pb-item" style="text-align:right"><label>Date</label><span>${rxDate}</span></div>
+    </div>
+
+    ${vitalsHtml}
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- Left: clinical -->
+      <div class="left-col">
+        ${clinicalHtml}
+        ${symptomsHtml}
+        ${diagnosisHtml}
+        ${testsHtml}
+      </div>
+
+      <!-- Right: Rx -->
+      <div class="right-col">
+        <div class="rx-symbol">&#8478;</div>
+        ${medsHtml}
+        ${adviceHtml}
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div style="font-size:8px;color:#9ca3af;line-height:1.8">
+        <div class="uid">${rxId}</div>
+        <div>Status: <span style="color:#16a34a;font-weight:700">MEDICALLY SIGNED</span></div>
+        <div>Generated: ${new Date().toLocaleString()}</div>
+      </div>
+      <div class="sig-area">
+        <div class="sig-line"></div>
+        <div class="sig-name">Dr. ${doctorName}</div>
+        <div class="sig-sub">Digital Authorized Signature</div>
+      </div>
+    </div>
+
+    <div class="legal">
+      <strong>Statutory Notice:</strong> This digital prescription complies with the Digital Health Standards Act and is a legally valid document.
+      Please present this at any authorized pharmacy. Prescription ID: <strong>${rxId}</strong>
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
+// ─── Main export ──────────────────────────────────────────────────────────────
+
+export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promise<void> => {
+  const { prescriptionData, appointmentData } = data;
+  console.log('[PDF] Generating for prescription:', prescriptionData?.id);
+
+  const html = buildPrescriptionHtml(prescriptionData, appointmentData);
+
+  // Open an isolated window, write the HTML, then trigger print-to-PDF
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) {
+    throw new Error('Popup was blocked. Please allow popups for this site and try again.');
   }
 
-  doc.setFontSize(6);
-  doc.setTextColor(180, 180, 180);
-  doc.text('SCAN TO VERIFY PRESCRIPTION AUTHENTICITY', margin + 22, finalY + 8);
-  doc.text(`UID: RX-${prescriptionData?.id}-${appointmentData?.id}`, margin + 22, finalY + 11);
-  doc.text('GENERATED BY LIVORA TRUSTED CLINICAL NETWORK', margin + 22, finalY + 14);
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 
-  // Signature Area
-  doc.setDrawColor(200, 200, 200);
-  doc.line(pageWidth - margin - 45, finalY + 16, pageWidth - margin, finalY + 16);
-  doc.setTextColor(40, 40, 40);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Dr. ${doctorName}`, pageWidth - margin - 22.5, finalY + 20, { align: 'center' });
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Digital Authorized Signature', pageWidth - margin - 22.5, finalY + 24, { align: 'center' });
-
-  // Paging
-  doc.setFontSize(6);
-  doc.text(`Page 1 of 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
-
-  const sanitizeFileName = (name: string) => {
-    return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  // Wait for fonts/layout to settle before triggering print
+  win.onload = () => {
+    setTimeout(() => {
+      win.focus();
+      win.print();
+      // Close the window after print dialog is accepted/cancelled
+      win.onafterprint = () => win.close();
+    }, 600);
   };
-
-  const safePatientName = sanitizeFileName(patientName);
-  const fileName = `Prescription_${safePatientName}_${new Date().getTime()}.pdf`;
-  
-  try {
-    doc.save(fileName);
-  } catch (saveError) {
-    console.error('Final PDF save failed:', saveError);
-    // Fallback filename if the complex one fails
-    doc.save('Prescription_Download.pdf');
-  }
-} catch (error) {
-  console.error('[PDF Service] Generation crashed:', error);
-  throw error;
-}
 };
