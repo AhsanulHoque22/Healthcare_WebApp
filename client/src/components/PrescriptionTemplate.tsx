@@ -164,7 +164,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
   };
 
   return (
-    <div className={`bg-white relative ${isPdf ? 'w-[794px] min-h-[1123px] p-14' : 'p-10 max-w-[800px] mx-auto shadow-2xl border border-gray-100 my-8'}`}>
+    <div className={`bg-white relative mx-auto ${isPdf ? 'w-[794px] min-h-[1123px]' : 'w-full max-w-[794px] border border-gray-200 shadow-md'}`}>
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none transform -rotate-45">
         <h1 className="text-[120px] font-black text-blue-900 tracking-tighter whitespace-nowrap">
@@ -172,7 +172,7 @@ const PrescriptionTemplate: React.FC<PrescriptionTemplateProps> = ({
         </h1>
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 p-10">
         {/* Prescription Header */}
         <div className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-8">
           <div className="flex items-center gap-6">

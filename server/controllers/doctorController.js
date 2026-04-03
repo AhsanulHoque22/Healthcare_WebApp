@@ -526,17 +526,24 @@ const uploadProfileImage = async (req, res, next) => {
       });
     }
     
-    // Update the doctor's profile image
-    await doctor.update({
-      profileImage: imageUrl
-    });
-
-    // Also update the user's profile image
-    const user = await User.findByPk(userId);
-    if (user) {
-      await user.update({
+    // Update the doctor's profile image or signature
+    const uploadType = req.query.type;
+    if (uploadType === 'signature') {
+      await doctor.update({
+        signature: imageUrl
+      });
+    } else {
+      await doctor.update({
         profileImage: imageUrl
       });
+
+      // Also update the user's profile image
+      const user = await User.findByPk(userId);
+      if (user) {
+        await user.update({
+          profileImage: imageUrl
+        });
+      }
     }
 
     res.json({

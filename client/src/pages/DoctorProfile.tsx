@@ -368,9 +368,9 @@ const DoctorProfile: React.FC = () => {
     setIsUploadingSignature(true);
     try {
       const formData = new FormData();
-      formData.append('profileImage', file); // Use same image upload endpoint
+      formData.append('profileImage', file); // Use same image upload field name
 
-      const response = await API.post('/doctors/upload-image', formData, {
+      const response = await API.post('/doctors/upload-image?type=signature', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

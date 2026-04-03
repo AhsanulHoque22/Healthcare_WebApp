@@ -14,22 +14,26 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
     console.log('[PDF] Generating high-fidelity PDF from component for:', prescriptionData?.id);
 
     try {
-      // 1. Create a hidden container attached to the document body
-      // It must be attached so that html2canvas can compute external CSS safely
+      // 1. Create a container that is part of the document flow but hidden
       const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '-9999px';
-      container.style.width = '800px'; 
-      container.style.background = '#ffffff';
+      container.id = `pdf-gen-container-${Date.now()}`;
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '794px'; // Standard A4 pixel width at 96dpi
+      container.style.height = 'auto';
+      container.style.zIndex = '-9999';
+      container.style.visibility = 'hidden';
+      container.style.overflow = 'hidden';
+      container.style.backgroundColor = 'white';
+      
       document.body.appendChild(container);
 
-      // 2. Render the React component synchronously 
+      // 2. Render the React component inside the app context
       const root = createRoot(container);
       
-      // We pass isPdf true so component knows to skip web-only shadows/borders
       root.render(
-        <div id="pdf-export-wrapper" style={{ margin: '0px', padding: '0px', width: '794px' }}>
+        <div id="pdf-export-wrapper" className="bg-white">
           <PrescriptionTemplate 
             prescriptionData={prescriptionData} 
             appointmentData={appointmentData} 
@@ -39,6 +43,7 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
       );
 
       // 3. Wait for render to commit, images to load, and fonts to settle
+      // Use a generous timeout to ensure all assets are ready for high-fidelity capture
       setTimeout(async () => {
         try {
           const exportWrapper = container.querySelector('#pdf-export-wrapper');
@@ -47,28 +52,47 @@ export const generatePrescriptionPdf = async (data: PrescriptionPdfData): Promis
           const rxId = `RX-${prescriptionData?.id || 'APT'}-${appointmentData?.id || ''}`;
           
           const opt = {
-            margin:       [0, 0, 0, 0] as [number, number, number, number], // ZERO MARGIN
+            margin:       0,
             filename:     `Prescription_${rxId}.pdf`,
             image:        { type: 'jpeg' as const, quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },
-            jsPDF:        { unit: 'px' as const, format: [794, 1123] as [number, number], orientation: 'portrait' as const }
+            html2canvas:  { 
+              scale: 2, 
+              useCORS: true, 
+              letterRendering: true,
+              backgroundColor: '#ffffff',
+              scrollY: 0,
+              windowWidth: 794
+            },
+            jsPDF: { 
+              unit: 'px' as const, 
+              format: [794, 1123] as [number, number], 
+              orientation: 'portrait' as const,
+              compress: true
+            }
           };
 
           // Generate and save
           await html2pdf().set(opt).from(exportWrapper as HTMLElement).save();
           
           // 4. Cleanup
-          root.unmount();
-          document.body.removeChild(container);
+          setTimeout(() => {
+            root.unmount();
+            if (document.body.contains(container)) {
+              document.body.removeChild(container);
+            }
+          }, 500);
           
           resolve();
         } catch (pdfError) {
-          root.unmount();
-          if (document.body.contains(container)) document.body.removeChild(container);
           console.error('[PDF] html2pdf generation failed:', pdfError);
+          // Cleanup on fail
+          root.unmount();
+          if (document.body.contains(container)) {
+            document.body.removeChild(container);
+          }
           reject(pdfError);
         }
-      }, 1000); // 1000ms delay to ensure complex QR codes & avatars paint correctly
+      }, 1500);
     } catch (error) {
       console.error('[PDF] Setup wrapper failed:', error);
       reject(error);

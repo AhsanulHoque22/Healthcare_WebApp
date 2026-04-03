@@ -29,6 +29,8 @@ import PrescriptionView from '../components/PrescriptionView';
 import { getDepartmentLabel } from '../utils/departments';
 import { calculateAge, formatAge } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
+import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
+import toast from 'react-hot-toast';
 
 interface Patient {
   id: number;
@@ -121,6 +123,7 @@ const Patients: React.FC = () => {
   const [showRecordDetail, setShowRecordDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<number | null>(null);
 
   const [searchParams] = useSearchParams();
   const patientIdFromURL = searchParams.get('patientId');
@@ -247,141 +250,165 @@ const Patients: React.FC = () => {
     }
   };
 
-  const handleDownloadRecord = (appointment: AppointmentMedicalRecord) => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MEDICAL RECORD', 105, 20, { align: 'center' });
-    
-    // Line under header
-    doc.setLineWidth(0.5);
-    doc.line(20, 25, 190, 25);
-    
-    let yPos = 35;
-    
-    // Patient Information
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Patient Information:', 20, yPos);
-    yPos += 7;
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${selectedPatient?.user.firstName} ${selectedPatient?.user.lastName}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Email: ${selectedPatient?.user.email}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Phone: ${selectedPatient?.user.phone || 'Not provided'}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Blood Type: ${selectedPatient?.bloodType || 'Not provided'}`, 20, yPos);
-    yPos += 10;
-    
-    // Appointment Information
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
-    }
-    doc.setFont('helvetica', 'bold');
-    doc.text('Appointment Information:', 20, yPos);
-    yPos += 7;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${new Date(appointment.appointmentDate).toLocaleDateString()}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Time: ${appointment.appointmentTime}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Serial #: ${appointment.serialNumber}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Type: ${appointment.type.replace('_', ' ').toUpperCase()}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Doctor: Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Department: ${getDepartmentLabel(appointment.doctor.department)}`, 20, yPos);
-    yPos += 10;
-    
-    // Medical Details
-    if (appointment.reason || appointment.symptoms) {
+  const handleDownloadRecord = async (appointment: AppointmentMedicalRecord) => {
+    setIsDownloading(appointment.id);
+    try {
+      // 1. Fetch prescription data specifically for this appointment
+      let prescriptionForPdf: any = null;
+      try {
+        const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
+        prescriptionForPdf = response.data?.data?.prescription || null;
+      } catch (fetchError: any) {
+        console.warn('[Patients] No prescription found for appointment:', appointment.id);
+      }
+
+      // 2. If it has prescription data, use the high-fidelity PDF 
+      if (prescriptionForPdf) {
+        await generatePrescriptionPdf({ prescriptionData: prescriptionForPdf, appointmentData: appointment });
+        return;
+      }
+
+      // 3. FALLBACK: Minimal jsPDF for appointments without formal prescriptions (legacy support)
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('MEDICAL RECORD', 105, 20, { align: 'center' });
+      
+      // Line under header
+      doc.setLineWidth(0.5);
+      doc.line(20, 25, 190, 25);
+      
+      let yPos = 35;
+      
+      // Patient Information
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Patient Information:', 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Name: ${selectedPatient?.user.firstName} ${selectedPatient?.user.lastName}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Email: ${selectedPatient?.user.email}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Phone: ${selectedPatient?.user.phone || 'Not provided'}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Blood Type: ${selectedPatient?.bloodType || 'Not provided'}`, 20, yPos);
+      yPos += 10;
+      
+      // Appointment Information
       if (yPos > 250) {
         doc.addPage();
         yPos = 20;
       }
       doc.setFont('helvetica', 'bold');
-      doc.text('Appointment Details:', 20, yPos);
+      doc.text('Appointment Information:', 20, yPos);
       yPos += 7;
       doc.setFont('helvetica', 'normal');
+      doc.text(`Date: ${new Date(appointment.appointmentDate).toLocaleDateString()}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Time: ${appointment.appointmentTime}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Serial #: ${appointment.serialNumber}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Type: ${appointment.type.replace('_', ' ').toUpperCase()}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Doctor: Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Department: ${getDepartmentLabel(appointment.doctor.department)}`, 20, yPos);
+      yPos += 10;
       
-      if (appointment.reason) {
-        doc.text(`Reason: ${appointment.reason}`, 20, yPos);
-        yPos += 5;
-      }
-      if (appointment.symptoms) {
-        const symptomLines = doc.splitTextToSize(`Symptoms: ${appointment.symptoms}`, 170);
-        doc.text(symptomLines, 20, yPos);
-        yPos += symptomLines.length * 5 + 5;
-      }
-    }
-    
-    // Diagnosis and Notes
-    if (appointment.diagnosis || appointment.notes) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
-      }
-      
-      if (appointment.notes) {
-        doc.setFont('helvetica', 'bold');
-        doc.text('Doctor\'s Notes:', 20, yPos);
-        yPos += 7;
-        doc.setFont('helvetica', 'normal');
-        const notesLines = doc.splitTextToSize(appointment.notes, 170);
-        doc.text(notesLines, 20, yPos);
-        yPos += notesLines.length * 5 + 5;
-      }
-      
-      if (appointment.diagnosis) {
+      // Medical Details
+      if (appointment.reason || appointment.symptoms) {
         if (yPos > 250) {
           doc.addPage();
           yPos = 20;
         }
         doc.setFont('helvetica', 'bold');
-        doc.text('Diagnosis:', 20, yPos);
+        doc.text('Appointment Details:', 20, yPos);
         yPos += 7;
         doc.setFont('helvetica', 'normal');
-        const diagnosisLines = doc.splitTextToSize(appointment.diagnosis, 170);
-        doc.text(diagnosisLines, 20, yPos);
-        yPos += diagnosisLines.length * 5 + 5;
+        
+        if (appointment.reason) {
+          doc.text(`Reason: ${appointment.reason}`, 20, yPos);
+          yPos += 5;
+        }
+        if (appointment.symptoms) {
+          const symptomLines = doc.splitTextToSize(`Symptoms: ${appointment.symptoms}`, 170);
+          doc.text(symptomLines, 20, yPos);
+          yPos += symptomLines.length * 5 + 5;
+        }
       }
-    }
-    
-    // Prescription
-    if (appointment.prescription) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = 20;
+      
+      // Diagnosis and Notes
+      if (appointment.diagnosis || appointment.notes) {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        if (appointment.notes) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Doctor\'s Notes:', 20, yPos);
+          yPos += 7;
+          doc.setFont('helvetica', 'normal');
+          const notesLines = doc.splitTextToSize(appointment.notes, 170);
+          doc.text(notesLines, 20, yPos);
+          yPos += notesLines.length * 5 + 5;
+        }
+        
+        if (appointment.diagnosis) {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          doc.setFont('helvetica', 'bold');
+          doc.text('Diagnosis:', 20, yPos);
+          yPos += 7;
+          doc.setFont('helvetica', 'normal');
+          const diagnosisLines = doc.splitTextToSize(appointment.diagnosis, 170);
+          doc.text(diagnosisLines, 20, yPos);
+          yPos += diagnosisLines.length * 5 + 5;
+        }
       }
-      doc.setFont('helvetica', 'bold');
-      doc.text('Prescription:', 20, yPos);
-      yPos += 7;
-      doc.setFont('helvetica', 'normal');
-      const prescriptionLines = doc.splitTextToSize(appointment.prescription, 170);
-      doc.text(prescriptionLines, 20, yPos);
-      yPos += prescriptionLines.length * 5 + 5;
+      
+      // Prescription string conversion 
+      if (appointment.prescription) {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text('Prescription Summary:', 20, yPos);
+        yPos += 7;
+        doc.setFont('helvetica', 'normal');
+        const prescriptionLines = doc.splitTextToSize(appointment.prescription, 170);
+        doc.text(prescriptionLines, 20, yPos);
+        yPos += prescriptionLines.length * 5 + 5;
+      }
+      
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text('This is a computer-generated medical record', 105, 285, { align: 'center' });
+      }
+      
+      // Save the PDF
+      const fileName = `medical-record-${selectedPatient?.user.firstName}-${selectedPatient?.user.lastName}-${appointment.id}-${new Date(appointment.appointmentDate).toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    } catch (error: any) {
+      console.error('[Patients] Download error:', error);
+      toast.error('Failed to generate record. Please try again.');
+    } finally {
+      setIsDownloading(null);
     }
-    
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
-      doc.text('This is a computer-generated medical record', 105, 285, { align: 'center' });
-    }
-    
-    // Save the PDF
-    const fileName = `medical-record-${selectedPatient?.user.firstName}-${selectedPatient?.user.lastName}-${appointment.id}-${new Date(appointment.appointmentDate).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
   };
 
   return (
@@ -937,10 +964,15 @@ const Patients: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleDownloadRecord(appointment)}
-                              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md animate-bounce"
+                              disabled={isDownloading === appointment.id}
+                              className={`flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md ${isDownloading === appointment.id ? 'opacity-50 cursor-not-allowed' : 'animate-bounce'}`}
                             >
-                              <ArrowDownTrayIcon className="h-4 w-4" />
-                              Download
+                              {isDownloading === appointment.id ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full" />
+                              ) : (
+                                <ArrowDownTrayIcon className="h-4 w-4" />
+                              )}
+                              {isDownloading === appointment.id ? 'Downloading...' : 'Download'}
                             </button>
                           </div>
                         </div>
@@ -1198,10 +1230,15 @@ const Patients: React.FC = () => {
                 <div className="mt-8 flex justify-end gap-4">
                   <button
                     onClick={() => handleDownloadRecord(selectedRecord)}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 animate-bounce"
+                    disabled={isDownloading === selectedRecord.id}
+                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 ${isDownloading === selectedRecord.id ? 'opacity-70 cursor-not-allowed' : 'animate-bounce'}`}
                   >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
-                    Download Record
+                    {isDownloading === selectedRecord.id ? (
+                      <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                    )}
+                    {isDownloading === selectedRecord.id ? 'Generating PDF...' : 'Download Record'}
                   </button>
                   <button
                     onClick={() => setShowRecordDetail(false)}
