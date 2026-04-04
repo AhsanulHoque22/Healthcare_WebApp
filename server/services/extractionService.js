@@ -15,64 +15,79 @@ const extractMedicalData = async (transcript, language = 'en') => {
     }
   } catch (e) {}
 
-  try {
-    // 🛠️ Using the discovery-enabled model identifier
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+  const maxRetries = 3;
+  let attempt = 0;
 
-    const prompt = `
-      As a specialized medical scribe, convert this doctor's dictation into a structured JSON prescription.
-      MATCH THESE UI FIELDS EXACTLY:
+  while (attempt < maxRetries) {
+    try {
+      // 🛠️ Using the stable discovery-verified alias
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-      1. medicines: Array of {
-         name: string,
-         type: "Tablet" | "Syrup" | "Injection" | "Capsule",
-         dosage: string (mg calculation),
-         morning: number (how many units),
-         lunch: number (how many units),
-         dinner: number (how many units),
-         mealTiming: "Before Meal" | "After Meal",
-         duration: number (days),
-         instructions: string
+      const prompt = `
+        As a specialized medical scribe, convert this doctor's dictation into a structured JSON prescription.
+        MATCH THESE UI FIELDS EXACTLY:
+
+        1. medicines: Array of {
+           name: string,
+           type: "Tablet" | "Syrup" | "Injection" | "Capsule",
+           dosage: string (mg calculation),
+           morning: number (how many units),
+           lunch: number (how many units),
+           dinner: number (how many units),
+           mealTiming: "Before Meal" | "After Meal",
+           duration: number (days),
+           instructions: string
+        }
+        2. vitalSigns: {
+           bloodPressure: string (e.g. "120/80"),
+           heartRate: number,
+           temperature: string (e.g. "98.6"),
+           respiratoryRate: number,
+           oxygenSaturation: number
+        }
+        3. clinicalFindings: string (detailed examination summary)
+        4. symptoms: Array of { description: string }
+        5. diagnosis: Array of { description: string, date: string (YYYY-MM-DD) }
+        6. tests: Array of { name: string, description: string }
+
+        TRANSCRIPT:
+        "${transcript}"
+
+        RULES:
+        - Interpret "Three times a day" as morning:1, lunch:1, dinner:1.
+        - Default mealTiming to "After Meal" if not specified.
+        - Return ONLY a valid JSON object.
+      `;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      
+      // Extract JSON from response (handling potential markdown blocks)
+      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch (e) {
+          console.error("Failed to parse extracted JSON:", e);
+          throw new Error("Invalid format in extraction result");
+        }
       }
-      2. vitalSigns: {
-         bloodPressure: string (e.g. "120/80"),
-         heartRate: number,
-         temperature: string (e.g. "98.6"),
-         respiratoryRate: number,
-         oxygenSaturation: number
+      
+      throw new Error("No structured data found in extraction result");
+    } catch (error) {
+      attempt++;
+      const isRetryable = error.status === 429 || error.status === 503 || error.message?.includes("High Demand");
+      
+      if (isRetryable && attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        console.warn(`[Extraction] Gemini error (${error.status}). Retrying in ${delay}ms... (Attempt ${attempt}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
       }
-      3. clinicalFindings: string (detailed examination summary)
-      4. symptoms: Array of { description: string }
-      5. diagnosis: Array of { description: string, date: string (YYYY-MM-DD) }
-      6. tests: Array of { name: string, description: string }
-
-      TRANSCRIPT:
-      "${transcript}"
-
-      RULES:
-      - Interpret "Three times a day" as morning:1, lunch:1, dinner:1.
-      - Default mealTiming to "After Meal" if not specified.
-      - Return ONLY a valid JSON object.
-    `;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // Extract JSON from response (handling potential markdown blocks)
-    let jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        return JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        console.error("Failed to parse extracted JSON:", e);
-        throw new Error("Invalid format in extraction result");
-      }
+      
+      console.error("Extraction Service Error:", error);
+      throw error;
     }
-    
-    throw new Error("No structured data found in extraction result");
-  } catch (error) {
-    console.error("Extraction Service Error:", error);
-    throw error;
   }
 };
 
