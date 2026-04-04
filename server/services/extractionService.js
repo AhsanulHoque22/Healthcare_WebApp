@@ -17,7 +17,7 @@ const extractMedicalData = async (transcript, language = 'en') => {
 
   try {
     // 🛠️ Using the discovery-enabled model identifier
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
       As a specialized medical scribe, convert this doctor's dictation into a structured JSON prescription.
