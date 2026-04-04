@@ -123,17 +123,24 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('stop-transcription');
+      }
+    } catch (e) {
+      console.warn('Cleanup error:', e);
+    } finally {
+      setIsRecording(false);
+      setInterimTranscript('');
+      mediaRecorderRef.current = null;
+      streamRef.current = null;
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    if (socketRef.current?.connected) {
-      socketRef.current.emit('stop-transcription');
-    }
-    setIsRecording(false);
-    setInterimTranscript('');
   };
 
   const handleExtract = () => {
@@ -162,7 +169,7 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
               <div className={`w-2 h-2 rounded-full ${socketStatus === 'connected' ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'}`}></div>
               <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{socketStatus}</span>
             </div>
-            <p className="text-xs text-gray-500">Dictate prescription details naturally</p>
+            <p className="text-xs text-gray-500">Dictate and edit before auto-filling</p>
           </div>
         </div>
 
@@ -196,31 +203,37 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
         </div>
       </div>
 
-      <div className="relative bg-white rounded-xl border border-emerald-100 p-4 min-h-[100px] max-h-[200px] overflow-y-auto">
-        {transcript || interimTranscript ? (
-          <div className="text-sm text-gray-700 whitespace-pre-wrap">
-            {transcript}
-            <span className="text-emerald-500 font-medium italic">{interimTranscript}</span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+      <div className="relative">
+        <textarea
+          value={transcript + (interimTranscript ? ' ' + interimTranscript : '')}
+          onChange={(e) => setTranscript(e.target.value)}
+          placeholder='Click "Start Listening" and speak naturally...'
+          className="w-full bg-white rounded-xl border border-emerald-100 p-4 min-h-[120px] max-h-[300px] text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none"
+          disabled={isRecording}
+        />
+        
+        {!transcript && !interimTranscript && !isRecording && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-400 gap-2">
             <SparklesIcon className="h-8 w-8 opacity-20" />
-            <p className="text-sm">Click "Start Listening" and speak naturally...</p>
-            <p className="text-[10px]">Example: "Patient has dry cough and mild fever. Suggest Paracetamol 500mg three times a day for 5 days."</p>
+            <p className="text-[10px]">Example: "Patient has dry cough and mild fever..."</p>
           </div>
         )}
         
-        {(transcript || interimTranscript) && (
+        {(transcript || interimTranscript) && !isRecording && (
           <button 
             onClick={clearTranscript}
-            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600"
+            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 bg-white/80 rounded-full shadow-sm"
           >
             <XMarkIcon className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      <div className="flex justify-end mt-4 gap-3">
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-[10px] text-emerald-600 font-medium italic">
+          {isRecording ? "Live transcribing... speak clearly" : transcript ? "✓ You can edit the text above before auto-filling" : ""}
+        </span>
+        
         <button
           onClick={handleExtract}
           disabled={!transcript || isProcessing}
@@ -243,6 +256,7 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
           )}
         </button>
       </div>
+    </div>
     </div>
   );
 };
