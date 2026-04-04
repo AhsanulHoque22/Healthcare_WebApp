@@ -26,88 +26,80 @@ const setupVoiceToPrescription = (server) => {
 
     socket.on("start-transcription", async (options) => {
       const language = options.language || "en";
-      const model = language === "en" ? "nova-2-medical" : "nova-2";
+      // Fallback model logic
+      const models = language === "en" ? ["nova-2-medical", "nova-2"] : ["nova-2"];
       
-      console.log(`[BACKEND] Starting Deepgram session. Model: ${model}, Lang: ${language}`);
+      console.log(`[BACKEND] Starting Deepgram. Key prefix: ${apiKey ? apiKey.substring(0, 4) : "NONE"}, Len: ${apiKey ? apiKey.length : 0}`);
 
-      if (dgConnection) {
-        try {
-          if (dgConnection.requestClose) dgConnection.requestClose();
-          else if (dgConnection.finish) dgConnection.finish();
-        } catch (e) {}
-        if (keepAlive) clearInterval(keepAlive);
-        isDeepgramOpen = false;
-      }
-
-      try {
-        console.log(`[BACKEND] Connecting to Deepgram...`);
+      const startWithModel = async (modelName) => {
+        console.log(`[BACKEND] Attempting connection with model: ${modelName}`);
         
-        dgConnection = await deepgram.listen.v1.connect({
-          model: model,
-          language: language,
-          smart_format: true,
-          interim_results: true,
-          utterance_end_ms: 1000,
-          vad_events: true,
-          endpointing: 300,
-          container: 'webm',
-          encoding: 'opus'
-        });
-
-        // Listen for all event variations to ensure we catch the open state
-        const handleOpen = () => {
-          console.log("[DEEPGRAM] Connection is now formally OPEN");
-          isDeepgramOpen = true;
-          socket.emit("transcription-started");
-          
-          if (keepAlive) clearInterval(keepAlive);
-          keepAlive = setInterval(() => {
-            if (dgConnection && isDeepgramOpen) {
-              dgConnection.keepAlive();
-            }
-          }, 10000);
-        };
-
-        dgConnection.on("Open", handleOpen);
-        dgConnection.on("open", handleOpen);
-
-        const handleTranscript = (data) => {
-          const transcript = data.channel?.alternatives?.[0]?.transcript;
-          if (transcript) {
-            console.log(`[DEEPGRAM] Result: "${transcript}"`);
-            socket.emit("transcript-result", {
-              transcript,
-              isFinal: data.is_final,
-            });
-          }
-        };
-
-        dgConnection.on("Results", handleTranscript);
-        dgConnection.on("results", handleTranscript);
-
-        dgConnection.on("Error", (error) => {
-          console.error("[DEEPGRAM] Connection error:", error);
-          socket.emit("transcription-error", error.message || "Deepgram Error");
-        });
-        dgConnection.on("error", (error) => {
-          console.error("[DEEPGRAM] Connection error (lc):", error);
-        });
-
-        dgConnection.on("close", () => {
-          console.log("[DEEPGRAM] Connection closed");
-          isDeepgramOpen = false;
-          if (keepAlive) clearInterval(keepAlive);
-        });
-
-        if (dgConnection.waitForOpen) {
-          await dgConnection.waitForOpen();
-          console.log("[DEEPGRAM] waitForOpen completed");
-          isDeepgramOpen = true;
+        if (dgConnection) {
+          try {
+            if (dgConnection.requestClose) dgConnection.requestClose();
+            else if (dgConnection.finish) dgConnection.finish();
+          } catch (e) {}
         }
 
-      } catch (error) {
-        console.error("[BACKEND] Failed to initialize Deepgram:", error);
-        socket.emit("transcription-error", "Initialization failed");
+        try {
+          dgConnection = await deepgram.listen.v1.connect({
+            model: modelName,
+            language: language,
+            smart_format: true,
+            interim_results: true,
+            utterance_end_ms: 1000,
+            vad_events: true,
+            endpointing: 300,
+            // Removed strict container/encoding to allow auto-detection
+          });
+
+          const handleOpen = () => {
+            console.log(`[DEEPGRAM] Connection formally OPEN with model: ${modelName}`);
+            isDeepgramOpen = true;
+            socket.emit("transcription-started");
+          };
+
+          dgConnection.on("Open", handleOpen);
+          dgConnection.on("open", handleOpen);
+
+          dgConnection.on("Results", (data) => {
+            const transcript = data.channel?.alternatives?.[0]?.transcript;
+            if (transcript) {
+              console.log(`[DEEPGRAM] Result: "${transcript}"`);
+              socket.emit("transcript-result", { transcript, isFinal: data.is_final });
+            }
+          });
+
+          dgConnection.on("results", (data) => {
+            const transcript = data.channel?.alternatives?.[0]?.transcript;
+            if (transcript) {
+              console.log(`[DEEPGRAM] Result (lc): "${transcript}"`);
+              socket.emit("transcript-result", { transcript, isFinal: data.is_final });
+            }
+          });
+
+          if (dgConnection.waitForOpen) {
+            // Wait with a 3-second timeout
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+            await Promise.race([dgConnection.waitForOpen(), timeoutPromise]);
+            console.log("[DEEPGRAM] waitForOpen completed");
+            isDeepgramOpen = true;
+            return true;
+          }
+           return true;
+        } catch (err) {
+          console.error(`[DEEPGRAM] Failed to connect with ${modelName}:`, err.message);
+          return false;
+        }
+      };
+
+      // Try medical first, then fallback
+      const success = await startWithModel(models[0]);
+      if (!success && models.length > 1) {
+        console.log("[BACKEND] Retrying with standard model...");
+        await startWithModel(models[1]);
+      } else if (!success) {
+        socket.emit("transcription-error", "Failed to connect to Deepgram service");
       }
     });
 
@@ -115,19 +107,21 @@ const setupVoiceToPrescription = (server) => {
     socket.on("audio-chunk", (data) => {
       chunkCount++;
       if (chunkCount % 20 === 0) {
-        console.log(`[BACKEND] Heartbeat: Combined chunks=${chunkCount} (isDeepgramOpen=${isDeepgramOpen})`);
+        console.log(`[BACKEND] Heartbeat: Chunks=${chunkCount} (Open=${isDeepgramOpen})`);
       }
       
       if (dgConnection && isDeepgramOpen) {
         try {
           dgConnection.send(Buffer.from(data));
         } catch (err) {
-          console.error("[BACKEND] Audio send error:", err.message);
+          // Only log send error once to avoid spam
+          if (chunkCount % 100 === 0) console.error("[BACKEND] Send error:", err.message);
         }
       }
     });
 
     const safeClose = () => {
+      console.log("[BACKEND] Safely closing Deepgram connection");
       if (dgConnection) {
         try {
           if (dgConnection.requestClose) dgConnection.requestClose();
@@ -139,15 +133,8 @@ const setupVoiceToPrescription = (server) => {
       if (keepAlive) clearInterval(keepAlive);
     };
 
-    socket.on("stop-transcription", () => {
-      console.log("[BACKEND] User stopped transcription");
-      safeClose();
-    });
-
-    socket.on("disconnect", () => {
-      console.log("[BACKEND] User disconnected");
-      safeClose();
-    });
+    socket.on("stop-transcription", () => safeClose());
+    socket.on("disconnect", () => safeClose());
   });
 
   return io;
