@@ -1,4 +1,3 @@
-const { createClient } = require("@deepgram/sdk");
 const { Server } = require("socket.io");
 
 const setupVoiceToPrescription = (server) => {
@@ -12,10 +11,20 @@ const setupVoiceToPrescription = (server) => {
   try {
     const apiKey = process.env.DEEPGRAM_API_KEY;
     if (!apiKey) throw new Error("DEEPGRAM_API_KEY is missing from environment");
-    deepgram = createClient(apiKey);
-    console.log('[VOICE] Deepgram client created successfully');
+    
+    // Support all versions of the v5 JS SDK initialization
+    const sdk = require("@deepgram/sdk");
+    if (sdk.DeepgramClient) {
+      deepgram = new sdk.DeepgramClient(apiKey);
+      console.log('[VOICE] Deepgram initialized with DeepgramClient class');
+    } else if (sdk.createClient) {
+      deepgram = sdk.createClient(apiKey);
+      console.log('[VOICE] Deepgram initialized with createClient factory');
+    } else {
+      throw new Error("Could not find a valid Deepgram initialization method in SDK");
+    }
   } catch (err) {
-    console.error('[VOICE] CRITICAL: Deepgram SDK failed to initialize:', err.message);
+    console.error('[VOICE] CRITICAL SDK FAIL:', err.message);
   }
 
   io.on("connection", (socket) => {
