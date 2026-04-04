@@ -17,7 +17,7 @@ const setupVoiceToPrescription = (server) => {
   const deepgram = createClient(apiKey);
 
   io.on("connection", (socket) => {
-    console.log("Client connected to Voice-to-Prescription WebSocket");
+    console.log(`[VOICE] Client connected. Socket ID: ${socket.id}`);
 
     let dgConnection;
     let keepAlive;

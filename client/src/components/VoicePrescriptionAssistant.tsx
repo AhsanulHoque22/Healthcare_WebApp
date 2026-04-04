@@ -82,25 +82,34 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
   }, []);
 
   const startRecording = async () => {
-    if (socketStatus !== 'connected') {
+    if (socketStatus !== 'connected' || !socketRef.current) {
+      console.warn('[VOICE] No socket connection!', { socketStatus, hasRef: !!socketRef.current });
       toast.error('Voice service is not connected. Reconnecting...');
       return;
     }
 
     try {
+      console.log('[VOICE] Attempting to start recorder. Socket ID:', socketRef.current.id);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
       const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+      console.log('[VOICE] Using mimeType:', mimeType);
+      
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
-      socketRef.current?.emit('start-transcription', { language });
+      console.log('[VOICE] Emitting start-transcription...');
+      socketRef.current.emit('start-transcription', { language });
 
       mediaRecorder.ondataavailable = async (event) => {
-        if (event.data.size > 0 && socketRef.current?.connected) {
-          const buffer = await event.data.arrayBuffer();
-          socketRef.current?.emit('audio-chunk', buffer);
+        if (event.data.size > 0) {
+          if (socketRef.current?.connected) {
+            const buffer = await event.data.arrayBuffer();
+            socketRef.current.emit('audio-chunk', buffer);
+          } else {
+            console.warn('[VOICE] Socket disconnected during data capture');
+          }
         }
       };
 
