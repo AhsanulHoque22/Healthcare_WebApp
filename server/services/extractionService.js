@@ -15,6 +15,7 @@ const extractMedicalData = async (transcript, language = 'en') => {
     }
   } catch (e) {}
 
+  try {
     // 🛠️ Using the discovery-enabled model identifier
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
