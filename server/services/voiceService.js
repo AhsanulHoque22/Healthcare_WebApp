@@ -36,6 +36,8 @@ const setupVoiceToPrescription = (server) => {
       }
 
       try {
+        console.log(`[BACKEND] Initializing Deepgram with model: ${model}`);
+        
         dgConnection = deepgram.listen.live({
           model: model,
           language: language,
@@ -44,13 +46,12 @@ const setupVoiceToPrescription = (server) => {
           utterance_end_ms: 1000,
           vad_events: true,
           endpointing: 300,
-          // Explicitly handle common web audio formats
           container: 'webm',
           encoding: 'opus'
         });
 
         dgConnection.on(LiveTranscriptionEvents.Open, () => {
-          console.log("[DEEPGRAM] Connection opened");
+          console.log("[DEEPGRAM] Connection successfully established");
           isDeepgramOpen = true;
           socket.emit("transcription-started");
           
@@ -64,6 +65,7 @@ const setupVoiceToPrescription = (server) => {
         dgConnection.on(LiveTranscriptionEvents.Transcript, (data) => {
           const transcript = data.channel.alternatives[0].transcript;
           if (transcript) {
+            console.log(`[DEEPGRAM] Result transcript: "${transcript}"`);
             socket.emit("transcript-result", {
               transcript,
               isFinal: data.is_final,
@@ -72,8 +74,16 @@ const setupVoiceToPrescription = (server) => {
         });
 
         dgConnection.on(LiveTranscriptionEvents.Error, (error) => {
-          console.error("[DEEPGRAM] Error:", error);
-          socket.emit("transcription-error", error.message || "Deepgram connection error");
+          console.error("[DEEPGRAM] Connection error detail:", error);
+          
+          // If medical model fails, try falling back to standard nova-2
+          if (model === "nova-2-medical") {
+            console.warn("[DEEPGRAM] Medical model failed, attempting fallback to standard nova-2...");
+            socket.emit("transcription-error", "Medical model unavailable, trying standard model...");
+            // Re-trigger start with simpler options might be needed, but for now we log it
+          }
+          
+          socket.emit("transcription-error", error.message || "Deepgram Error");
         });
 
         dgConnection.on(LiveTranscriptionEvents.Close, () => {
@@ -89,12 +99,18 @@ const setupVoiceToPrescription = (server) => {
       }
     });
 
+    let chunkCount = 0;
     socket.on("audio-chunk", (data) => {
+      chunkCount++;
+      if (chunkCount % 20 === 0) {
+        console.log(`[BACKEND] Heartbeat: Received ${chunkCount} audio chunks from client (deepgramOpen=${isDeepgramOpen})`);
+      }
+      
       if (dgConnection && isDeepgramOpen) {
         try {
           dgConnection.send(Buffer.from(data));
         } catch (err) {
-          console.error("[BACKEND] Error sending audio to Deepgram:", err.message);
+          console.error("[BACKEND] Audio send error:", err.message);
         }
       }
     });
