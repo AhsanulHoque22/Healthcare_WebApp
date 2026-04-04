@@ -20,8 +20,9 @@ const setupVoiceToPrescription = (server) => {
       
       console.log(`[VOICE] Starting RAW Deepgram Session (${model}, ${language})`);
 
-      // 🛠️ Direct Deepgram WebSocket Connection
-      const url = `wss://api.deepgram.com/v1/listen?model=${model}&language=${language}&smart_format=true&interim_results=true&utterance_end_ms=1000`;
+      // 🛠️ Adding explicit encoding and container for WebM (standard browser format)
+      // This tells Deepgram exactly how to decode the incoming binary stream
+      const url = `wss://api.deepgram.com/v1/listen?model=${model}&language=${language}&smart_format=true&interim_results=true&encoding=opus&container=webm&sample_rate=48000`;
       
       dgSocket = new WebSocket(url, {
         headers: {
@@ -41,20 +42,19 @@ const setupVoiceToPrescription = (server) => {
           const transcript = response.channel?.alternatives?.[0]?.transcript;
           
           if (transcript) {
-            console.log(`[VOICE] Transcript: "${transcript}"`);
+            console.log(`[VOICE] Transcript Received: "${transcript}"`);
             socket.emit("transcript-result", {
               transcript,
               isFinal: response.is_final
             });
           }
         } catch (e) {
-          console.error("[VOICE] Error parsing Deepgram message:", e.message);
+          console.error("[VOICE] Error parsing:", e.message);
         }
       });
 
       dgSocket.on('error', (err) => {
         console.error("[VOICE] RAW Deepgram ERROR:", err.message);
-        socket.emit("transcription-error", err.message);
       });
 
       dgSocket.on('close', (code, reason) => {
@@ -63,8 +63,14 @@ const setupVoiceToPrescription = (server) => {
       });
     });
 
+    let chunkCount = 0;
     socket.on("audio-chunk", (data) => {
       if (dgSocket && isConnected && dgSocket.readyState === WebSocket.OPEN) {
+        chunkCount++;
+        if (chunkCount % 50 === 0) {
+          console.log(`[VOICE] Streaming binary audio to Deepgram... (Chunk #${chunkCount}, Size: ${data.length} bytes)`);
+        }
+        // Send binary data directly
         dgSocket.send(data);
       }
     });
