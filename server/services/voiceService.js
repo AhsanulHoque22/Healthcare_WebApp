@@ -2,12 +2,21 @@ const { createClient } = require("@deepgram/sdk");
 const { Server } = require("socket.io");
 
 const setupVoiceToPrescription = (server) => {
+  console.log('[VOICE] Initializing WebSocket subsystem...');
+  
   const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] }
   });
 
-  const apiKey = process.env.DEEPGRAM_API_KEY;
-  const deepgram = createClient(apiKey);
+  let deepgram;
+  try {
+    const apiKey = process.env.DEEPGRAM_API_KEY;
+    if (!apiKey) throw new Error("DEEPGRAM_API_KEY is missing from environment");
+    deepgram = createClient(apiKey);
+    console.log('[VOICE] Deepgram client created successfully');
+  } catch (err) {
+    console.error('[VOICE] CRITICAL: Deepgram SDK failed to initialize:', err.message);
+  }
 
   io.on("connection", (socket) => {
     let dgConnection;
@@ -16,6 +25,11 @@ const setupVoiceToPrescription = (server) => {
     let pendingChunks = []; // 🛠️ BUFFER to store audio while connecting
 
     socket.on("start-transcription", async (options) => {
+      if (!deepgram) {
+        console.error('[VOICE] start-transcription failed: client not initialized');
+        return socket.emit("transcription-error", "Deepgram not initialized on server");
+      }
+      
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
