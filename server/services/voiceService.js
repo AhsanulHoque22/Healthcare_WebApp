@@ -28,7 +28,7 @@ const setupVoiceToPrescription = (server) => {
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`[BACKEND] Starting Deepgram session: model=${model}, lang=${language}`);
+      console.log(`[BACKEND] Starting Deepgram v5 session: model=${model}, lang=${language}`);
 
       if (dgConnection) {
         dgConnection.finish();
@@ -37,8 +37,9 @@ const setupVoiceToPrescription = (server) => {
       }
 
       try {
-        console.log(`[BACKEND] Initializing Deepgram with model: ${model}`);
+        console.log(`[BACKEND] Initializing Deepgram live connection...`);
         
+        // In v5, listen.live is the correct method
         dgConnection = deepgram.listen.live({
           model: model,
           language: language,
@@ -51,8 +52,9 @@ const setupVoiceToPrescription = (server) => {
           encoding: 'opus'
         });
 
-        dgConnection.on(LiveTranscriptionEvents.Open, () => {
-          console.log("[DEEPGRAM] Connection successfully established");
+        // Use string events for maximum compatibility in v5
+        dgConnection.on("Open", () => {
+          console.log("[DEEPGRAM] Connection successfully established (v5)");
           isDeepgramOpen = true;
           socket.emit("transcription-started");
           
@@ -63,10 +65,10 @@ const setupVoiceToPrescription = (server) => {
           }, 10000);
         });
 
-        dgConnection.on(LiveTranscriptionEvents.Transcript, (data) => {
+        dgConnection.on("Results", (data) => {
           const transcript = data.channel.alternatives[0].transcript;
           if (transcript) {
-            console.log(`[DEEPGRAM] Result transcript: "${transcript}"`);
+            console.log(`[DEEPGRAM] Result: "${transcript}"`);
             socket.emit("transcript-result", {
               transcript,
               isFinal: data.is_final,
@@ -74,20 +76,12 @@ const setupVoiceToPrescription = (server) => {
           }
         });
 
-        dgConnection.on(LiveTranscriptionEvents.Error, (error) => {
+        dgConnection.on("Error", (error) => {
           console.error("[DEEPGRAM] Connection error detail:", error);
-          
-          // If medical model fails, try falling back to standard nova-2
-          if (model === "nova-2-medical") {
-            console.warn("[DEEPGRAM] Medical model failed, attempting fallback to standard nova-2...");
-            socket.emit("transcription-error", "Medical model unavailable, trying standard model...");
-            // Re-trigger start with simpler options might be needed, but for now we log it
-          }
-          
           socket.emit("transcription-error", error.message || "Deepgram Error");
         });
 
-        dgConnection.on(LiveTranscriptionEvents.Close, () => {
+        dgConnection.on("Close", () => {
           console.log("[DEEPGRAM] Connection closed");
           isDeepgramOpen = false;
           socket.emit("transcription-stopped");
