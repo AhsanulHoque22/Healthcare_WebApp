@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { triggerPrescriptionCreated } = require('../services/notificationTriggers');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { extractMedicalData } = require('../services/extractionService');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -600,6 +601,34 @@ const calculateNextReminder = (reminderTime, dayOfWeek) => {
   return nextDate;
 };
 
+// Extract voice data
+const extractVoiceData = async (req, res) => {
+  try {
+    const { transcript, language } = req.body;
+
+    if (!transcript) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transcript is required'
+      });
+    }
+
+    const structuredData = await extractMedicalData(transcript, language);
+
+    res.json({
+      success: true,
+      data: structuredData
+    });
+  } catch (error) {
+    console.error('Error extracting medical data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to extract medical data',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPrescriptionByAppointment,
   createOrUpdatePrescription,
@@ -608,5 +637,6 @@ module.exports = {
   getTestReports,
   downloadTestReport,
   extractMedicinesFromPrescription,
+  extractVoiceData,
   upload
 };

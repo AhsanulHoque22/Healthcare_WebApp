@@ -28,6 +28,8 @@ import {
   DevicePhoneMobileIcon,
   CpuChipIcon
 } from '@heroicons/react/24/outline';
+import VoicePrescriptionAssistant from './VoicePrescriptionAssistant';
+import { SparklesIcon as SparklesSolidIcon } from '@heroicons/react/24/solid';
 
 interface PrescriptionInterfaceProps {
   appointmentId: number;
@@ -157,6 +159,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState<'medicines' | 'symptoms' | 'diagnosis' | 'suggestions' | 'tests' | 'reports' | 'clinical'>('medicines');
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const form = useForm<PrescriptionFormData>({
     defaultValues: {
@@ -644,6 +647,94 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
     }
   };
 
+  const handleVoiceExtraction = async (transcript: string) => {
+    setIsExtracting(true);
+    try {
+      const response = await API.post('/prescriptions/extract-voice-data', { transcript });
+      const data = response.data.data;
+
+      // Map medicines
+      if (data.medicines && data.medicines.length > 0) {
+        setMedicines(prev => [...prev, ...data.medicines.map((m: any) => ({
+          ...m,
+          unit: m.unit || 'mg',
+          type: m.type || 'tablet',
+          mealTiming: m.mealTiming || 'after',
+          duration: m.duration || 7
+        }))]);
+      }
+
+      // Map symptoms
+      if (data.symptoms && data.symptoms.length > 0) {
+        setSymptoms(prev => [...prev, ...data.symptoms.map((s: any) => ({ 
+          id: Date.now().toString() + Math.random(), 
+          description: s.description 
+        }))]);
+      }
+
+      // Map diagnosis
+      if (data.diagnosis && data.diagnosis.length > 0) {
+        setDiagnoses(prev => [...prev, ...data.diagnosis.map((d: any) => ({ 
+          id: Date.now().toString() + Math.random(), 
+          description: d.description, 
+          date: d.date || new Date().toISOString().split('T')[0] 
+        }))]);
+      }
+
+      // Map vital signs
+      if (data.vitalSigns) {
+        setVitalSigns(prev => ({
+          ...prev,
+          bloodPressure: data.vitalSigns.bloodPressure || prev.bloodPressure,
+          heartRate: data.vitalSigns.heartRate || prev.heartRate,
+          temperature: data.vitalSigns.temperature || prev.temperature,
+          respiratoryRate: data.vitalSigns.respiratoryRate || prev.respiratoryRate,
+          oxygenSaturation: data.vitalSigns.oxygenSaturation || prev.oxygenSaturation
+        }));
+      }
+
+      // Map recommendations
+      if (data.recommendations) {
+        if (data.recommendations.exercises) {
+          const current = form.getValues('exercises');
+          form.setValue('exercises', (current ? current + '\n' : '') + data.recommendations.exercises);
+        }
+        if (data.recommendations.dietaryChanges) {
+          const current = form.getValues('dietaryChanges');
+          form.setValue('dietaryChanges', (current ? current + '\n' : '') + data.recommendations.dietaryChanges);
+        }
+        if (data.recommendations.suggestions) {
+          const current = form.getValues('suggestions');
+          form.setValue('suggestions', (current ? current + '\n' : '') + data.recommendations.suggestions);
+        }
+      }
+
+      // Map clinical findings
+      if (data.clinicalFindings) {
+        const current = form.getValues('clinicalFindings');
+        form.setValue('clinicalFindings', (current ? current + '\n' : '') + data.clinicalFindings);
+      }
+
+      // Map tests
+      if (data.tests && data.tests.length > 0) {
+        setTests(prev => [...prev, ...data.tests.map((t: any) => ({ 
+          id: Date.now().toString() + Math.random(), 
+          name: t.name, 
+          description: t.description, 
+          status: 'ordered', 
+          category: 'Others' 
+        }))]);
+      }
+
+      toast.success('Prescription auto-filled!');
+    } catch (error) {
+      console.error('Extraction error:', error);
+      toast.error('Failed to extract structured data');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   const tabs = [
     { id: 'medicines', name: 'Medicines', icon: DocumentTextIcon },
     { id: 'clinical', name: 'Clinical', icon: HeartIcon },
@@ -737,6 +828,19 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Voice Assistant Section */}
+      {!isReadOnly && userRole === 'doctor' && (
+        <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/20">
+          <VoicePrescriptionAssistant 
+            onTranscriptionUpdate={(transcript, isFinal) => {
+              // Can be used for live preview if needed
+            }}
+            onExtractionRequest={handleVoiceExtraction}
+            isProcessing={isExtracting}
+          />
         </div>
       )}
 

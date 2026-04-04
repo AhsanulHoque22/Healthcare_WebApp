@@ -31,6 +31,12 @@ router.post('/appointment/:appointmentId',
   prescriptionController.createOrUpdatePrescription
 );
 
+// Extract voice data (Doctor only)
+router.post('/extract-voice-data',
+  authorizeRoles('doctor'),
+  prescriptionController.extractVoiceData
+);
+
 // Complete prescription (Doctor only)
 router.put('/appointment/:appointmentId/complete', 
   authorizeRoles('doctor'), 

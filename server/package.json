@@ -15,7 +15,9 @@
     "test-email": "node test-email.js"
   },
   "dependencies": {
+    "@deepgram/sdk": "^5.0.0",
     "@getbrevo/brevo": "^5.0.3",
+    "@google/generative-ai": "^0.24.1",
     "@sendgrid/mail": "^8.1.6",
     "@types/multer": "^2.0.0",
     "axios": "^1.13.5",

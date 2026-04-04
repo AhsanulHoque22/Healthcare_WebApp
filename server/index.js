@@ -23,6 +23,7 @@ const medicineRoutes = require('./routes/medicine');
 const notificationRoutes = require('./routes/notifications');
 const websiteReviewRoutes = require('./routes/websiteReviews');
 const errorHandler = require('./middleware/errorHandler');
+const { setupVoiceToPrescription } = require('./services/voiceService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -246,6 +247,14 @@ const startServer = async () => {
         console.log('[Server] Medicine reminder job started');
       } catch (err) {
         console.warn('[Server] Medicine reminder job could not start:', err.message);
+      }
+
+      // Voice-to-Prescription WebSocket setup
+      try {
+        setupVoiceToPrescription(server);
+        console.log('[Server] Voice-to-Prescription WebSocket service initialized');
+      } catch (err) {
+        console.error('[Server] Failed to initialize voice service:', err.message);
       }
     });
 
