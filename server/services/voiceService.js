@@ -49,20 +49,32 @@ const setupVoiceToPrescription = (server) => {
       }
 
       try {
-        console.log(`[VOICE] Attempting connection. Available methods on .listen: ${Object.keys(deepgram.listen || {}).join(', ')}`);
+        console.log(`[VOICE] Full Discovery - Keys: ${Object.keys(deepgram).join(', ')}`);
         
-        // Try the 3 variations of the connect method across all v4-v5 versions
-        const connectMethod = 
-            (deepgram.listen.live ? deepgram.listen.live.bind(deepgram.listen) : null) || 
-            (deepgram.listen.v1 && deepgram.listen.v1.connect ? deepgram.listen.v1.connect.bind(deepgram.listen.v1) : null) ||
-            (deepgram.listen.v1 && deepgram.listen.v1.live ? deepgram.listen.v1.live.bind(deepgram.listen.v1) : null);
-            
-        if (!connectMethod) {
-          throw new Error(`CRITICAL: No connect method found! Keys: ${Object.keys(deepgram.listen || {}).join(',')}`);
+        // Polyfill to find the live connection method regardless of SDK version
+        let connectMethod = null;
+        let binding = null;
+
+        if (deepgram.listen) {
+          if (typeof deepgram.listen.live === 'function') { connectMethod = deepgram.listen.live; binding = deepgram.listen; }
+          else if (deepgram.listen.v1) {
+            if (typeof deepgram.listen.v1.connect === 'function') { connectMethod = deepgram.listen.v1.connect; binding = deepgram.listen.v1; }
+            else if (typeof deepgram.listen.v1.live === 'function') { connectMethod = deepgram.listen.v1.live; binding = deepgram.listen.v1; }
+          }
+        }
+        
+        // Fallback to legacy v3 structure if listen is empty
+        if (!connectMethod && deepgram.transcription) {
+          if (typeof deepgram.transcription.live === 'function') { connectMethod = deepgram.transcription.live; binding = deepgram.transcription; }
         }
 
-        console.log('[VOICE] Found connection method, starting...');
-        dgConnection = connectMethod({
+        if (!connectMethod) {
+          const listenKeys = Object.keys(deepgram.listen || {});
+          throw new Error(`CRITICAL: No connect method found! (listen: ${listenKeys.join(',')})`);
+        }
+
+        console.log('[VOICE] Method found. Connecting...');
+        dgConnection = connectMethod.call(binding, {
           model: model,
           language: language,
           smart_format: true,
@@ -72,7 +84,6 @@ const setupVoiceToPrescription = (server) => {
           endpointing: 300,
         });
 
-        // Some versions of the SDK require await, some don't.
         if (dgConnection instanceof Promise) {
            dgConnection = await dgConnection;
         }
