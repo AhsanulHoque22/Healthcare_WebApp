@@ -4,21 +4,34 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.G
 
 const extractMedicalData = async (transcript, language = 'en') => {
   try {
-    // 🛠️ Using the most stable model identifier
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 🛠️ Switching to 'gemini-pro' for maximum compatibility
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      You are an expert clinical scribe. Extract medical data from this transcript and format as JSON.
-      Fields needed:
-      - medicines: { name, dosage, unit, morning, lunch, dinner, mealTiming, duration, notes }
-      - symptoms: { description }
-      - diagnosis: { description }
-      - vitalSigns: { bloodPressure, heartRate, temperature }
-      - instructions: string (advice for patient)
+      As a medical data architect, transform this clinical transcript into a structured JSON prescription.
       
-      Transcript: "${transcript}"
+      TARGET FIELDS:
+      1. medicines: Array of { 
+         name: string, 
+         dosage: string (e.g. "500"), 
+         unit: string (e.g. "mg"), 
+         frequency: string (e.g. "1-1-1" or "Daily"),
+         duration: number (days),
+         mealTiming: "before" | "after",
+         notes: string 
+      }
+      2. symptoms: Array of { description: string } (e.g. "Fever", "Dry Cough")
+      3. diagnosis: Array of { description: string }
+      4. vitalSigns: Object { bloodPressure: string, heartRate: string, temperature: string }
+      5. advice: string (Instructions for patient)
       
-      Output MUST be valid JSON only.
+      TRANSCRIPT (MAY HAVE SOME TYPOS):
+      "${transcript}"
+      
+      STRICT RULES:
+      - Reply with ONLY valid JSON. 
+      - Correct common transcription misspellings (e.g., "Azithro" -> "Azithromycin").
+      - Interpret dosage frequencies clearly (e.g., "Three times a day" -> "1-1-1").
     `;
 
     const result = await model.generateContent(prompt);

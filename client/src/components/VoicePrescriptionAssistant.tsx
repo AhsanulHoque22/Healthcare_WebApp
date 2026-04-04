@@ -257,7 +257,6 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
         </button>
       </div>
     </div>
-    </div>
   );
 };
 

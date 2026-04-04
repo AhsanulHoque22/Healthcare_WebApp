@@ -16,10 +16,19 @@ const setupVoiceToPrescription = (server) => {
     let pendingChunks = []; // 🛠️ BUFFER to store audio (crucial for headers)
 
     socket.on("start-transcription", (options) => {
+      // 🚀 SESSION RESET: Ensure a clean slate for the 2nd/3rd recording attempt
+      if (dgSocket) {
+        console.log("[VOICE] Resetting stale session");
+        try { dgSocket.close(); } catch (e) {}
+        dgSocket = null;
+      }
+      isConnected = false;
+      pendingChunks = [];
+
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`[VOICE] Starting Deepgram: ${model} (${socket.id})`);
+      console.log(`[VOICE] Starting NEW Deepgram: ${model} (${socket.id})`);
 
       // 🛠️ Simple URL - let Deepgram auto-detect from the buffered header
       const url = `wss://api.deepgram.com/v1/listen?model=${model}&language=${language}&smart_format=true&interim_results=true`;
