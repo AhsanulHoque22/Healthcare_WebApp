@@ -26,80 +26,79 @@ const setupVoiceToPrescription = (server) => {
 
     socket.on("start-transcription", async (options) => {
       const language = options.language || "en";
-      // Fallback model logic
-      const models = language === "en" ? ["nova-2-medical", "nova-2"] : ["nova-2"];
+      const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`[BACKEND] Starting Deepgram. Key prefix: ${apiKey ? apiKey.substring(0, 4) : "NONE"}, Len: ${apiKey ? apiKey.length : 0}`);
+      console.log(`[BACKEND] Initializing Voice-AI session. Model: ${model}, Prefix: ${apiKey ? apiKey.substring(0, 4) : "NONE"}`);
 
-      const startWithModel = async (modelName) => {
-        console.log(`[BACKEND] Attempting connection with model: ${modelName}`);
-        
-        if (dgConnection) {
-          try {
-            if (dgConnection.requestClose) dgConnection.requestClose();
-            else if (dgConnection.finish) dgConnection.finish();
-          } catch (e) {}
-        }
-
+      if (dgConnection) {
         try {
-          dgConnection = await deepgram.listen.v1.connect({
-            model: modelName,
-            language: language,
-            smart_format: true,
-            interim_results: true,
-            utterance_end_ms: 1000,
-            vad_events: true,
-            endpointing: 300,
-            // Removed strict container/encoding to allow auto-detection
-          });
+          if (dgConnection.requestClose) dgConnection.requestClose();
+          else if (dgConnection.finish) dgConnection.finish();
+        } catch (e) {}
+      }
 
-          const handleOpen = () => {
-            console.log(`[DEEPGRAM] Connection formally OPEN with model: ${modelName}`);
-            isDeepgramOpen = true;
-            socket.emit("transcription-started");
-          };
-
-          dgConnection.on("Open", handleOpen);
-          dgConnection.on("open", handleOpen);
-
-          dgConnection.on("Results", (data) => {
-            const transcript = data.channel?.alternatives?.[0]?.transcript;
-            if (transcript) {
-              console.log(`[DEEPGRAM] Result: "${transcript}"`);
-              socket.emit("transcript-result", { transcript, isFinal: data.is_final });
-            }
-          });
-
-          dgConnection.on("results", (data) => {
-            const transcript = data.channel?.alternatives?.[0]?.transcript;
-            if (transcript) {
-              console.log(`[DEEPGRAM] Result (lc): "${transcript}"`);
-              socket.emit("transcript-result", { transcript, isFinal: data.is_final });
-            }
-          });
-
-          if (dgConnection.waitForOpen) {
-            // Wait with a 3-second timeout
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
-            await Promise.race([dgConnection.waitForOpen(), timeoutPromise]);
-            console.log("[DEEPGRAM] waitForOpen completed");
-            isDeepgramOpen = true;
-            return true;
-          }
-           return true;
-        } catch (err) {
-          console.error(`[DEEPGRAM] Failed to connect with ${modelName}:`, err.message);
-          return false;
+      try {
+        console.log(`[BACKEND] Connecting to Deepgram...`);
+        
+        // V5 SDK: Stable method is .live()
+        // We use a safe accessor to handle potential property moves in sub-versions
+        const liveService = deepgram.listen.live || (deepgram.listen.v1 ? deepgram.listen.v1.connect : null);
+        
+        if (!liveService) {
+           throw new Error("Could not find Deepgram live connection method");
         }
-      };
 
-      // Try medical first, then fallback
-      const success = await startWithModel(models[0]);
-      if (!success && models.length > 1) {
-        console.log("[BACKEND] Retrying with standard model...");
-        await startWithModel(models[1]);
-      } else if (!success) {
-        socket.emit("transcription-error", "Failed to connect to Deepgram service");
+        dgConnection = await liveService.call(deepgram.listen, {
+          model: model,
+          language: language,
+          smart_format: true,
+          interim_results: true,
+          utterance_end_ms: 1000,
+          vad_events: true,
+          endpointing: 300,
+        });
+
+        // Event naming is the most common cause of "hanging"
+        const onOpen = () => {
+          console.log("[DEEPGRAM] Connection is now formally OPEN and ACTIVE");
+          isDeepgramOpen = true;
+          socket.emit("transcription-started");
+        };
+
+        dgConnection.on("Open", onOpen);
+        dgConnection.on("open", onOpen);
+        dgConnection.on("connected", onOpen);
+
+        dgConnection.on("Results", (data) => {
+          const transcript = data.channel?.alternatives?.[0]?.transcript;
+          if (transcript) {
+            console.log(`[DEEPGRAM] Result: "${transcript}"`);
+            socket.emit("transcript-result", { transcript, isFinal: data.is_final });
+          }
+        });
+        
+        dgConnection.on("results", (data) => {
+          const transcript = data.channel?.alternatives?.[0]?.transcript;
+          if (transcript) {
+            socket.emit("transcript-result", { transcript, isFinal: data.is_final });
+          }
+        });
+
+        dgConnection.on("Error", (e) => console.error("[DEEPGRAM] ERROR:", e));
+        dgConnection.on("error", (e) => console.error("[DEEPGRAM] error:", e));
+
+        if (dgConnection.waitForOpen) {
+          console.log("[BACKEND] Waiting for handshake to complete (Up to 10s)...");
+          // Re-adding a GENEROUS 10 second timeout for Railway
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Handshake Timeout")), 10000));
+          await Promise.race([dgConnection.waitForOpen(), timeoutPromise]);
+          console.log("[DEEPGRAM] Connection warming complete");
+          isDeepgramOpen = true;
+        }
+
+      } catch (err) {
+        console.error(`[BACKEND] Connection failure:`, err.message);
+        socket.emit("transcription-error", err.message);
       }
     });
 
