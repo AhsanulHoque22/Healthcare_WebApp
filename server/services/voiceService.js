@@ -15,12 +15,21 @@ const setupVoiceToPrescription = (server) => {
     console.log("Client connected to Voice-to-Prescription WebSocket");
 
     let dgConnection;
+    let keepAlive;
+    let isDeepgramOpen = false;
 
     socket.on("start-transcription", async (options) => {
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`Starting Deepgram transcription session (model: ${model}, lang: ${language})`);
+      console.log(`[BACKEND] Starting Deepgram session: model=${model}, lang=${language}`);
+
+      if (dgConnection) {
+        console.log("[BACKEND] Cleaning up existing Deepgram connection");
+        dgConnection.finish();
+        if (keepAlive) clearInterval(keepAlive);
+        isDeepgramOpen = false;
+      }
 
       try {
         dgConnection = deepgram.listen.live({
@@ -34,8 +43,15 @@ const setupVoiceToPrescription = (server) => {
         });
 
         dgConnection.on(LiveTranscriptionEvents.Open, () => {
-          console.log("Deepgram connection opened");
+          console.log("[DEEPGRAM] Connection opened");
+          isDeepgramOpen = true;
           socket.emit("transcription-started");
+          
+          keepAlive = setInterval(() => {
+            if (dgConnection && isDeepgramOpen) {
+              dgConnection.keepAlive();
+            }
+          }, 10000);
         });
 
         dgConnection.on(LiveTranscriptionEvents.Transcript, (data) => {
@@ -49,45 +65,51 @@ const setupVoiceToPrescription = (server) => {
         });
 
         dgConnection.on(LiveTranscriptionEvents.Error, (error) => {
-          console.error("Deepgram error:", error);
-          socket.emit("transcription-error", error.message);
+          console.error("[DEEPGRAM] Error:", error);
+          socket.emit("transcription-error", error.message || "Deepgram connection error");
         });
 
         dgConnection.on(LiveTranscriptionEvents.Close, () => {
-          console.log("Deepgram connection closed");
+          console.log("[DEEPGRAM] Connection closed");
+          isDeepgramOpen = false;
           socket.emit("transcription-stopped");
-        });
-
-        dgConnection.on(LiveTranscriptionEvents.Metadata, (metadata) => {
-          console.log("Deepgram metadata:", metadata);
+          if (keepAlive) clearInterval(keepAlive);
         });
 
       } catch (error) {
-        console.error("Failed to connect to Deepgram:", error);
+        console.error("[BACKEND] Failed to initialize Deepgram:", error);
         socket.emit("transcription-error", error.message);
       }
     });
 
     socket.on("audio-chunk", (data) => {
-      if (dgConnection && dgConnection.getReadyState() === 1) {
-        dgConnection.send(data);
+      if (dgConnection && isDeepgramOpen) {
+        try {
+          dgConnection.send(Buffer.from(data));
+        } catch (err) {
+          console.error("[BACKEND] Error sending audio to Deepgram:", err.message);
+        }
       }
     });
 
     socket.on("stop-transcription", () => {
-      console.log("Stopping transcription session");
+      console.log("[BACKEND] User stopped transcription");
       if (dgConnection) {
         dgConnection.finish();
         dgConnection = null;
       }
+      isDeepgramOpen = false;
+      if (keepAlive) clearInterval(keepAlive);
     });
 
     socket.on("disconnect", () => {
-      console.log("Client disconnected");
+      console.log("[BACKEND] Socket disconnected");
       if (dgConnection) {
         dgConnection.finish();
         dgConnection = null;
       }
+      isDeepgramOpen = false;
+      if (keepAlive) clearInterval(keepAlive);
     });
   });
 

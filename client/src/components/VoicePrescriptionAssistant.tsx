@@ -33,11 +33,25 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
   useEffect(() => {
     // Initialize socket connection
     const socketUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-    socketRef.current = io(socketUrl);
+    console.log('[VOICE] Connecting to socket at:', socketUrl);
+    
+    socketRef.current = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('[VOICE] Socket connected successfully');
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('[VOICE] Socket connection error:', error);
+    });
 
     socketRef.current.on('transcript-result', (data: { transcript: string; isFinal: boolean }) => {
+      console.log('[VOICE] Received transcript:', data);
       if (data.isFinal) {
-        setTranscript(prev => prev + ' ' + data.transcript);
+        setTranscript(prev => (prev + ' ' + data.transcript).trim());
         setInterimTranscript('');
         onTranscriptionUpdate(data.transcript, true);
       } else {
@@ -47,12 +61,18 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
     });
 
     socketRef.current.on('transcription-error', (error: string) => {
+      console.error('[VOICE] Transcription error from server:', error);
       toast.error(`Transcription Error: ${error}`);
       stopRecording();
     });
 
+    socketRef.current.on('transcription-started', () => {
+      console.log('[VOICE] Server confirmed transcription started');
+    });
+
     return () => {
       if (socketRef.current) {
+        console.log('[VOICE] Disconnecting socket');
         socketRef.current.disconnect();
       }
       stopRecording();
@@ -76,9 +96,10 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
         socketRef.current.emit('start-transcription', { language });
       }
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && socketRef.current) {
-          socketRef.current.emit('audio-chunk', event.data);
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data.size > 0 && socketRef.current?.connected) {
+          const buffer = await event.data.arrayBuffer();
+          socketRef.current.emit('audio-chunk', buffer);
         }
       };
 
