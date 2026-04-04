@@ -49,8 +49,20 @@ const setupVoiceToPrescription = (server) => {
       }
 
       try {
-        // v5.x connection
-        dgConnection = deepgram.listen.live({
+        console.log(`[VOICE] Attempting connection. Available methods on .listen: ${Object.keys(deepgram.listen || {}).join(', ')}`);
+        
+        // Try the 3 variations of the connect method across all v4-v5 versions
+        const connectMethod = 
+            (deepgram.listen.live ? deepgram.listen.live.bind(deepgram.listen) : null) || 
+            (deepgram.listen.v1 && deepgram.listen.v1.connect ? deepgram.listen.v1.connect.bind(deepgram.listen.v1) : null) ||
+            (deepgram.listen.v1 && deepgram.listen.v1.live ? deepgram.listen.v1.live.bind(deepgram.listen.v1) : null);
+            
+        if (!connectMethod) {
+          throw new Error(`CRITICAL: No connect method found! Keys: ${Object.keys(deepgram.listen || {}).join(',')}`);
+        }
+
+        console.log('[VOICE] Found connection method, starting...');
+        dgConnection = connectMethod({
           model: model,
           language: language,
           smart_format: true,
@@ -59,6 +71,11 @@ const setupVoiceToPrescription = (server) => {
           vad_events: true,
           endpointing: 300,
         });
+
+        // Some versions of the SDK require await, some don't.
+        if (dgConnection instanceof Promise) {
+           dgConnection = await dgConnection;
+        }
 
         const onOpen = () => {
           console.log(`[DEEPGRAM] Connection OPEN. Flushing ${pendingChunks.length} buffered chunks.`);
