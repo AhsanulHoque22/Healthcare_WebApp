@@ -3,35 +3,55 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
 
 const extractMedicalData = async (transcript, language = 'en') => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  
+  // � ONE-TIME DISCOVERY ON RAILWAY
   try {
-    // 🛠️ Switching to 'gemini-pro' for maximum compatibility
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const discoUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+    const discoRes = await fetch(discoUrl);
+    const discoData = await discoRes.json();
+    if (discoData.models) {
+      console.log("[RAILWAY DISCOVERY] Available Models:", discoData.models.map(m => m.name.replace('models/', '')).join(', '));
+    }
+  } catch (e) {}
+
+    // 🛠️ Using the discovery-enabled model identifier
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const prompt = `
-      As a medical data architect, transform this clinical transcript into a structured JSON prescription.
-      
-      TARGET FIELDS:
-      1. medicines: Array of { 
-         name: string, 
-         dosage: string (e.g. "500"), 
-         unit: string (e.g. "mg"), 
-         frequency: string (e.g. "1-1-1" or "Daily"),
+      As a specialized medical scribe, convert this doctor's dictation into a structured JSON prescription.
+      MATCH THESE UI FIELDS EXACTLY:
+
+      1. medicines: Array of {
+         name: string,
+         type: "Tablet" | "Syrup" | "Injection" | "Capsule",
+         dosage: string (mg calculation),
+         morning: number (how many units),
+         lunch: number (how many units),
+         dinner: number (how many units),
+         mealTiming: "Before Meal" | "After Meal",
          duration: number (days),
-         mealTiming: "before" | "after",
-         notes: string 
+         instructions: string
       }
-      2. symptoms: Array of { description: string } (e.g. "Fever", "Dry Cough")
-      3. diagnosis: Array of { description: string }
-      4. vitalSigns: Object { bloodPressure: string, heartRate: string, temperature: string }
-      5. advice: string (Instructions for patient)
-      
-      TRANSCRIPT (MAY HAVE SOME TYPOS):
+      2. vitalSigns: {
+         bloodPressure: string (e.g. "120/80"),
+         heartRate: number,
+         temperature: string (e.g. "98.6"),
+         respiratoryRate: number,
+         oxygenSaturation: number
+      }
+      3. clinicalFindings: string (detailed examination summary)
+      4. symptoms: Array of { description: string }
+      5. diagnosis: Array of { description: string, date: string (YYYY-MM-DD) }
+      6. tests: Array of { name: string, description: string }
+
+      TRANSCRIPT:
       "${transcript}"
-      
-      STRICT RULES:
-      - Reply with ONLY valid JSON. 
-      - Correct common transcription misspellings (e.g., "Azithro" -> "Azithromycin").
-      - Interpret dosage frequencies clearly (e.g., "Three times a day" -> "1-1-1").
+
+      RULES:
+      - Interpret "Three times a day" as morning:1, lunch:1, dinner:1.
+      - Default mealTiming to "After Meal" if not specified.
+      - Return ONLY a valid JSON object.
     `;
 
     const result = await model.generateContent(prompt);
