@@ -13,74 +13,67 @@ const setupVoiceToPrescription = (server) => {
     
     let dgSocket;
     let isConnected = false;
+    let pendingChunks = []; // 🛠️ BUFFER to store audio (crucial for headers)
 
     socket.on("start-transcription", (options) => {
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`[VOICE] Starting RAW Deepgram Session (${model}, ${language})`);
+      console.log(`[VOICE] Starting Deepgram: ${model} (${socket.id})`);
 
-      // 🛠️ Adding explicit encoding and container for WebM (standard browser format)
-      // This tells Deepgram exactly how to decode the incoming binary stream
-      const url = `wss://api.deepgram.com/v1/listen?model=${model}&language=${language}&smart_format=true&interim_results=true&encoding=opus&container=webm&sample_rate=48000`;
+      // 🛠️ Simple URL - let Deepgram auto-detect from the buffered header
+      const url = `wss://api.deepgram.com/v1/listen?model=${model}&language=${language}&smart_format=true&interim_results=true`;
       
-      dgSocket = new WebSocket(url, {
-        headers: {
-          Authorization: `Token ${DEEPGRAM_API_KEY}`,
-        },
-      });
+      dgSocket = new WebSocket(url, { headers: { Authorization: `Token ${DEEPGRAM_API_KEY}` } });
 
       dgSocket.on('open', () => {
-        console.log("[VOICE] RAW Deepgram Connection OPENED");
+        console.log(`[VOICE] Socket Open. Flushing ${pendingChunks.length} chunks (including header).`);
         isConnected = true;
         socket.emit("transcription-started");
+        
+        // 🚀 FLUSH BUFFER (Sends the critical header first!)
+        while (pendingChunks.length > 0) {
+          const chunk = pendingChunks.shift();
+          if (dgSocket.readyState === WebSocket.OPEN) dgSocket.send(chunk);
+        }
       });
 
       dgSocket.on('message', (data) => {
         try {
           const response = JSON.parse(data);
           const transcript = response.channel?.alternatives?.[0]?.transcript;
-          
           if (transcript) {
-            console.log(`[VOICE] Transcript Received: "${transcript}"`);
-            socket.emit("transcript-result", {
-              transcript,
-              isFinal: response.is_final
-            });
+            console.log(`[DEEPGRAM] "${transcript}"`);
+            socket.emit("transcript-result", { transcript, isFinal: response.is_final });
           }
-        } catch (e) {
-          console.error("[VOICE] Error parsing:", e.message);
-        }
+        } catch (e) {}
       });
 
-      dgSocket.on('error', (err) => {
-        console.error("[VOICE] RAW Deepgram ERROR:", err.message);
-      });
+      dgSocket.on('error', (err) => console.error("[VOICE] Socket Error:", err.message));
 
       dgSocket.on('close', (code, reason) => {
-        console.log(`[VOICE] RAW Deepgram CLOSED. Code: ${code}, Reason: ${reason}`);
+        console.log(`[VOICE] Socket Closed. Code: ${code}`);
         isConnected = false;
+        pendingChunks = [];
       });
     });
 
-    let chunkCount = 0;
     socket.on("audio-chunk", (data) => {
-      if (dgSocket && isConnected && dgSocket.readyState === WebSocket.OPEN) {
-        chunkCount++;
-        if (chunkCount % 50 === 0) {
-          console.log(`[VOICE] Streaming binary audio to Deepgram... (Chunk #${chunkCount}, Size: ${data.length} bytes)`);
-        }
-        // Send binary data directly
+      if (isConnected && dgSocket && dgSocket.readyState === WebSocket.OPEN) {
         dgSocket.send(data);
+      } else {
+        // 📥 BUFFERING (Store the header until it's open!)
+        pendingChunks.push(data);
+        if (pendingChunks.length % 20 === 0) {
+          console.log(`[VOICE] Buffering... (Count: ${pendingChunks.length})`);
+        }
       }
     });
 
     socket.on("stop-transcription", () => {
-      if (dgSocket) {
-        dgSocket.close();
-        dgSocket = null;
-      }
+      if (dgSocket) { dgSocket.close(); dgSocket = null; }
       isConnected = false;
+      pendingChunks = [];
     });
 
     socket.on("disconnect", () => {
