@@ -1,4 +1,4 @@
-const { createClient, LiveTranscriptionEvents } = require("@deepgram/sdk");
+const { DeepgramClient, LiveTranscriptionEvents } = require("@deepgram/sdk");
 const { Server } = require("socket.io");
 
 const setupVoiceToPrescription = (server) => {
@@ -14,7 +14,8 @@ const setupVoiceToPrescription = (server) => {
     console.warn('[VOICE] WARNING: Deepgram API Key is missing or using placeholder value!');
   }
 
-  const deepgram = createClient(apiKey);
+  // Deepgram SDK v5 uses the DeepgramClient class
+  const deepgram = new DeepgramClient(apiKey);
 
   io.on("connection", (socket) => {
     console.log(`[VOICE] Client connected. Socket ID: ${socket.id}`);

@@ -202,34 +202,24 @@ const startServer = async () => {
       console.log('[Database] Synchronization complete.');
     }
     
-    // Always ensure critical tables are up to date with latest columns
-    try {
-      const { User, Patient, WebsiteReview, Doctor, Appointment, LabTestOrder } = require('./models');
-      
-      const syncTable = async (model, name) => {
-        try {
-          await model.sync({ alter: true });
-          console.log(`[Database] ${name} schema verified/altered successfully.`);
-        } catch (err) {
-          console.error(`[Database] Failed to alter ${name} table:`, err.message);
+    // Note: alter: true is disabled in production to prevent "Too many keys" errors in MySQL.
+    // Use manual migrations for schema changes.
+    if (process.env.NODE_ENV === 'production') {
+      console.log('[Database] Table-specific synchronization skipped in production for stability.');
+    } else {
+      try {
+        const models = require('./models');
+        const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog'];
+        
+        for (const name of tablesToSync) {
+          if (models[name]) {
+            await models[name].sync({ alter: true });
+            console.log(`[Database] ${name} schema verified/altered successfully.`);
+          }
         }
-      };
-
-      await syncTable(User, 'User');
-      await syncTable(Patient, 'Patient');
-      await syncTable(Doctor, 'Doctor');
-      await syncTable(WebsiteReview, 'WebsiteReview');
-      await syncTable(Appointment, 'Appointment');
-      await syncTable(LabTestOrder, 'LabTestOrder');
-      const { Medicine, MedicineReminder, MedicineDosage, Prescription, MedicineLog } = require('./models');
-      await syncTable(Medicine, 'Medicine');
-      await syncTable(MedicineReminder, 'MedicineReminder');
-      await syncTable(MedicineDosage, 'MedicineDosage');
-      await syncTable(Prescription, 'Prescription');
-      await syncTable(MedicineLog, 'MedicineLog');
-      
-    } catch (err) {
-      console.error('[Database] Critical error during table synchronization loop:', err.message);
+      } catch (err) {
+        console.error('[Database] Dev-mode sync failure:', err.message);
+      }
     }
     
     const server = app.listen(PORT, () => {
