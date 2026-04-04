@@ -28,7 +28,7 @@ const setupVoiceToPrescription = (server) => {
       const language = options.language || "en";
       const model = language === "en" ? "nova-2-medical" : "nova-2";
       
-      console.log(`[BACKEND] Starting Deepgram v5 session: model=${model}, lang=${language}`);
+      console.log(`[BACKEND] Starting Deepgram v5.0 session: model=${model}, lang=${language}`);
 
       if (dgConnection) {
         dgConnection.finish();
@@ -37,10 +37,10 @@ const setupVoiceToPrescription = (server) => {
       }
 
       try {
-        console.log(`[BACKEND] Initializing Deepgram live connection...`);
+        console.log(`[BACKEND] Connecting to Deepgram v1 listen service...`);
         
-        // In v5, listen.live is the correct method
-        dgConnection = deepgram.listen.live({
+        // Final Correct V5 Method: v1.connect()
+        dgConnection = await deepgram.listen.v1.connect({
           model: model,
           language: language,
           smart_format: true,
@@ -52,9 +52,9 @@ const setupVoiceToPrescription = (server) => {
           encoding: 'opus'
         });
 
-        // Use string events for maximum compatibility in v5
+        // Use string events matching v5 documentation
         dgConnection.on("Open", () => {
-          console.log("[DEEPGRAM] Connection successfully established (v5)");
+          console.log("[DEEPGRAM] Connection successful (v1.connect)");
           isDeepgramOpen = true;
           socket.emit("transcription-started");
           
