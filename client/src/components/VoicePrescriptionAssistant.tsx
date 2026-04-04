@@ -30,26 +30,35 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [socketStatus, setSocketStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
+
   useEffect(() => {
     // Initialize socket connection
-    const socketUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const env = process.env as any;
+    const socketUrl = env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
     console.log('[VOICE] Connecting to socket at:', socketUrl);
     
-    socketRef.current = io(socketUrl, {
+    const socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5
     });
+    socketRef.current = socket;
 
-    socketRef.current.on('connect', () => {
+    socket.on('connect', () => {
       console.log('[VOICE] Socket connected successfully');
+      setSocketStatus('connected');
     });
 
-    socketRef.current.on('connect_error', (error) => {
+    socket.on('disconnect', () => {
+      setSocketStatus('disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
       console.error('[VOICE] Socket connection error:', error);
+      setSocketStatus('disconnected');
     });
 
-    socketRef.current.on('transcript-result', (data: { transcript: string; isFinal: boolean }) => {
-      console.log('[VOICE] Received transcript:', data);
+    socket.on('transcript-result', (data: { transcript: string; isFinal: boolean }) => {
       if (data.isFinal) {
         setTranscript(prev => (prev + ' ' + data.transcript).trim());
         setInterimTranscript('');
@@ -60,55 +69,47 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
       }
     });
 
-    socketRef.current.on('transcription-error', (error: string) => {
-      console.error('[VOICE] Transcription error from server:', error);
+    socket.on('transcription-error', (error: string) => {
+      console.error('[VOICE] Transcription error:', error);
       toast.error(`Transcription Error: ${error}`);
       stopRecording();
     });
 
-    socketRef.current.on('transcription-started', () => {
-      console.log('[VOICE] Server confirmed transcription started');
-    });
-
     return () => {
-      if (socketRef.current) {
-        console.log('[VOICE] Disconnecting socket');
-        socketRef.current.disconnect();
-      }
+      socket.disconnect();
       stopRecording();
     };
   }, []);
 
   const startRecording = async () => {
+    if (socketStatus !== 'connected') {
+      toast.error('Voice service is not connected. Reconnecting...');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const supportedMimeTypes = ['audio/webm', 'audio/ogg', 'audio/mp4'];
-      const mimeType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'audio/webm';
-      
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: mimeType,
-      });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
-      if (socketRef.current) {
-        socketRef.current.emit('start-transcription', { language });
-      }
+      socketRef.current?.emit('start-transcription', { language });
 
       mediaRecorder.ondataavailable = async (event) => {
         if (event.data.size > 0 && socketRef.current?.connected) {
           const buffer = await event.data.arrayBuffer();
-          socketRef.current.emit('audio-chunk', buffer);
+          socketRef.current?.emit('audio-chunk', buffer);
         }
       };
 
-      mediaRecorder.start(250); // Send chunks every 250ms
+      mediaRecorder.start(250);
       setIsRecording(true);
       toast.success('Listening...');
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast.error('Could not access microphone');
+      toast.error('Microphone access denied');
     }
   };
 
@@ -119,7 +120,7 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
-    if (socketRef.current) {
+    if (socketRef.current?.connected) {
       socketRef.current.emit('stop-transcription');
     }
     setIsRecording(false);
@@ -130,7 +131,7 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
     if (transcript.trim()) {
       onExtractionRequest(transcript);
     } else {
-      toast.error('No transcript to process');
+      toast.error('No transcript available to process');
     }
   };
 
@@ -143,11 +144,15 @@ const VoicePrescriptionAssistant: React.FC<VoicePrescriptionAssistantProps> = ({
     <div className="bg-emerald-50/30 rounded-2xl border border-emerald-100 p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-emerald-100 text-emerald-600'}`}>
+          <div className={`p-2 rounded-xl ${isRecording ? 'bg-red-100 text-red-600 animate-pulse transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)]' : 'bg-emerald-100 text-emerald-600'}`}>
             <MicrophoneIcon className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="font-bold text-gray-900">Voice Assistant</h4>
+            <div className="flex items-center gap-2">
+              <h4 className="font-bold text-gray-900">Voice Assistant</h4>
+              <div className={`w-2 h-2 rounded-full ${socketStatus === 'connected' ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-red-500 animate-pulse'}`}></div>
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{socketStatus}</span>
+            </div>
             <p className="text-xs text-gray-500">Dictate prescription details naturally</p>
           </div>
         </div>

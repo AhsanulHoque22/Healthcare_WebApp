@@ -9,7 +9,12 @@ const setupVoiceToPrescription = (server) => {
     }
   });
 
-  const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
+  const apiKey = process.env.DEEPGRAM_API_KEY;
+  if (!apiKey || apiKey.includes('your_deepgram_api_key')) {
+    console.warn('[VOICE] WARNING: Deepgram API Key is missing or using placeholder value!');
+  }
+
+  const deepgram = createClient(apiKey);
 
   io.on("connection", (socket) => {
     console.log("Client connected to Voice-to-Prescription WebSocket");
@@ -25,7 +30,6 @@ const setupVoiceToPrescription = (server) => {
       console.log(`[BACKEND] Starting Deepgram session: model=${model}, lang=${language}`);
 
       if (dgConnection) {
-        console.log("[BACKEND] Cleaning up existing Deepgram connection");
         dgConnection.finish();
         if (keepAlive) clearInterval(keepAlive);
         isDeepgramOpen = false;
@@ -40,6 +44,9 @@ const setupVoiceToPrescription = (server) => {
           utterance_end_ms: 1000,
           vad_events: true,
           endpointing: 300,
+          // Explicitly handle common web audio formats
+          container: 'webm',
+          encoding: 'opus'
         });
 
         dgConnection.on(LiveTranscriptionEvents.Open, () => {
