@@ -23,7 +23,7 @@ const createAppointment = async (req, res, next) => {
       });
     }
 
-    const { patientId, doctorId, appointmentDate, timeBlock, duration, type, reason, symptoms } = req.body;
+    const { patientId, doctorId, appointmentDate, timeBlock, duration, type, reason, symptoms, chamber } = req.body;
 
     // Check if doctor exists and is verified
     const doctor = await Doctor.findByPk(doctorId);
@@ -88,6 +88,7 @@ const createAppointment = async (req, res, next) => {
       type: type || 'in_person',
       reason,
       symptoms,
+      chamber,
       status: 'requested' // Changed to 'requested' - requires doctor approval
     });
 

@@ -59,6 +59,11 @@ const Appointment = sequelize.define('Appointment', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  chamber: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'The selected chamber for this appointment'
+  },
   symptoms: {
     type: DataTypes.TEXT,
     allowNull: true

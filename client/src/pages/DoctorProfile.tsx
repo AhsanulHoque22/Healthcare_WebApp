@@ -42,6 +42,14 @@ interface DoctorProfileData {
   chamberTimes: {
     [key: string]: string[];
   };
+  chambers: Array<{
+    id: string;
+    name: string;
+    address: string;
+    chamberTimes: {
+      [key: string]: string[];
+    };
+  }>;
   consultationFee?: string | null | undefined;
   languages: string[];
   services: string[];
@@ -69,6 +77,7 @@ const DoctorProfile: React.FC = () => {
     hospital: '',
     location: '',
     chamberTimes: {},
+    chambers: [],
     consultationFee: '',
     languages: ['English', 'Bengali'],
     services: [],
@@ -123,6 +132,7 @@ const DoctorProfile: React.FC = () => {
         hospital: data.hospital || '',
         location: data.location || '',
         chamberTimes: data.chamberTimes || {},
+        chambers: data.chambers || [],
         consultationFee: data.consultationFee ? data.consultationFee.toString() : '',
         languages: data.languages || ['English', 'Bengali'],
         services: data.services || [],
@@ -165,6 +175,7 @@ const DoctorProfile: React.FC = () => {
         degrees: profileData.degrees,
         awards: profileData.awards,
         chamberTimes: profileData.chamberTimes,
+        chambers: profileData.chambers,
         languages: profileData.languages,
         services: profileData.services,
         profileImage: profileData.profileImage,
@@ -257,6 +268,63 @@ const DoctorProfile: React.FC = () => {
       ...prev,
       services: prev.services.filter((_, i) => i !== index)
     }));
+  };
+
+  const addChamber = () => {
+    setProfileData(prev => ({
+      ...prev,
+      chambers: [
+        ...(prev.chambers || []),
+        {
+          id: Date.now().toString(),
+          name: '',
+          address: '',
+          chamberTimes: {}
+        }
+      ]
+    }));
+  };
+
+  const removeChamber = (index: number) => {
+    setProfileData(prev => ({
+      ...prev,
+      chambers: (prev.chambers || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateChamberField = (index: number, field: string, value: string) => {
+    setProfileData(prev => {
+      const newChambers = [...(prev.chambers || [])];
+      newChambers[index] = { ...newChambers[index], [field]: value };
+      return { ...prev, chambers: newChambers };
+    });
+  };
+
+  const toggleSpecificChamberTime = (chamberIndex: number, day: string, timeSlot: string) => {
+    setProfileData(prev => {
+      const newChambers = [...(prev.chambers || [])];
+      const chamber = { ...newChambers[chamberIndex] };
+      const currentTimes = chamber.chamberTimes[day] || [];
+      
+      let newTimes;
+      if (currentTimes.includes(timeSlot)) {
+        newTimes = currentTimes.filter(t => t !== timeSlot);
+      } else {
+        newTimes = [...currentTimes, timeSlot].sort();
+      }
+
+      chamber.chamberTimes = {
+        ...chamber.chamberTimes,
+        [day]: newTimes
+      };
+
+      if (newTimes.length === 0) {
+        delete chamber.chamberTimes[day];
+      }
+
+      newChambers[chamberIndex] = chamber;
+      return { ...prev, chambers: newChambers };
+    });
   };
 
   // Toggle chamber time
@@ -821,6 +889,97 @@ const DoctorProfile: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Additional Chambers */}
+              <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center">
+                    <div className="bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg p-3 text-white mr-3">
+                      <HomeIcon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Additional Chambers</h3>
+                      <p className="text-sm text-gray-600">Add multiple chambers and their schedules</p>
+                    </div>
+                  </div>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={addChamber}
+                      className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm font-medium flex items-center gap-2"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Add Chamber
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-8">
+                  {profileData.chambers && profileData.chambers.map((chamber, cIndex) => (
+                    <div key={chamber.id || cIndex} className="bg-gray-50 rounded-xl p-6 border border-gray-200 shadow-sm relative pt-12">
+                        {isEditing && (
+                          <button
+                            type="button"
+                            onClick={() => removeChamber(cIndex)}
+                            className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                        )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">Chamber Name / Hospital</label>
+                          <input
+                            type="text"
+                            value={chamber.name}
+                            onChange={(e) => updateChamberField(cIndex, 'name', e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="e.g. LabAid Hospital"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 disabled:bg-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">Address Location</label>
+                          <input
+                            type="text"
+                            value={chamber.address}
+                            onChange={(e) => updateChamberField(cIndex, 'address', e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="e.g. Dhanmondi, Dhaka"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 disabled:bg-transparent"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {days.map(day => (
+                          <div key={day} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                            <h5 className="font-medium text-gray-700 mb-2 text-center text-sm">{day}</h5>
+                            <div className="space-y-2">
+                              {timeSlots.map(timeSlot => (
+                                <label key={timeSlot} className="flex items-center cursor-pointer group text-xs">
+                                  <input
+                                    type="checkbox"
+                                    checked={chamber.chamberTimes[day]?.includes(timeSlot) || false}
+                                    onChange={() => toggleSpecificChamberTime(cIndex, day, timeSlot)}
+                                    disabled={!isEditing}
+                                    className="w-3 h-3 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                  />
+                                  <span className="ml-2 text-gray-600 group-hover:text-teal-600">{timeSlot}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {(!profileData.chambers || profileData.chambers.length === 0) && (
+                     <p className="text-gray-500 text-center italic py-4">No additional chambers added.</p>
+                  )}
                 </div>
               </div>
 

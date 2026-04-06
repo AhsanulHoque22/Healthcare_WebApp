@@ -110,6 +110,12 @@ const Doctor = sequelize.define('Doctor', {
     defaultValue: {},
     comment: 'Available chamber times for each day'
   },
+  chambers: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    comment: 'Array of detailed chamber objects'
+  },
   languages: {
     type: DataTypes.JSON,
     allowNull: true,

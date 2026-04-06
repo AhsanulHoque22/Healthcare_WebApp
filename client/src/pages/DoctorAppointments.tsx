@@ -724,6 +724,12 @@ Do you want to proceed?`;
                             <div className="flex items-center gap-1">
                               <span className="font-bold text-indigo-600">#{appointment.serialNumber}</span>
                             </div>
+                            {appointment.chamber && (
+                              <div className="flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
+                                <MapPinIcon className="h-4 w-4 text-teal-600" />
+                                <span className="font-medium text-teal-700 text-xs">{appointment.chamber}</span>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-2">
                             <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${getAppointmentTypeColor(appointment.type)}`}>
@@ -939,10 +945,16 @@ Do you want to proceed?`;
                       </div>
                       <div className="bg-white/70 rounded-xl p-4">
                         <label className="text-sm font-semibold text-emerald-800">Status</label>
-                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadge(selectedAppointment.status)}`}>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadge(selectedAppointment.status)} ml-2`}>
                           {selectedAppointment.status.replace('_', ' ')}
                         </span>
                       </div>
+                      {selectedAppointment.chamber && (
+                        <div className="bg-white/70 rounded-xl p-4">
+                          <label className="text-sm font-semibold text-emerald-800">Chamber</label>
+                          <p className="text-gray-900 font-medium">{selectedAppointment.chamber}</p>
+                        </div>
+                      )}
                       {selectedAppointment.status === 'completed' && selectedAppointment.startedAt && selectedAppointment.completedAt && (
                         <>
                           <div className="bg-white/70 rounded-xl p-4">

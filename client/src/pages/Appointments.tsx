@@ -41,7 +41,8 @@ const Appointments: React.FC = () => {
     timeBlock: '',
     type: 'in_person',
     reason: '',
-    symptoms: ''
+    symptoms: '',
+    chamber: ''
   });
   const [doctors, setDoctors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,40 +167,75 @@ const Appointments: React.FC = () => {
 
   // Get available time blocks for selected doctor
   const getAvailableTimeBlocks = (doctorId: string) => {
-    const doctor = doctors.find(d => d.id.toString() === doctorId);
-    if (!doctor || !doctor.chamberTimes) {
+    const doctor = doctors.find((d: any) => d.id.toString() === doctorId);
+    if (!doctor) {
       return [];
     }
 
     const times: Array<{value: string, label: string}> = [];
-    const chamberTimes = doctor.chamberTimes;
-
-    // Get the day of the week for the selected appointment date
     const selectedDate = bookingForm.appointmentDate ? new Date(bookingForm.appointmentDate) : new Date();
     const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
 
-    // Check if doctor has chamber times for this day
-    if (chamberTimes[dayOfWeek] && Array.isArray(chamberTimes[dayOfWeek])) {
-      chamberTimes[dayOfWeek].forEach((time: string) => {
-        times.push({
-          value: time,
-          label: `${time} (${dayOfWeek})`
-        });
-      });
-    }
-
-    // If no times for specific day, show all available times
-    if (times.length === 0) {
-      Object.keys(chamberTimes).forEach(day => {
-        if (Array.isArray(chamberTimes[day])) {
-          chamberTimes[day].forEach((time: string) => {
-            times.push({
-              value: time,
-              label: `${time} (${day})`
-            });
+    // Handle multiple chambers
+    if (doctor.chambers && doctor.chambers.length > 0) {
+      // First try to find times for the specific day
+      let dayHasTimes = false;
+      doctor.chambers.forEach((chamber: any) => {
+        const cTimes = chamber.chamberTimes || {};
+        if (cTimes[dayOfWeek] && Array.isArray(cTimes[dayOfWeek])) {
+          cTimes[dayOfWeek].forEach((time: string) => {
+             const chamberName = chamber.name || 'Additional Chamber';
+             times.push({
+               value: `${chamberName}|${time}`,
+               label: `${chamberName} - ${time}`
+             });
+             dayHasTimes = true;
           });
         }
       });
+      
+      if (!dayHasTimes) {
+        doctor.chambers.forEach((chamber: any) => {
+          const cTimes = chamber.chamberTimes || {};
+          Object.keys(cTimes).forEach((day: string) => {
+            if (Array.isArray(cTimes[day])) {
+              cTimes[day].forEach((time: string) => {
+                 const chamberName = chamber.name || 'Additional Chamber';
+                 times.push({
+                   value: `${chamberName}|${time}`,
+                   label: `${chamberName} - ${time} (${day})`
+                 });
+              });
+            }
+          });
+        });
+      }
+    }
+
+    // Handle regular chamberTimes (legacy / base hospital)
+    if (doctor.chamberTimes && Object.keys(doctor.chamberTimes).length > 0) {
+       const chamberTimes = doctor.chamberTimes;
+       const baseChamberName = doctor.hospital || "Main Chamber";
+       
+       if (chamberTimes[dayOfWeek] && Array.isArray(chamberTimes[dayOfWeek])) {
+         chamberTimes[dayOfWeek].forEach((time: string) => {
+           times.push({
+             value: `${baseChamberName}|${time}`,
+             label: `${baseChamberName} - ${time}`
+           });
+         });
+       } else if (times.length === 0) { // Only fallback if we have NO times from anything
+         Object.keys(chamberTimes).forEach((day: string) => {
+           if (Array.isArray(chamberTimes[day])) {
+             chamberTimes[day].forEach((time: string) => {
+               times.push({
+                 value: `${baseChamberName}|${time}`,
+                 label: `${baseChamberName} - ${time} (${day})`
+               });
+             });
+           }
+         });
+       }
     }
 
     return times;
@@ -211,7 +247,7 @@ const Appointments: React.FC = () => {
       const response = await API.get('/doctors');
       // Filter doctors who have chamber times set
       const doctorsWithChamberTimes = response.data.data.doctors.filter((doctor: any) => 
-        doctor.chamberTimes && Object.keys(doctor.chamberTimes).length > 0
+        (doctor.chamberTimes && Object.keys(doctor.chamberTimes).length > 0) || (doctor.chambers && doctor.chambers.length > 0)
       );
       setDoctors(doctorsWithChamberTimes);
     } catch (error) {
@@ -257,7 +293,8 @@ const Appointments: React.FC = () => {
         timeBlock: '',
         type: 'in_person',
         reason: '',
-        symptoms: ''
+        symptoms: '',
+        chamber: ''
       });
       // Refresh appointments list and dashboard stats
       await refetchAppointments();
@@ -564,6 +601,14 @@ const Appointments: React.FC = () => {
                             </span>
                           </div>
                           
+                          {appointment.chamber && (
+                            <div className="flex items-center gap-2 col-span-full mb-1">
+                              <span className="text-sm font-medium text-gray-700">Chamber:</span>
+                              <span className="text-sm text-gray-900 bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">
+                                {appointment.chamber}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
                             <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                               appointment.status === 'requested' ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200' :
@@ -707,13 +752,21 @@ const Appointments: React.FC = () => {
                     Available Chamber Times
                   </label>
                   <select
-                    value={bookingForm.timeBlock}
-                    onChange={(e) => setBookingForm({...bookingForm, timeBlock: e.target.value})}
+                    value={`${bookingForm.chamber}|${bookingForm.timeBlock}`}
+                    onChange={(e) => {
+                       const val = e.target.value;
+                       if(val) {
+                           const [chamber, timeBlock] = val.split('|');
+                           setBookingForm({...bookingForm, chamber: chamber, timeBlock: timeBlock});
+                       } else {
+                           setBookingForm({...bookingForm, chamber: '', timeBlock: ''});
+                       }
+                    }}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     required
                     disabled={!bookingForm.doctorId || !bookingForm.appointmentDate}
                   >
-                    <option value="">
+                    <option value="|">
                       {!bookingForm.doctorId ? 'Please select a doctor first' : 
                        !bookingForm.appointmentDate ? 'Please select a date first' : 
                        'Choose an available chamber time'}
