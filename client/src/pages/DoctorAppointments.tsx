@@ -44,6 +44,7 @@ interface Appointment {
   notes: string;
   diagnosis: string;
   prescription: string;
+  chamber?: string;
   startedAt?: string;
   completedAt?: string;
   patient: {
