@@ -202,10 +202,30 @@ const startServer = async () => {
       console.log('[Database] Synchronization complete.');
     }
     
-    // Note: alter: true is disabled in production to prevent "Too many keys" errors in MySQL.
-    // Use manual migrations for schema changes.
+    // Note: Temporary logic to deploy chamber structures to Railway
     if (process.env.NODE_ENV === 'production') {
-      console.log('[Database] Table-specific synchronization skipped in production for stability.');
+      console.log('[Database] Running explicit missing table alterations for chambers update...');
+      try {
+        await sequelize.query("ALTER TABLE doctors ADD COLUMN chambers JSON;");
+        console.log("Successfully added chambers to doctors");
+      } catch(e) {
+         if(e.message && e.message.includes("Duplicate column name")) {
+             console.log("Column chambers already exists");
+         } else {
+             console.error("Error adding chambers:", e.message);
+         }
+      }
+
+      try {
+        await sequelize.query("ALTER TABLE appointments ADD COLUMN chamber VARCHAR(255);");
+        console.log("Successfully added chamber to appointments");
+      } catch(e) {
+         if(e.message && e.message.includes("Duplicate column name")) {
+             console.log("Column chamber already exists");
+         } else {
+             console.error("Error adding chamber:", e.message);
+         }
+      }
     } else {
       try {
         const models = require('./models');
