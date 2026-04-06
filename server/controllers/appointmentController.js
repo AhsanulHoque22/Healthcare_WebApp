@@ -100,7 +100,8 @@ const createAppointment = async (req, res, next) => {
         },
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }],
+          attributes: ['id', 'userId', 'department', 'hospital', 'chambers', 'bmdcRegistrationNumber', 'experience']
         }
       ]
     });
@@ -215,7 +216,8 @@ const getAppointments = async (req, res, next) => {
         },
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }],
+          attributes: ['id', 'userId', 'department', 'hospital', 'chambers', 'bmdcRegistrationNumber', 'experience']
         }
       ],
       order: [['appointmentDate', 'DESC'], ['appointmentTime', 'DESC']],
@@ -413,7 +415,8 @@ const rescheduleAppointment = async (req, res, next) => {
         },
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }],
+          attributes: ['id', 'userId', 'hospital', 'chambers']
         }
       ]
     });
@@ -464,7 +467,8 @@ const approveAppointment = async (req, res, next) => {
         },
         {
           association: 'doctor',
-          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }],
+          attributes: ['id', 'userId', 'hospital', 'chambers']
         }
       ]
     });

@@ -128,6 +128,39 @@ const getAdminUserIds = async () => {
   return admins.map((a) => a.id);
 };
 
+// ============== APPOINTMENT HELPERS ==============
+
+/**
+ * Extract chamber name and address for emails
+ */
+const getChamberDetails = (appointment, doctor) => {
+  const doctorData = doctor?.get ? doctor.get({ plain: true }) : doctor;
+  
+  if (!appointment.chamber) {
+    return { 
+      name: doctorData.hospital || 'Main Chamber', 
+      address: doctorData.location || 'Consult the doctor profile for local address' 
+    };
+  }
+  
+  // Try to find in the dynamic chambers array
+  const chambers = doctorData.chambers || [];
+  const found = chambers.find(c => c.name === appointment.chamber);
+  if (found) {
+    return { name: found.name, address: found.address };
+  }
+  
+  // Check if it's the main hospital
+  if (doctorData.hospital && appointment.chamber === doctorData.hospital) {
+     return { name: doctorData.hospital, address: doctorData.location || 'Main Hospital' };
+  }
+  
+  return { 
+    name: appointment.chamber, 
+    address: doctorData.location || 'Consult the doctor profile for address' 
+  };
+};
+
 // ============== APPOINTMENT TRIGGERS ==============
 
 /** Patient: appointment booking confirmation */
@@ -141,11 +174,13 @@ const triggerAppointmentCreated = async (appointment, patient, doctor) => {
   const patientUserId = patient?.userId ?? patientUser?.id ?? (patient?.dataValues?.userId);
   const doctorUserId = doctor?.userId ?? doctorUser?.id ?? (doctor?.dataValues?.userId);
 
+  const chamberInfo = getChamberDetails(appointment, doctor);
+
   if (patientUserId) {
     await notifyUsers({
       userIds: patientUserId,
       title: 'Appointment Requested',
-      message: `Your appointment request with ${doctorName} on ${dateStr}${timeStr ? ` at ${timeStr}` : ''} has been submitted. Awaiting doctor approval.`,
+      message: `Your appointment request with ${doctorName} on ${dateStr}${timeStr ? ` at ${timeStr}` : ''} at ${chamberInfo.name} has been submitted. Awaiting doctor approval.`,
       type: 'info',
       targetRole: 'patient',
       actionType: 'appointment_created',
@@ -154,11 +189,14 @@ const triggerAppointmentCreated = async (appointment, patient, doctor) => {
       emailOptions: {
         subject: 'Appointment Request Submitted – Livora',
         html: buildEmailHtml('Appointment Request Submitted', `
+          <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${patientUser.firstName || ''},</p>
           <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your appointment request has been received and is awaiting doctor approval.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7faff;border-radius:8px;padding:20px;margin:0 0 20px;">
             <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:140px;">Doctor</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">${doctorName}</td></tr>
+            <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Clinic / Hospital</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">${chamberInfo.name}</td></tr>
+            <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Address</td><td style="padding:6px 0;color:#2d3748;font-size:13px;">${chamberInfo.address}</td></tr>
             <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Date</td><td style="padding:6px 0;color:#2d3748;">${dateStr}</td></tr>
-            ${timeStr ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Time</td><td style="padding:6px 0;color:#2d3748;">${timeStr}</td></tr>` : ''}
+            ${timeStr ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Approx. Time</td><td style="padding:6px 0;color:#2d3748;">${timeStr}</td></tr>` : ''}
             ${appointment.type ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Type</td><td style="padding:6px 0;color:#2d3748;text-transform:capitalize;">${String(appointment.type).replace('_', ' ')}</td></tr>` : ''}
           </table>
           <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">You will receive another email once the doctor approves or declines your request. You can track your appointment status in your dashboard.</p>
@@ -189,10 +227,12 @@ const triggerAppointmentApproved = async (appointment, patient, doctor) => {
   const dateStr = new Date(appointment.appointmentDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = appointment.appointmentTime ? String(appointment.appointmentTime).slice(0, 5) : '';
 
+  const chamberInfo = getChamberDetails(appointment, doctor);
+
   await notifyUsers({
     userIds: patient?.userId || patient?.user?.id,
     title: 'Appointment Approved ✓',
-    message: `Your appointment with ${doctorName} on ${dateStr} has been approved.`,
+    message: `Your appointment with ${doctorName} on ${dateStr} at ${chamberInfo.name} has been approved.`,
     type: 'success',
     targetRole: 'patient',
     actionType: 'appointment_approved',
@@ -201,14 +241,18 @@ const triggerAppointmentApproved = async (appointment, patient, doctor) => {
     emailOptions: {
       subject: 'Appointment Confirmed – Livora',
       html: buildEmailHtml('Your Appointment is Confirmed! ✓', `
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Great news! Your appointment has been approved by the doctor.</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border-left:4px solid #38a169;border-radius:4px;padding:20px;margin:0 0 20px;">
-          <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:140px;">Doctor</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">${doctorName}</td></tr>
-          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Date</td><td style="padding:6px 0;color:#2d3748;">${dateStr}</td></tr>
-          ${timeStr ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Time</td><td style="padding:6px 0;color:#2d3748;">${timeStr}</td></tr>` : ''}
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${patient?.user?.firstName || ''},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Great news! Your appointment has been approved by the doctor. Please find the details below.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border-left:4px solid #38a169;border-radius:8px;padding:24px;margin:0 0 24px;">
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:140px;">Doctor</td><td style="padding:6px 0;color:#2d3748;font-weight:700;font-size:16px;">Dr. ${doctorName}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Clinic / Hospital</td><td style="padding:6px 0;color:#2d3748;font-weight:700;">${chamberInfo.name}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Location</td><td style="padding:6px 0;color:#2d3748;font-weight:600;font-size:13px;">${chamberInfo.address}</td></tr>
+          <tr><td style="padding:12px 0 6px;color:#718096;font-size:14px;border-top:1px solid #c6f6d5;margin-top:10px;">Date</td><td style="padding:12px 0 6px;color:#2d3748;font-weight:600;">${dateStr}</td></tr>
+          ${timeStr ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Serial Time</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">${timeStr}</td></tr>` : ''}
+          ${appointment.serialNumber ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Serial Number</td><td style="padding:6px 0;color:#38a169;font-weight:800;font-size:18px;">#${appointment.serialNumber}</td></tr>` : ''}
           ${appointment.type ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Type</td><td style="padding:6px 0;color:#2d3748;text-transform:capitalize;">${String(appointment.type).replace('_', ' ')}</td></tr>` : ''}
         </table>
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Please make sure to arrive on time. You can view full appointment details in your Livora dashboard.</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;"><strong>Patient Reminder:</strong> Please make sure to arrive at the chamber at least 15 minutes before your scheduled time slot. You can view full appointment details and track real-time serial status in your Livora dashboard.</p>
         <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
       `)
     }
@@ -316,10 +360,12 @@ const triggerAppointmentRescheduled = async (appointment, patient, doctor) => {
   const dateStr = new Date(appointment.appointmentDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = appointment.appointmentTime ? String(appointment.appointmentTime).slice(0, 5) : '';
 
+  const chamberInfo = getChamberDetails(appointment, doctor);
+
   await notifyUsers({
     userIds: patient?.userId || patient?.user?.id,
     title: 'Appointment Rescheduled',
-    message: `Your appointment with ${doctorName} has been rescheduled to ${dateStr}.`,
+    message: `Your appointment with ${doctorName} has been rescheduled to ${dateStr} at ${chamberInfo.name}.`,
     type: 'info',
     targetRole: 'patient',
     actionType: 'appointment_rescheduled',
@@ -328,13 +374,16 @@ const triggerAppointmentRescheduled = async (appointment, patient, doctor) => {
     emailOptions: {
       subject: 'Appointment Rescheduled – Livora',
       html: buildEmailHtml('Your Appointment Has Been Rescheduled', `
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your appointment has been rescheduled to a new date and time.</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#ebf8ff;border-left:4px solid #3182ce;border-radius:4px;padding:20px;margin:0 0 20px;">
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Hello ${patientUser.firstName || ''},</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your appointment has been rescheduled to a new date, time or location.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#ebf8ff;border-left:4px solid #3182ce;border-radius:8px;padding:20px;margin:0 0 24px;">
           <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:140px;">Doctor</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">${doctorName}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Clinic / Hospital</td><td style="padding:6px 0;color:#2d3748;font-weight:700;">${chamberInfo.name}</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Location</td><td style="padding:6px 0;color:#2d3748;font-size:13px;">${chamberInfo.address}</td></tr>
           <tr><td style="padding:6px 0;color:#718096;font-size:14px;">New Date</td><td style="padding:6px 0;color:#2d3748;">${dateStr}</td></tr>
           ${timeStr ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">New Time</td><td style="padding:6px 0;color:#2d3748;">${timeStr}</td></tr>` : ''}
         </table>
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Please make note of the new date and time. View full details in your Livora dashboard.</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Please make note of the new date, time and chamber location. View full details in your Livora dashboard.</p>
         <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
       `)
     }
