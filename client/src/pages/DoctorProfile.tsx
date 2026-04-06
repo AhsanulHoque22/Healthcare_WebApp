@@ -271,6 +271,21 @@ const DoctorProfile: React.FC = () => {
   };
 
   const addChamber = () => {
+    const chambers = profileData.chambers || [];
+    if (chambers.length > 0) {
+      const last = chambers[chambers.length - 1];
+      if (!last.name || !last.address) {
+        toast.error('Please complete the Clinic Name and Address for the current chamber before adding another one.');
+        return;
+      }
+      
+      const hasTimes = Object.values(last.chamberTimes).some(times => times && times.length > 0);
+      if (!hasTimes) {
+        toast.error('Please add at least one time slot to the current chamber before adding another one.');
+        return;
+      }
+    }
+
     setProfileData(prev => ({
       ...prev,
       chambers: [
