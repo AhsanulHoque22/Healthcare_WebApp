@@ -174,7 +174,7 @@ const DoctorProfile: React.FC = () => {
         bmdcRegistrationNumber: profileData.bmdcRegistrationNumber,
         degrees: profileData.degrees,
         awards: profileData.awards,
-        chamberTimes: profileData.chamberTimes,
+        chamberTimes: {},
         chambers: profileData.chambers,
         languages: profileData.languages,
         services: profileData.services,
@@ -300,19 +300,32 @@ const DoctorProfile: React.FC = () => {
     });
   };
 
-  const toggleSpecificChamberTime = (chamberIndex: number, day: string, timeSlot: string) => {
+  const addSpecificChamberTime = (chamberIndex: number, day: string, timeString: string) => {
+    if (!timeString.trim()) return;
     setProfileData(prev => {
       const newChambers = [...(prev.chambers || [])];
       const chamber = { ...newChambers[chamberIndex] };
       const currentTimes = chamber.chamberTimes[day] || [];
       
-      let newTimes;
-      if (currentTimes.includes(timeSlot)) {
-        newTimes = currentTimes.filter(t => t !== timeSlot);
-      } else {
-        newTimes = [...currentTimes, timeSlot].sort();
+      if (!currentTimes.includes(timeString.trim())) {
+        chamber.chamberTimes = {
+          ...chamber.chamberTimes,
+          [day]: [...currentTimes, timeString.trim()]
+        };
       }
 
+      newChambers[chamberIndex] = chamber;
+      return { ...prev, chambers: newChambers };
+    });
+  };
+
+  const removeSpecificChamberTime = (chamberIndex: number, day: string, timeSlot: string) => {
+    setProfileData(prev => {
+      const newChambers = [...(prev.chambers || [])];
+      const chamber = { ...newChambers[chamberIndex] };
+      const currentTimes = chamber.chamberTimes[day] || [];
+      
+      const newTimes = currentTimes.filter(t => t !== timeSlot);
       chamber.chamberTimes = {
         ...chamber.chamberTimes,
         [day]: newTimes
@@ -324,24 +337,6 @@ const DoctorProfile: React.FC = () => {
 
       newChambers[chamberIndex] = chamber;
       return { ...prev, chambers: newChambers };
-    });
-  };
-
-  // Toggle chamber time
-  const toggleChamberTime = (day: string, timeSlot: string) => {
-    setProfileData(prev => {
-      const currentTimes = prev.chamberTimes[day] || [];
-      const newTimes = currentTimes.includes(timeSlot)
-        ? currentTimes.filter(t => t !== timeSlot)
-        : [...currentTimes, timeSlot];
-      
-      return {
-        ...prev,
-        chamberTimes: {
-          ...prev.chamberTimes,
-          [day]: newTimes
-        }
-      };
     });
   };
 
@@ -858,41 +853,7 @@ const DoctorProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Chamber Times */}
-              <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in' : ''}`}>
-                <div className="flex items-center mb-6">
-                  <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-lg p-3 text-white mr-3">
-                    <ClockIcon className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Chamber Times</h3>
-                    <p className="text-sm text-gray-600">Set your availability schedule</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {days.map(day => (
-                    <div key={day} className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200/50">
-                      <h4 className="font-semibold text-gray-800 mb-4 text-center">{day}</h4>
-                      <div className="space-y-3">
-                        {timeSlots.map(timeSlot => (
-                          <label key={timeSlot} className="flex items-center cursor-pointer group">
-                            <input
-                              type="checkbox"
-                              checked={profileData.chamberTimes[day]?.includes(timeSlot) || false}
-                              onChange={() => toggleChamberTime(day, timeSlot)}
-                              disabled={!isEditing}
-                              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 transition-all duration-200"
-                            />
-                            <span className="ml-3 text-sm text-gray-700 group-hover:text-indigo-600 transition-colors duration-200">{timeSlot}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Chambers */}
+              {/* Chambers Management */}
               <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in' : ''}`}>
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center">
@@ -900,8 +861,8 @@ const DoctorProfile: React.FC = () => {
                       <HomeIcon className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Additional Chambers</h3>
-                      <p className="text-sm text-gray-600">Add multiple chambers and their schedules</p>
+                      <h3 className="text-xl font-bold text-gray-900">Your Chambers & Schedules</h3>
+                      <p className="text-sm text-gray-600">Add different locations where you see patients and define your custom times.</p>
                     </div>
                   </div>
                   {isEditing && (
@@ -930,7 +891,7 @@ const DoctorProfile: React.FC = () => {
                         )}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Chamber Name / Hospital</label>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">Clinic / Hospital Name</label>
                           <input
                             type="text"
                             value={chamber.name}
@@ -941,7 +902,7 @@ const DoctorProfile: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Address Location</label>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">Chamber Address / Location</label>
                           <input
                             type="text"
                             value={chamber.address}
@@ -953,24 +914,47 @@ const DoctorProfile: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {days.map(day => (
-                          <div key={day} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
-                            <h5 className="font-medium text-gray-700 mb-2 text-center text-sm">{day}</h5>
-                            <div className="space-y-2">
-                              {timeSlots.map(timeSlot => (
-                                <label key={timeSlot} className="flex items-center cursor-pointer group text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={chamber.chamberTimes[day]?.includes(timeSlot) || false}
-                                    onChange={() => toggleSpecificChamberTime(cIndex, day, timeSlot)}
-                                    disabled={!isEditing}
-                                    className="w-3 h-3 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                                  />
-                                  <span className="ml-2 text-gray-600 group-hover:text-teal-600">{timeSlot}</span>
-                                </label>
+                          <div key={day} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                            <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">{day}</h5>
+                            <div className="space-y-2 mb-3">
+                              {(chamber.chamberTimes[day] || []).map(timeSlot => (
+                                <div key={timeSlot} className="flex justify-between items-center bg-teal-50 text-teal-800 px-3 py-1.5 rounded-lg text-sm border border-teal-100 flex-wrap">
+                                  <span>{timeSlot}</span>
+                                  {isEditing && (
+                                    <button 
+                                      type="button" 
+                                      onClick={() => removeSpecificChamberTime(cIndex, day, timeSlot)}
+                                      className="text-teal-600 hover:text-red-500 transition-colors"
+                                    >
+                                      <XMarkIcon className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
                               ))}
+                              {(!chamber.chamberTimes[day] || chamber.chamberTimes[day].length === 0) && (
+                                <p className="text-xs text-gray-400 italic">No times added</p>
+                              )}
                             </div>
+                            
+                            {isEditing && (
+                              <div className="mt-auto">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. 09:00 AM - 01:00 PM"
+                                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-all mb-2"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      addSpecificChamberTime(cIndex, day, e.currentTarget.value);
+                                      e.currentTarget.value = '';
+                                    }
+                                  }}
+                                />
+                                <p className="text-[10px] text-gray-500">Press Enter to add time slot</p>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -978,7 +962,11 @@ const DoctorProfile: React.FC = () => {
                   ))}
                   
                   {(!profileData.chambers || profileData.chambers.length === 0) && (
-                     <p className="text-gray-500 text-center italic py-4">No additional chambers added.</p>
+                     <div className="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                        <HomeIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500 font-medium">No chambers added.</p>
+                        <p className="text-gray-400 text-sm mt-1">Add a chamber to set your schedule for patients.</p>
+                     </div>
                   )}
                 </div>
               </div>
