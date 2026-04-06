@@ -880,9 +880,9 @@ const DoctorProfile: React.FC = () => {
                     <button
                       type="button"
                       onClick={addChamber}
-                      className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm font-medium flex items-center gap-2"
+                      className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-teal-100 font-bold flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
                     >
-                      <PlusIcon className="h-4 w-4" />
+                      <PlusIcon className="h-5 w-5 stroke-[2]" />
                       Add Chamber
                     </button>
                   )}
@@ -895,9 +895,10 @@ const DoctorProfile: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => removeChamber(cIndex)}
-                            className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                            className="absolute top-4 right-4 p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm"
+                            title="Remove this chamber"
                           >
-                            <XMarkIcon className="h-5 w-5" />
+                            <XMarkIcon className="h-5 w-5 stroke-[2]" />
                           </button>
                         )}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -909,7 +910,7 @@ const DoctorProfile: React.FC = () => {
                             onChange={(e) => updateChamberField(cIndex, 'name', e.target.value)}
                             disabled={!isEditing}
                             placeholder="e.g. LabAid Hospital"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 disabled:bg-transparent"
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-50/50 transition-all duration-200"
                           />
                         </div>
                         <div>
@@ -920,7 +921,7 @@ const DoctorProfile: React.FC = () => {
                             onChange={(e) => updateChamberField(cIndex, 'address', e.target.value)}
                             disabled={!isEditing}
                             placeholder="e.g. Dhanmondi, Dhaka"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 disabled:bg-transparent"
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-50/50 transition-all duration-200"
                           />
                         </div>
                       </div>
@@ -950,23 +951,30 @@ const DoctorProfile: React.FC = () => {
                             </div>
                             
                             {isEditing && (
-                              <div className="mt-auto pt-2 border-t border-gray-100">
-                                <div className="grid grid-cols-2 gap-2 mb-2">
-                                  <div>
-                                    <label className="text-[10px] text-gray-500 uppercase font-bold">Start</label>
+                              <div className="mt-auto pt-3 border-t border-teal-100/50">
+                                <div className="space-y-3 mb-3">
+                                  <div className="relative group/time">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                      <ClockIcon className="h-4 w-4 text-teal-500 transition-transform group-hover/time:rotate-12" />
+                                    </div>
                                     <input
                                       type="time"
                                       id={`start-${cIndex}-${day}`}
-                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 bg-white"
+                                      className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all shadow-sm group-hover/time:border-teal-300 outline-none"
                                     />
+                                    <span className="absolute top-0 right-3 -translate-y-1/2 bg-white px-2 text-[10px] uppercase tracking-wider font-bold text-teal-600 border border-teal-100 rounded-full shadow-sm">Start Time</span>
                                   </div>
-                                  <div>
-                                    <label className="text-[10px] text-gray-500 uppercase font-bold">End</label>
+                                  
+                                  <div className="relative group/time">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                      <ClockIcon className="h-4 w-4 text-emerald-500 transition-transform group-hover/time:rotate-12" />
+                                    </div>
                                     <input
                                       type="time"
                                       id={`end-${cIndex}-${day}`}
-                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 bg-white"
+                                      className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm group-hover/time:border-emerald-300 outline-none"
                                     />
+                                    <span className="absolute top-0 right-3 -translate-y-1/2 bg-white px-2 text-[10px] uppercase tracking-wider font-bold text-emerald-600 border border-emerald-100 rounded-full shadow-sm">End Time</span>
                                   </div>
                                 </div>
                                 <button
@@ -980,13 +988,13 @@ const DoctorProfile: React.FC = () => {
                                       startEl.value = '';
                                       endEl.value = '';
                                     } else {
-                                      toast.error('Please select both start and end time');
+                                      toast.error('Select both start and end times');
                                     }
                                   }}
-                                  className="w-full py-1.5 text-xs bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm font-medium flex items-center justify-center gap-1"
+                                  className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-teal-200/50 flex items-center justify-center gap-2 font-bold text-sm"
                                 >
-                                  <PlusIcon className="h-3 w-3" />
-                                  Add Slot
+                                  <PlusIcon className="h-4 w-4 stroke-[3]" />
+                                  Add Schedule
                                 </button>
                               </div>
                             )}
