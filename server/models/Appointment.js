@@ -36,8 +36,8 @@ const Appointment = sequelize.define('Appointment', {
     allowNull: false,
     defaultValue: 180, // 3 hours for chamber blocks
     validate: {
-      min: 60,
-      max: 240
+      min: 1,
+      max: 1440
     }
   },
   status: {

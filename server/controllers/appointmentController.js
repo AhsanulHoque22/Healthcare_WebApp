@@ -50,17 +50,31 @@ const createAppointment = async (req, res, next) => {
       });
     }
 
-    // Convert time block to start time for the appointment
-    let appointmentTime;
-    if (timeBlock === '09:00-12:00') {
-      appointmentTime = '09:00:00';
-    } else if (timeBlock === '14:00-17:00') {
-      appointmentTime = '14:00:00';
-    } else if (timeBlock === '19:00-22:00') {
-      appointmentTime = '19:00:00';
-    } else {
-      // Custom time block - use the first part as start time
-      appointmentTime = `${timeBlock.split('-')[0]}:00:00`;
+    // Convert time block to start time for the appointment (HH:mm:ss)
+    let appointmentTime = '00:00:00';
+    if (timeBlock) {
+      if (typeof timeBlock === 'string' && (timeBlock.includes('AM') || timeBlock.includes('PM'))) {
+        try {
+          const firstPart = timeBlock.split('-')[0].trim(); // e.g. "09:15 AM"
+          const [timePart, meridiem] = firstPart.split(' ');
+          let [hours, minutes] = timePart.split(':');
+          let h = parseInt(hours);
+          if (meridiem === 'PM' && h < 12) h += 12;
+          if (meridiem === 'AM' && h === 12) h = 0;
+          appointmentTime = `${h.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}:00`;
+        } catch (err) {
+          console.error('[appointmentController] Error parsing timeBlock:', timeBlock, err.message);
+          // Fallback - try simple split
+          appointmentTime = `${timeBlock.split(':')[0].padStart(2, '0')}:00:00`;
+        }
+      } else if (typeof timeBlock === 'string' && timeBlock.includes(':')) {
+        // Fallback for formats like "09:00-12:00" or raw HH:mm
+        const start = timeBlock.split('-')[0].trim();
+        const parts = start.split(':');
+        appointmentTime = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}:00`;
+      } else if (typeof timeBlock === 'string') {
+        appointmentTime = `${timeBlock.split('-')[0].padStart(2, '0')}:00:00`;
+      }
     }
 
     // Generate serial number for this doctor on this date (resets daily)
