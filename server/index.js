@@ -138,13 +138,17 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/website-reviews', websiteReviewRoutes);
 
-// Health check endpoint
+// Health check endpoints
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).send('Livora API is Running');
 });
 
 // Error handling middleware
@@ -164,9 +168,10 @@ const connectWithRetry = async () => {
       console.log('Database connection established successfully.');
       return;
     } catch (err) {
-      console.log('Database not ready. Retrying in 5 seconds...');
+      console.log(`Database not ready (Retries left: ${retries - 1}). Error: ${err.message}`);
       retries -= 1;
-      await new Promise(res => setTimeout(res, 5000));
+      if (retries === 0) break;
+      await new Promise(res => setTimeout(res, 2000)); // Reduced to 2s
     }
   }
 
