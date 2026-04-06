@@ -300,6 +300,17 @@ const DoctorProfile: React.FC = () => {
     });
   };
 
+  const formatToAMPM = (time: string) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    let h = parseInt(hours);
+    const m = minutes;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12; // the hour '0' should be '12'
+    return `${h.toString().padStart(2, '0')}:${m} ${ampm}`;
+  };
+
   const addSpecificChamberTime = (chamberIndex: number, day: string, timeString: string) => {
     if (!timeString.trim()) return;
     setProfileData(prev => {
@@ -939,20 +950,44 @@ const DoctorProfile: React.FC = () => {
                             </div>
                             
                             {isEditing && (
-                              <div className="mt-auto">
-                                <input
-                                  type="text"
-                                  placeholder="e.g. 09:00 AM - 01:00 PM"
-                                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-all mb-2"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      addSpecificChamberTime(cIndex, day, e.currentTarget.value);
-                                      e.currentTarget.value = '';
+                              <div className="mt-auto pt-2 border-t border-gray-100">
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 uppercase font-bold">Start</label>
+                                    <input
+                                      type="time"
+                                      id={`start-${cIndex}-${day}`}
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 bg-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 uppercase font-bold">End</label>
+                                    <input
+                                      type="time"
+                                      id={`end-${cIndex}-${day}`}
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 bg-white"
+                                    />
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const startEl = document.getElementById(`start-${cIndex}-${day}`) as HTMLInputElement;
+                                    const endEl = document.getElementById(`end-${cIndex}-${day}`) as HTMLInputElement;
+                                    if (startEl && endEl && startEl.value && endEl.value) {
+                                      const formatted = `${formatToAMPM(startEl.value)} - ${formatToAMPM(endEl.value)}`;
+                                      addSpecificChamberTime(cIndex, day, formatted);
+                                      startEl.value = '';
+                                      endEl.value = '';
+                                    } else {
+                                      toast.error('Please select both start and end time');
                                     }
                                   }}
-                                />
-                                <p className="text-[10px] text-gray-500">Press Enter to add time slot</p>
+                                  className="w-full py-1.5 text-xs bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm font-medium flex items-center justify-center gap-1"
+                                >
+                                  <PlusIcon className="h-3 w-3" />
+                                  Add Slot
+                                </button>
                               </div>
                             )}
                           </div>
