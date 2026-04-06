@@ -1016,6 +1016,29 @@ const DoctorProfile: React.FC = () => {
                           </div>
                         ))}
                       </div>
+
+                      {isEditing && (
+                        <div className="mt-8 flex justify-between items-center bg-white p-4 rounded-xl border border-indigo-100 shadow-sm">
+                           <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <ShieldCheckIcon className="h-4 w-4 text-indigo-500" />
+                              Chamber details are temporarily tracked. Click Confirm to validate.
+                           </p>
+                           <button
+                             type="button"
+                             onClick={() => {
+                               if (!chamber.name || !chamber.address) {
+                                 toast.error('Please provide both Hospital/Clinic name and Address location.');
+                                 return;
+                               }
+                               toast.success(`Confirmed! ${chamber.name} info is ready. Now click "Save Changes" at the bottom of the profile to finish.`);
+                             }}
+                             className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 font-bold text-xs flex items-center gap-2"
+                           >
+                             <CheckCircleIcon className="h-4 w-4" />
+                             Confirm & Lock Chamber Info
+                           </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                   
