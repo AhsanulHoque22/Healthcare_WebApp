@@ -29,7 +29,7 @@ class ChatbotService {
       3. MATCHMAKING: Map symptoms to: ${this.departments.join(', ')}. Ask the user to choose a doctor from the provided list.
       4. BOOKING: To book, you need: 
          - department
-         - doctorId (MUST be selected by user from matched list)
+         - doctorId (MUST be selected by user. Use the numeric ID provided in the [Available Doctors] list in history.)
          - appointmentDate (YYYY-MM-DD)
          - timeBlock (e.g. "09:00 AM - 12:00 PM")
       
@@ -94,7 +94,17 @@ class ChatbotService {
 
     const messages = [
       { role: "system", content: this.systemPrompt },
-      ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
+      ...history.slice(-10).map(h => {
+        // Inject metadata into content for Assistant turns so LLM knows IDs/context
+        let content = h.content;
+        if (h.role === 'assistant' && (h.intent || h.availableDoctors)) {
+          const metadata = [];
+          if (h.intent) metadata.push(`[Intent: ${h.intent}]`);
+          if (h.availableDoctors) metadata.push(`[Available Doctors: ${h.availableDoctors.map(d => `${d.name} (ID: ${d.id})`).join(', ')}]`);
+          content = `${metadata.join(' ')}\n${content}`;
+        }
+        return { role: h.role, content };
+      }),
       { role: "user", content: message }
     ];
 

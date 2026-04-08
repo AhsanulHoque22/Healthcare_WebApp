@@ -31,6 +31,11 @@ const ChatHistory = sequelize.define('ChatHistory', {
     type: DataTypes.JSON,
     allowNull: true,
     comment: 'Stores extracted entities like symptoms, department, etc.'
+  },
+  availableDoctors: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    field: 'available_doctors'
   }
 }, {
   tableName: 'chat_histories',

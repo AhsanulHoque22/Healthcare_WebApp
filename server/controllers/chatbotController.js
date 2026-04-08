@@ -58,7 +58,8 @@ class ChatbotController {
                 role: 'assistant',
                 content: aiResponse.message,
                 intent: aiResponse.intent,
-                context: aiResponse.context
+                context: aiResponse.context,
+                availableDoctors: aiResponse.availableDoctors
               }).catch(err => console.error("[ChatbotHistory] Save failed:", err.message));
 
               return res.json({ success: true, data: aiResponse });
@@ -75,7 +76,8 @@ class ChatbotController {
         role: 'assistant',
         content: aiResponse.message,
         intent: aiResponse.intent,
-        context: aiResponse.context
+        context: aiResponse.context,
+        availableDoctors: aiResponse.availableDoctors
       });
 
       res.json({

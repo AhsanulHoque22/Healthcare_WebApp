@@ -237,8 +237,8 @@ const startServer = async () => {
        // 🛠️ Ensure ChatHistory table exists in production
        try {
          const { ChatHistory } = require('./models');
-         await ChatHistory.sync();
-         console.log("[Database] ChatHistory table verified/created in production.");
+         await ChatHistory.sync({ alter: true });
+         console.log("[Database] ChatHistory table verified/created/altered in production.");
        } catch (e) {
          console.error("[Database] Error sync ChatHistory:", e.message);
        }
