@@ -229,11 +229,20 @@ const startServer = async () => {
       } catch(e) {
          if(e.message && e.message.includes("Duplicate column name")) {
              console.log("Column chamber already exists");
-         } else {
-             console.error("Error adding chamber:", e.message);
-         }
-      }
-    } else {
+          } else {
+              console.error("Error adding chamber:", e.message);
+          }
+       }
+
+       // 🛠️ Ensure ChatHistory table exists in production
+       try {
+         const { ChatHistory } = require('./models');
+         await ChatHistory.sync();
+         console.log("[Database] ChatHistory table verified/created in production.");
+       } catch (e) {
+         console.error("[Database] Error sync ChatHistory:", e.message);
+       }
+     } else {
       try {
         const models = require('./models');
         const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog', 'ChatHistory'];
