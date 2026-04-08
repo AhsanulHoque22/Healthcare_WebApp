@@ -2,8 +2,8 @@ const axios = require('axios');
 const { Doctor, Patient, User, Notification } = require('../models');
 const { Op } = require('sequelize');
 
-// Llama 3 via Groq (High-performance open-source model)
-const CHATBOT_MODEL = "llama3-70b-8192"; 
+// Llama 3.3 via Groq (State-of-the-art open-source model)
+const CHATBOT_MODEL = "llama-3.3-70b-versatile"; 
 
 class ChatbotService {
   constructor() {
