@@ -31,7 +31,6 @@ const ChatbotWidget: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [socketStatus, setSocketStatus] = useState('disconnected');
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -67,16 +66,16 @@ const ChatbotWidget: React.FC = () => {
 
   // Voice Socket Setup
   useEffect(() => {
-    const socketUrl = (process.env as any).REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
-    const socket = io(socketUrl, { transports: ['websocket'] });
+    const socketUrl = (process.env as any).REACT_APP_API_URL?.replace('/api', '') || window.location.origin.replace('3000', '5000');
+    const socket = io(socketUrl, { 
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5
+    });
     socketRef.current = socket;
 
-    socket.on('connect', () => {
-      console.log('[CHATBOT] Voice socket connected');
-      setSocketStatus('connected');
-    });
-    socket.on('disconnect', () => setSocketStatus('disconnected'));
-
+    socket.on('connect', () => console.log('[CHATBOT] Voice socket connected'));
+    
     socket.on('transcript-result', (data: { transcript: string; isFinal: boolean }) => {
       if (data.isFinal) {
         setInput(prev => (prev + ' ' + data.transcript).trim());
@@ -85,11 +84,20 @@ const ChatbotWidget: React.FC = () => {
 
     return () => { 
       socket.disconnect(); 
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      cleanupMedia();
     };
   }, []);
+
+  const cleanupMedia = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    mediaRecorderRef.current = null;
+    streamRef.current = null;
+  };
 
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
@@ -100,7 +108,9 @@ const ChatbotWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Send history to LLM for context (stripped to role/content only)
       const history = newMessages.map(m => ({ role: m.role, content: m.content }));
+      
       const response = await API.post('/chatbot/message', { message: text, history });
       
       const aiData = response.data.data;
@@ -118,15 +128,33 @@ const ChatbotWidget: React.FC = () => {
       }
 
     } catch (error: any) {
-      console.error("[Chatbot] Error:", error.message);
-      toast.error("Failed to connect to AI server");
+      const errorMsg = error.response?.data?.message || error.message || "Failed to connect to AI server";
+      console.error("[Chatbot] Error:", error);
+      toast.error(errorMsg);
+      // Rollback messages if failed
+      setMessages(messages);
+      setInput(text);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const toggleRecording = async () => {
+    if (isRecording) {
+      stopVoice();
+    } else {
+      await startVoice();
+    }
+  };
+
   const startVoice = async () => {
     try {
+      cleanupMedia();
+      
+      if (!socketRef.current?.connected) {
+        socketRef.current?.connect();
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
@@ -143,6 +171,7 @@ const ChatbotWidget: React.FC = () => {
 
       mediaRecorder.start(250);
       setIsRecording(true);
+      toast.success("Listening...");
     } catch (e) {
       console.error("[Chatbot] Microphone error:", e);
       toast.error("Microphone access failed");
@@ -151,12 +180,7 @@ const ChatbotWidget: React.FC = () => {
 
   const stopVoice = () => {
     try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      cleanupMedia();
       if (socketRef.current?.connected) {
         socketRef.current.emit('stop-transcription');
       }
@@ -164,8 +188,6 @@ const ChatbotWidget: React.FC = () => {
       console.warn('[Chatbot] stopVoice error:', e);
     } finally {
       setIsRecording(false);
-      mediaRecorderRef.current = null;
-      streamRef.current = null;
     }
   };
 
@@ -276,10 +298,9 @@ const ChatbotWidget: React.FC = () => {
           {/* Input Area */}
           <div className="p-4 bg-white border-t border-gray-100 flex items-center gap-2">
             <button 
-              onMouseDown={startVoice}
-              onMouseUp={stopVoice}
+              onClick={toggleRecording}
               className={`p-3 rounded-2xl transition-all ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-              title="Hold to speak"
+              title={isRecording ? "Click to stop" : "Click to speak"}
             >
               {isRecording ? <StopIcon className="h-6 w-6" /> : <MicrophoneIcon className="h-6 w-6" />}
             </button>
@@ -287,7 +308,7 @@ const ChatbotWidget: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Type or hold microphone..."
+              placeholder="Type or click microphone..."
               className="flex-1 bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
             />
             <button 

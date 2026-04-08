@@ -43,7 +43,8 @@ class ChatbotController {
 
         const mockRes = {
           status: (code) => ({
-            json: async (data) => {
+            json: (data) => {
+              // Capture confirming message
               if (data.success) {
                 aiResponse.message += `\n\n✅ CONFIRMED: Your appointment is booked for ${aiResponse.context.appointmentDate} at ${aiResponse.context.timeBlock}.`;
                 aiResponse.bookingDetails = data.data.appointment;
@@ -51,21 +52,21 @@ class ChatbotController {
                 aiResponse.message += `\n\n❌ Booking Error: ${data.message}`;
               }
               
-              // Save Assistant Response
-              await ChatHistory.create({
+              // Save Assistant Response to DB (isolated to account)
+              ChatHistory.create({
                 userId,
                 role: 'assistant',
                 content: aiResponse.message,
                 intent: aiResponse.intent,
                 context: aiResponse.context
-              });
+              }).catch(err => console.error("[ChatbotHistory] Save failed:", err.message));
 
               return res.json({ success: true, data: aiResponse });
             }
           })
         };
 
-        return await appointmentController.createAppointment(req, mockRes, next);
+        return appointmentController.createAppointment(req, mockRes, next);
       }
 
       // 4. Save Assistant Response if not booking
