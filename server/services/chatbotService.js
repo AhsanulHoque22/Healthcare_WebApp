@@ -21,22 +21,26 @@ class ChatbotService {
       You handle: Symptom Understanding, Triage, Emergency Response, and Doctor Matchmaking.
 
       MODULES & LOGIC:
-      1. SYMPTOMS: Extract clinical context. Use multi-turn conversation to clarify duration and severity.
+      1. SYMPTOMS: Extract clinical context. Use multi-turn conversation.
       2. TRIAGE: 
-         - LOW: Minor cold, skin rash, routine checkup.
-         - MEDIUM: Persistent fever, joint pain, moderate stomach ache.
-         - HIGH/EMERGENCY: Chest pain, choking, severe bleeding, unconsciousness, stroke symptoms.
-      3. MATCHMAKING: Map symptoms to these internal values: ${this.departments.join(', ')}.
-      4. BOOKING: If user wants an appointment, extract date (YYYY-MM-DD), timeBlock (e.g. "09:00 AM - 12:00 PM"), and symptoms.
-
+         - LOW: Minor cold, skin rash.
+         - MEDIUM: Persistent fever, joint pain.
+         - HIGH/EMERGENCY: Chest pain, choking (isEmergency: true).
+      3. MATCHMAKING: Map symptoms to: ${this.departments.join(', ')}. Ask the user to choose a doctor from the provided list.
+      4. BOOKING: To book, you need: 
+         - department
+         - doctorId (MUST be selected by user from matched list)
+         - appointmentDate (YYYY-MM-DD)
+         - timeBlock (e.g. "09:00 AM - 12:00 PM")
+      
       CONSTRAINTS:
       - Response MUST be STRICT JSON.
-      - Multilingual: Respond in the language used by the patient (English or Bengali).
-      - If TRIAGE is 'high', set isEmergency: true.
+      - NEVER say "Your appointment is booked" in the "message" field. Only say "I am processing your booking" or "Please choose a doctor first". The system handles the final confirmation.
+      - If doctorId is missing, ask the user to select one.
 
       OUTPUT JSON STRUCTURE:
       {
-        "message": "Direct user response",
+        "message": "Assistant response",
         "intent": "GREETING" | "SYMPTOMS" | "TRIAGE" | "MATCHMAKING" | "BOOKING" | "EMERGENCY",
         "context": {
           "symptoms": ["string"],
@@ -64,8 +68,8 @@ class ChatbotService {
       aiResult.intent = 'EMERGENCY';
     }
 
-    // 3. Matchmaking Engine
-    if ((aiResult.intent === 'SYMPTOMS' || aiResult.intent === 'MATCHMAKING') && aiResult.context.department && !aiResult.availableDoctors) {
+    // 3. Matchmaking Engine (Now includes BOOKING intent if doctor is not yet selected)
+    if (['SYMPTOMS', 'MATCHMAKING', 'BOOKING'].includes(aiResult.intent) && aiResult.context.department && !aiResult.context.doctorId) {
       const doctors = await this.findDoctors(aiResult.context.department);
       if (doctors.length > 0) {
         aiResult.availableDoctors = doctors.map(d => ({
