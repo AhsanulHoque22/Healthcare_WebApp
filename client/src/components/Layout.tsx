@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
+import ChatbotWidget from './ChatbotWidget';
 import {
   HomeIcon,
   UserIcon,
@@ -434,6 +435,7 @@ const Layout: React.FC = () => {
             </div>
           </div>
         </main>
+        <ChatbotWidget />
       </div>
     </div>
   );

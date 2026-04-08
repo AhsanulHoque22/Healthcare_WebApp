@@ -22,6 +22,7 @@ const bkashRoutes = require('./routes/bkash');
 const medicineRoutes = require('./routes/medicine');
 const notificationRoutes = require('./routes/notifications');
 const websiteReviewRoutes = require('./routes/websiteReviews');
+const chatbotRoutes = require('./routes/chatbot');
 const errorHandler = require('./middleware/errorHandler');
 const { setupVoiceToPrescription } = require('./services/voiceService');
 
@@ -137,6 +138,7 @@ app.use('/api/bkash', bkashRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/website-reviews', websiteReviewRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Health check endpoints
 app.get('/api/health', (req, res) => {
