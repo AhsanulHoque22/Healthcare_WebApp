@@ -5,5 +5,6 @@ const { authenticateToken } = require('../middleware/auth');
 
 router.post('/message', authenticateToken, (req, res, next) => chatbotController.handleMessage(req, res, next));
 router.post('/voice', authenticateToken, (req, res, next) => chatbotController.handleVoice(req, res, next));
+router.get('/history', authenticateToken, (req, res, next) => chatbotController.getHistory(req, res, next));
 
 module.exports = router;

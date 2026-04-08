@@ -36,6 +36,7 @@ const ChatbotWidget: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,13 +44,37 @@ const ChatbotWidget: React.FC = () => {
     }
   }, [messages, isOpen]);
 
+  // Load history on mount (Isolated to account)
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await API.get('/chatbot/history');
+        if (response.data.data.length > 0) {
+          const formattedHistory = response.data.data.map((h: any) => ({
+            role: h.role,
+            content: h.content,
+            intent: h.intent,
+            context: h.context
+          }));
+          setMessages(formattedHistory);
+        }
+      } catch (error) {
+        console.error("Failed to load history");
+      }
+    };
+    if (isOpen) fetchHistory();
+  }, [isOpen]);
+
   // Voice Socket Setup
   useEffect(() => {
     const socketUrl = (process.env as any).REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
     const socket = io(socketUrl, { transports: ['websocket'] });
     socketRef.current = socket;
 
-    socket.on('connect', () => setSocketStatus('connected'));
+    socket.on('connect', () => {
+      console.log('[CHATBOT] Voice socket connected');
+      setSocketStatus('connected');
+    });
     socket.on('disconnect', () => setSocketStatus('disconnected'));
 
     socket.on('transcript-result', (data: { transcript: string; isFinal: boolean }) => {
@@ -58,7 +83,12 @@ const ChatbotWidget: React.FC = () => {
       }
     });
 
-    return () => { socket.disconnect(); };
+    return () => { 
+      socket.disconnect(); 
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
   const handleSend = async (text: string = input) => {
@@ -87,7 +117,8 @@ const ChatbotWidget: React.FC = () => {
         toast.error("Emergency Alert Triggered!");
       }
 
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[Chatbot] Error:", error.message);
       toast.error("Failed to connect to AI server");
     } finally {
       setIsLoading(false);
@@ -97,6 +128,7 @@ const ChatbotWidget: React.FC = () => {
   const startVoice = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
@@ -112,14 +144,29 @@ const ChatbotWidget: React.FC = () => {
       mediaRecorder.start(250);
       setIsRecording(true);
     } catch (e) {
+      console.error("[Chatbot] Microphone error:", e);
       toast.error("Microphone access failed");
     }
   };
 
   const stopVoice = () => {
-    mediaRecorderRef.current?.stop();
-    socketRef.current?.emit('stop-transcription');
-    setIsRecording(false);
+    try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('stop-transcription');
+      }
+    } catch (e) {
+      console.warn('[Chatbot] stopVoice error:', e);
+    } finally {
+      setIsRecording(false);
+      mediaRecorderRef.current = null;
+      streamRef.current = null;
+    }
   };
 
   return (

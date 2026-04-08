@@ -16,12 +16,14 @@ const PatientReminderSettings = require('./PatientReminderSettings');
 const Notification = require('./Notification');
 const WebsiteReview = require('./WebsiteReview');
 const MedicineLog = require('./MedicineLog');
+const ChatHistory = require('./ChatHistory');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
 User.hasOne(Doctor, { foreignKey: 'userId', as: 'doctorProfile' });
 User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 User.hasMany(WebsiteReview, { foreignKey: 'userId', as: 'websiteReviews' });
+User.hasMany(ChatHistory, { foreignKey: 'userId', as: 'chatHistory' });
 
 // Patient associations
 Patient.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -116,6 +118,9 @@ Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 // Website Review associations
 WebsiteReview.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Chat History associations
+ChatHistory.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 module.exports = {
   User,
   Patient,
@@ -134,5 +139,6 @@ module.exports = {
   PatientReminderSettings,
   Notification,
   WebsiteReview,
-  MedicineLog
+  MedicineLog,
+  ChatHistory
 };

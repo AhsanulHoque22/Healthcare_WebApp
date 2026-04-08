@@ -236,7 +236,7 @@ const startServer = async () => {
     } else {
       try {
         const models = require('./models');
-        const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog'];
+        const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog', 'ChatHistory'];
         
         for (const name of tablesToSync) {
           if (models[name]) {

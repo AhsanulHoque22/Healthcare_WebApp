@@ -85,7 +85,7 @@ class ChatbotService {
 
   async callLLM(message, history) {
     if (!process.env.GROQ_API_KEY) {
-      return this.mockLLM(message); // Safety if key missing during dev
+      return this.mockLLM(message, "API Key Missing");
     }
 
     const messages = [
@@ -110,7 +110,7 @@ class ChatbotService {
       return JSON.parse(response.data.choices[0].message.content);
     } catch (err) {
       console.error("[LLM Error]", err.response?.data || err.message);
-      return this.mockLLM(message);
+      return this.mockLLM(message, err.message);
     }
   }
 
@@ -140,7 +140,7 @@ class ChatbotService {
     });
   }
 
-  mockLLM(msg) {
+  mockLLM(msg, error = "API Key Missing") {
     // Robust fallback for testing
     const text = msg.toLowerCase();
     let urgency = 'low';
@@ -150,7 +150,7 @@ class ChatbotService {
     if (text.includes('chest') || text.includes('breath')) urgency = 'high';
 
     return {
-      message: "I am currently in safe mode. How can I help with your health today?",
+      message: `I'M IN SAFE MODE (Dev Only): ${error === "API Key Missing" ? "I need a GROQ_API_KEY in the .env file to enable my medical brain." : "My connection to Llama 3 is temporarily down. I'm using an offline model."}\n\nHow can I help with your health today?`,
       intent: intent,
       context: { symptoms: [], urgency, department: 'general_medicine' },
       isEmergency: urgency === 'high'
