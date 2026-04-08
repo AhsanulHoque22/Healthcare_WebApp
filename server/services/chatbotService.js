@@ -84,13 +84,13 @@ class ChatbotService {
   }
 
   async callLLM(message, history) {
-    if (!process.env.GROQ_API_KEY) {
-      return this.mockLLM(message, "API Key Missing");
+    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'undefined') {
+      return this.mockLLM(message, "Missing GROQ_API_KEY. Please set it in Railway Variables.");
     }
 
     const messages = [
       { role: "system", content: this.systemPrompt },
-      ...history.slice(-6), // Keep last 3 turns
+      ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
       { role: "user", content: message }
     ];
 
@@ -104,13 +104,15 @@ class ChatbotService {
         headers: {
           'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 10000 
       });
 
       return JSON.parse(response.data.choices[0].message.content);
     } catch (err) {
-      console.error("[LLM Error]", err.response?.data || err.message);
-      return this.mockLLM(message, err.message);
+      const apiError = err.response?.data?.error?.message || err.message;
+      console.error("[LLM Error]", apiError);
+      return this.mockLLM(message, `Connection Error: ${apiError}`);
     }
   }
 
@@ -140,7 +142,7 @@ class ChatbotService {
     });
   }
 
-  mockLLM(msg, error = "API Key Missing") {
+  mockLLM(msg, error = "") {
     // Robust fallback for testing
     const text = msg.toLowerCase();
     let urgency = 'low';
@@ -150,7 +152,7 @@ class ChatbotService {
     if (text.includes('chest') || text.includes('breath')) urgency = 'high';
 
     return {
-      message: `I'M IN SAFE MODE (Dev Only): ${error === "API Key Missing" ? "I need a GROQ_API_KEY in the .env file to enable my medical brain." : "My connection to Llama 3 is temporarily down. I'm using an offline model."}\n\nHow can I help with your health today?`,
+      message: `[AI SAFE MODE] ${error}\n\nI can still help you book an appointment manually or triage emergencies. How can I help?`,
       intent: intent,
       context: { symptoms: [], urgency, department: 'general_medicine' },
       isEmergency: urgency === 'high'
