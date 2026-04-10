@@ -10,6 +10,7 @@ const RBAC_POLICIES = {
   patient: {
     allowedTools: [
       'generate_medical_summary',
+      'analyze_medical_document',
       'get_patient_profile', 
       'get_appointments', 
       'get_prescriptions', 
