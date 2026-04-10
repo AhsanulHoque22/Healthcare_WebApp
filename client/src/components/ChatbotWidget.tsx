@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { 
   ChatBubbleLeftRightIcon, 
@@ -28,6 +29,7 @@ interface Message {
 }
 
 const ChatbotWidget: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hello! I'm Livora AI. How can I help you today? You can describe your symptoms or ask for an appointment." }
