@@ -33,7 +33,7 @@ const TOOL_DEFINITIONS = [
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["requested", "scheduled", "confirmed", "completed", "all"] },
+          status: { type: "string", enum: ["requested", "scheduled", "confirmed", "completed", "all", "upcoming"] },
           limit: { type: "integer", minimum: 1, maximum: 10 }
         }
       }
@@ -214,11 +214,18 @@ const implementations = {
   get_appointments: async (params, userId) => {
     const patient = await Patient.findOne({ where: { userId } });
     if (!patient) return [];
-    const where = { patientId: patient.id };
-    if (params.status && params.status !== 'all') where.status = params.status;
+    let whereClause = { patientId: patient.id };
+    
+    if (params.status && params.status !== 'all') {
+      if (params.status === 'upcoming') {
+        whereClause.status = { [Op.in]: ['requested', 'scheduled', 'confirmed'] };
+      } else {
+        whereClause.status = params.status;
+      }
+    }
     
     const raw = await Appointment.findAll({
-      where,
+      where: whereClause,
       include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }],
       limit: params.limit || 5,
       order: [['appointmentDate', 'DESC']]
