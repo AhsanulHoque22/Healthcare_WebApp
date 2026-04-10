@@ -300,12 +300,16 @@ const ChatbotWidget: React.FC = () => {
                                <UserIcon className="h-4 w-4" />
                              </div>
                              <div>
-                               <p className="font-bold text-xs text-blue-900">{doc.name}</p>
-                               <p className="text-[10px] text-blue-700">{doc.hospital}</p>
+                               <p className="font-bold text-xs text-blue-900">{doc.doctorName || doc.name}</p>
+                               <p className="text-[10px] text-blue-700">{doc.department} · {doc.hospital}</p>
                              </div>
                            </div>
-                           <button 
-                             onClick={() => handleSend(`Book with ${doc.name}`)}
+                           {/* Navigate to booking page — do NOT auto-submit a booking message */}
+                           <button
+                             onClick={() => {
+                               setIsOpen(false);
+                               navigate(`/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(doc.doctorName || doc.name)}`);
+                             }}
                              className="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-lg hover:bg-blue-700 transition-all font-bold"
                            >
                              Book

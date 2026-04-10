@@ -436,7 +436,8 @@ const Layout: React.FC = () => {
             </div>
           </div>
         </main>
-        <ChatbotWidget />
+        {/* Hide floating widget on the full-screen assistant page */}
+        {location.pathname !== '/app/assistant' && <ChatbotWidget />}
       </div>
     </div>
   );
