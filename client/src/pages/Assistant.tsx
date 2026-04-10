@@ -8,10 +8,11 @@ import {
   UserIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  ChatBubbleBottomCenterTextIcon,
+  ChatBubbleLeftRightIcon,
   XMarkIcon,
   ChevronRightIcon,
   Bars3Icon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -33,10 +34,10 @@ interface Session {
 }
 
 const QUICK_ACTIONS = [
-  { q: 'Symptoms for heart issue', label: 'Check Heart Symptoms' },
-  { q: 'Find cardiologist', label: 'Find Cardiologists' },
-  { q: "What's my next appointment?", label: 'My Appointments' },
-  { q: 'Search for oncologist', label: 'Find Oncologists' },
+  { q: 'Symptoms for heart issue', label: 'Check Heart Symptoms', emoji: '❤️' },
+  { q: 'Find cardiologist', label: 'Find Cardiologists', emoji: '🩺' },
+  { q: "What's my next appointment?", label: 'My Appointments', emoji: '📅' },
+  { q: 'Search for oncologist', label: 'Find Oncologists', emoji: '🔬' },
 ];
 
 const Assistant: React.FC = () => {
@@ -51,34 +52,28 @@ const Assistant: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Fetch session list on mount
   useEffect(() => {
     fetchSessions();
   }, []);
 
-  // Load messages when session changes
   useEffect(() => {
     if (currentSessionId) {
       fetchHistory(currentSessionId);
     } else {
       setMessages([]);
     }
-    // Focus input after session switch
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [currentSessionId]);
 
   const fetchSessions = useCallback(async () => {
     try {
       const resp = await API.get('/chatbot/sessions');
-      if (resp.data.success) {
-        setSessions(resp.data.data);
-      }
-    } catch (err) {
+      if (resp.data.success) setSessions(resp.data.data);
+    } catch {
       console.error('Failed to load sessions');
     }
   }, []);
@@ -100,7 +95,7 @@ const Assistant: React.FC = () => {
           }))
         );
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load conversation history');
     } finally {
       setIsLoadingHistory(false);
@@ -119,7 +114,6 @@ const Assistant: React.FC = () => {
 
     if (!sessionId) {
       sessionId = generateSessionId();
-      // Set state immediately so subsequent messages use same session
       setCurrentSessionId(sessionId);
       isNewSession = true;
     }
@@ -129,7 +123,7 @@ const Assistant: React.FC = () => {
       content: text,
       createdAt: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
@@ -143,30 +137,28 @@ const Assistant: React.FC = () => {
       });
 
       const aiResponse = response.data.data;
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: aiResponse.message,
-        intent: aiResponse.intent,
-        isEmergency: aiResponse.intent === 'EMERGENCY',
-        availableDoctors: aiResponse.availableDoctors,
-        bookingDetails: aiResponse.bookingDetails,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-
-      // Always refresh session list after each message to keep it current
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: aiResponse.message,
+          intent: aiResponse.intent,
+          isEmergency: aiResponse.intent === 'EMERGENCY',
+          availableDoctors: aiResponse.availableDoctors,
+          bookingDetails: aiResponse.bookingDetails,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
       await fetchSessions();
-    } catch (error: any) {
-      toast.error('Assistant reasoning engine failed. Please try again.');
-      // Roll back optimistic user message
-      setMessages((prev) => prev.filter((m) => m !== userMessage));
+    } catch {
+      toast.error('Assistant failed. Please try again.');
+      setMessages(prev => prev.filter(m => m !== userMessage));
       setInput(text);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Start a completely fresh session (no ID = new session on first message)
   const startNewChat = () => {
     setCurrentSessionId(null);
     setMessages([]);
@@ -176,7 +168,6 @@ const Assistant: React.FC = () => {
   const selectSession = (sessionId: string) => {
     if (sessionId === currentSessionId) return;
     setCurrentSessionId(sessionId);
-    // Close sidebar on mobile when selecting
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
@@ -185,24 +176,21 @@ const Assistant: React.FC = () => {
     if (!window.confirm('Delete this conversation?')) return;
     try {
       await API.delete(`/chatbot/history?conversationId=${sessionId}`);
-      setSessions((prev) => prev.filter((s) => s.conversationId !== sessionId));
+      setSessions(prev => prev.filter(s => s.conversationId !== sessionId));
       if (currentSessionId === sessionId) startNewChat();
       toast.success('Conversation deleted');
-    } catch (err) {
-      toast.error('Failed to delete conversation');
+    } catch {
+      toast.error('Failed to delete');
     }
   };
 
-  const formatTime = (isoString?: string) => {
-    if (!isoString) return '';
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatTime = (iso?: string) => {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatDate = (isoString: string) => {
-    const d = new Date(isoString);
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -212,938 +200,367 @@ const Assistant: React.FC = () => {
   };
 
   return (
-    <div className="assistant-container">
-      {/* Mobile sidebar toggle when closed */}
-      {!isSidebarOpen && (
-        <button
-          className="assistant-mobile-toggle"
-          onClick={() => setIsSidebarOpen(true)}
-          aria-label="Open sidebar"
-        >
-          <Bars3Icon className="h-5 w-5" />
-        </button>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      {/* Ambient background orbs — exactly like Dashboard */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-gradient-to-tr from-indigo-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+      </div>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
-      <aside className={`assistant-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
-        {/* Sidebar header */}
-        <div className="sidebar-header">
-          <div className="sidebar-header-left">
-            <ChatBubbleBottomCenterTextIcon className="h-5 w-5 text-indigo-400" />
-            <span className="sidebar-title">Conversations</span>
+      <div className="relative z-10 p-4 sm:p-6 animate-fade-in">
+        {/* Page heading */}
+        <div className="mb-5 flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-indigo-200">
+            <SparklesIcon className="h-6 w-6 text-white" />
           </div>
-          <button
-            className="sidebar-close-btn lg-hidden"
-            onClick={() => setIsSidebarOpen(false)}
-            aria-label="Close sidebar"
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Livora AI Assistant</h1>
+            <p className="text-sm text-gray-500">Your intelligent healthcare companion</p>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5 bg-white/70 backdrop-blur-sm border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            Online
+          </div>
+        </div>
+
+        {/* Main chat shell */}
+        <div className="flex gap-4" style={{ height: 'calc(100vh - 11rem)' }}>
+
+          {/* ── SIDEBAR ──────────────────────────────────────────────── */}
+          <div
+            className={`
+              flex-shrink-0 flex flex-col
+              bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/60
+              transition-all duration-300 overflow-hidden
+              ${isSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
+              lg:opacity-100 lg:pointer-events-auto
+              ${!isSidebarOpen ? 'lg:w-0' : 'lg:w-72'}
+            `}
           >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* New Chat button — only one, canonical action */}
-        <div className="sidebar-new-chat-area">
-          <button className="new-chat-btn" onClick={startNewChat} id="new-chat-btn">
-            <PlusCircleIcon className="h-5 w-5" />
-            New Conversation
-          </button>
-        </div>
-
-        {/* Session list */}
-        <div className="session-list">
-          {sessions.length === 0 ? (
-            <div className="session-empty">
-              <SparklesIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-xs text-gray-400 italic">No conversations yet.</p>
-              <p className="text-[10px] text-gray-300 mt-1">Start chatting to create one.</p>
+            {/* Sidebar top */}
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <ChatBubbleLeftRightIcon className="h-5 w-5 text-indigo-600" />
+                <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Conversations</span>
+              </div>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="lg:hidden text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
-          ) : (
-            sessions.map((s) => {
-              const isActive = currentSessionId === s.conversationId;
-              return (
-                <div
-                  key={s.conversationId}
-                  className={`session-item ${isActive ? 'active' : ''}`}
-                  onClick={() => selectSession(s.conversationId)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && selectSession(s.conversationId)}
-                >
-                  <div className={`session-icon ${isActive ? 'active' : ''}`}>
-                    <SparklesIcon className="h-3.5 w-3.5" />
+
+            {/* New chat button */}
+            <div className="p-3 flex-shrink-0">
+              <button
+                id="new-chat-btn"
+                onClick={startNewChat}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 px-4 rounded-xl font-semibold text-sm shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              >
+                <PlusCircleIcon className="h-4 w-4" />
+                New Conversation
+              </button>
+            </div>
+
+            {/* Session list */}
+            <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
+              {sessions.length === 0 ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <SparklesIcon className="h-6 w-6 text-indigo-400" />
                   </div>
-                  <div className="session-info">
-                    <p className="session-title">{s.title || 'Conversation'}</p>
-                    <p className="session-date">
-                      <ClockIcon className="h-2.5 w-2.5" />
-                      {formatDate(s.lastMessageAt)}
+                  <p className="text-xs text-gray-400 font-medium">No conversations yet.</p>
+                  <p className="text-[11px] text-gray-300 mt-1">Start chatting above.</p>
+                </div>
+              ) : (
+                sessions.map(s => {
+                  const isActive = s.conversationId === currentSessionId;
+                  return (
+                    <div
+                      key={s.conversationId}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => selectSession(s.conversationId)}
+                      onKeyDown={e => e.key === 'Enter' && selectSession(s.conversationId)}
+                      className={`
+                        group flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-200 border
+                        ${isActive
+                          ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 shadow-sm'
+                          : 'border-transparent hover:bg-gray-50 hover:border-gray-200'
+                        }
+                      `}
+                    >
+                      <div className={`
+                        w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all
+                        ${isActive ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-sm' : 'bg-gray-100 group-hover:bg-indigo-100'}
+                      `}>
+                        <SparklesIcon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-indigo-500'}`} />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[13px] font-semibold truncate ${isActive ? 'text-indigo-900' : 'text-gray-700'}`}>
+                          {s.title || 'Conversation'}
+                        </p>
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                          <ClockIcon className="h-2.5 w-2.5" />
+                          {formatDate(s.lastMessageAt)}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={e => deleteSession(e, s.conversationId)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 hover:text-red-500 text-gray-400 transition-all"
+                        aria-label="Delete"
+                      >
+                        <TrashIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Sidebar footer — trust badge */}
+            <div className="p-3 border-t border-gray-100 flex-shrink-0">
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                <ShieldCheckIcon className="h-3.5 w-3.5 text-green-500" />
+                HIPAA Compliant · Private Session
+              </div>
+            </div>
+          </div>
+
+          {/* ── MAIN CHAT ─────────────────────────────────────────────── */}
+          <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/60 overflow-hidden min-w-0">
+
+            {/* Chat header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-5 py-4 flex items-center gap-3 flex-shrink-0 relative overflow-hidden">
+              {/* Decorative shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 pointer-events-none" />
+
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all"
+                aria-label="Toggle sidebar"
+              >
+                <Bars3Icon className="h-5 w-5" />
+              </button>
+
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-xl flex-shrink-0">
+                <SparklesIcon className="h-5 w-5 text-white" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-white font-bold text-base leading-tight">Livora AI Assistant</h2>
+                <p className="text-blue-100 text-xs flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  Secure Clinical Intelligence
+                </p>
+              </div>
+
+              {currentSessionId && (
+                <span className="bg-white/15 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-white/20">
+                  Active Chat
+                </span>
+              )}
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-gradient-to-b from-slate-50/50 to-white/30">
+
+              {/* Empty state */}
+              {messages.length === 0 && !isLoadingHistory && (
+                <div className="h-full flex flex-col items-center justify-center text-center px-6 py-10">
+                  <div className="relative mb-5">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl" />
+                    <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 p-5 rounded-3xl border border-indigo-200/50 shadow-lg animate-bounce-in">
+                      <SparklesIcon className="h-10 w-10 text-indigo-600" />
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">How can I help you today?</h2>
+                  <p className="text-gray-500 text-sm max-w-sm mb-6 leading-relaxed">
+                    Describe your symptoms, search for doctors, or manage your appointments — all in one place.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-md">
+                    {QUICK_ACTIONS.map(item => (
+                      <button
+                        key={item.q}
+                        onClick={() => handleSend(item.q)}
+                        disabled={isLoading}
+                        className="flex items-center gap-3 px-4 py-3 bg-white/80 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:border-indigo-200 hover:text-indigo-800 hover:shadow-md transition-all duration-200 text-left group disabled:opacity-50"
+                      >
+                        <span className="text-base">{item.emoji}</span>
+                        <span className="flex-1">{item.label}</span>
+                        <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Skeleton loader */}
+              {isLoadingHistory && (
+                <div className="space-y-4 animate-pulse">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                      <div className="h-12 bg-gray-200 rounded-2xl" style={{ width: `${35 + i * 12}%` }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Messages */}
+              {!isLoadingHistory && messages.map((m, i) => (
+                <div key={i} className={`flex items-end gap-2.5 animate-fade-in-up ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+
+                  {/* Avatar */}
+                  {m.role === 'assistant' && (
+                    <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md mb-1">
+                      <SparklesIcon className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  {m.role === 'user' && (
+                    <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md mb-1">
+                      <UserIcon className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+
+                  <div className={`max-w-[78%] flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    {/* Bubble */}
+                    <div className={`
+                      rounded-2xl px-4 py-3 shadow-sm
+                      ${m.role === 'user'
+                        ? 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white rounded-br-md'
+                        : m.isEmergency
+                          ? 'bg-red-50 border-2 border-red-200 text-red-900 rounded-bl-md'
+                          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
+                      }
+                    `}>
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap font-[450]">{m.content}</p>
+
+                      {/* Emergency banner */}
+                      {m.isEmergency && (
+                        <div className="mt-3 bg-red-600 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 animate-pulse">
+                          <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
+                          IMMEDIATE ACTION: Call 999 or go to the nearest emergency room.
+                        </div>
+                      )}
+
+                      {/* Doctor cards */}
+                      {m.availableDoctors && m.availableDoctors.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {m.availableDoctors.map((doc: any) => (
+                            <div
+                              key={doc.id}
+                              className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3 hover:shadow-md transition-all group"
+                            >
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                                <UserIcon className="h-4.5 w-4.5 text-white h-5 w-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-indigo-900 truncate">
+                                  Dr. {doc.doctorName || doc.name}
+                                </p>
+                                <p className="text-[11px] text-indigo-600 font-medium">
+                                  {doc.department} · {doc.hospital}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => navigate(`/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(doc.doctorName || doc.name)}`)}
+                                className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:shadow-md hover:scale-105 active:scale-95 transition-all"
+                              >
+                                Book
+                                <ChevronRightIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Booking confirmation */}
+                      {m.bookingDetails && (
+                        <div className="mt-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3 relative">
+                          <span className="absolute -top-2.5 left-4 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                            Confirmed
+                          </span>
+                          <p className="text-sm font-bold text-emerald-800 mt-1">Appointment Requested ✓</p>
+                          <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+                            With <strong>{m.bookingDetails.doctorName}</strong> on {m.bookingDetails.date}.
+                          </p>
+                          {m.bookingDetails.serialNumber && (
+                            <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+                              Serial #{m.bookingDetails.serialNumber}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamp */}
+                    <p className="text-[10px] text-gray-400 font-semibold mt-1 px-1 uppercase tracking-wider">
+                      {formatTime(m.createdAt)}
                     </p>
                   </div>
-                  <button
-                    className="session-delete-btn"
-                    onClick={(e) => deleteSession(e, s.conversationId)}
-                    aria-label="Delete conversation"
-                    title="Delete"
-                  >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </aside>
-
-      {/* ── MAIN CHAT AREA ──────────────────────────────────────────────── */}
-      <main className="assistant-main">
-        {/* Header — no redundant new-chat button here */}
-        <header className="chat-header">
-          <button
-            className="chat-header-menu-btn"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            aria-label="Toggle sidebar"
-          >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-          <div className="chat-header-brand">
-            <div className="chat-header-icon">
-              <SparklesIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="chat-header-title">Livora AI Assistant</h1>
-              <p className="chat-header-status">
-                <span className="status-dot" />
-                Secure Clinical Intelligence
-              </p>
-            </div>
-          </div>
-        </header>
-
-        {/* Messages area */}
-        <div className="messages-area">
-          {/* Empty state */}
-          {messages.length === 0 && !isLoadingHistory && (
-            <div className="empty-state">
-              <div className="empty-icon-ring">
-                <SparklesIcon className="h-10 w-10 text-indigo-400" />
-              </div>
-              <h2 className="empty-title">How can I help you today?</h2>
-              <p className="empty-subtitle">
-                Describe your symptoms, ask about doctors, or manage your appointments.
-              </p>
-              <div className="quick-actions-grid">
-                {QUICK_ACTIONS.map((item) => (
-                  <button
-                    key={item.q}
-                    className="quick-action-btn"
-                    onClick={() => handleSend(item.q)}
-                    disabled={isLoading}
-                  >
-                    {item.label}
-                    <ChevronRightIcon className="h-4 w-4 quick-action-arrow" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Loading history skeleton */}
-          {isLoadingHistory && (
-            <div className="history-loading">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={`skeleton-row ${i % 2 === 0 ? 'right' : 'left'}`}>
-                  <div className="skeleton-bubble" style={{ width: `${40 + i * 15}%` }} />
                 </div>
               ))}
-            </div>
-          )}
 
-          {/* Message list */}
-          {!isLoadingHistory &&
-            messages.map((m, i) => (
-              <div
-                key={i}
-                className={`message-row ${m.role === 'user' ? 'user' : 'assistant'}`}
-              >
-                {/* Avatar */}
-                {m.role === 'assistant' && (
-                  <div className="assistant-avatar">
-                    <SparklesIcon className="h-4 w-4 text-indigo-400" />
+              {/* Typing indicator */}
+              {isLoading && (
+                <div className="flex items-end gap-2.5 animate-fade-in">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                    <SparklesIcon className="h-4 w-4 text-white" />
                   </div>
-                )}
-
-                <div className="message-group">
-                  {/* Bubble */}
-                  <div
-                    className={`message-bubble ${
-                      m.role === 'user'
-                        ? 'user-bubble'
-                        : m.isEmergency
-                        ? 'emergency-bubble'
-                        : 'assistant-bubble'
-                    }`}
-                  >
-                    <p className="message-text">{m.content}</p>
-
-                    {/* Emergency banner */}
-                    {m.isEmergency && (
-                      <div className="emergency-banner">
-                        <ExclamationTriangleIcon className="h-5 w-5 shrink-0" />
-                        IMMEDIATE ACTION: Call 999 or go to the nearest emergency room.
-                      </div>
-                    )}
-
-                    {/* Doctor cards */}
-                    {m.availableDoctors && m.availableDoctors.length > 0 && (
-                      <div className="doctor-grid">
-                        {m.availableDoctors.map((doc: any) => (
-                          <div key={doc.id} className="doctor-card">
-                            <div className="doctor-card-avatar">
-                              <UserIcon className="h-5 w-5" />
-                            </div>
-                            <div className="doctor-card-info">
-                              <p className="doctor-name">
-                                Dr. {doc.doctorName || doc.name}
-                              </p>
-                              <p className="doctor-meta">
-                                {doc.department} · {doc.hospital}
-                              </p>
-                            </div>
-                            <button
-                              className="book-now-btn"
-                              onClick={() =>
-                                navigate(
-                                  `/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(
-                                    doc.doctorName || doc.name
-                                  )}`
-                                )
-                              }
-                            >
-                              Book
-                              <ChevronRightIcon className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Booking confirmation */}
-                    {m.bookingDetails && (
-                      <div className="booking-confirmation">
-                        <div className="booking-badge">Confirmed</div>
-                        <p className="booking-title">Appointment Requested</p>
-                        <p className="booking-detail">
-                          With <strong>{m.bookingDetails.doctorName}</strong> on{' '}
-                          {m.bookingDetails.date}.
-                        </p>
-                        {m.bookingDetails.serialNumber && (
-                          <p className="booking-serial">
-                            Serial #{m.bookingDetails.serialNumber}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm flex items-center gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <span
+                        key={i}
+                        className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce inline-block"
+                        style={{ animationDelay: `${i * 150}ms` }}
+                      />
+                    ))}
+                    <span className="text-xs text-indigo-500 font-semibold ml-1">Thinking...</span>
                   </div>
-
-                  {/* Timestamp */}
-                  <p className={`message-timestamp ${m.role === 'user' ? 'text-right' : ''}`}>
-                    {formatTime(m.createdAt)}
-                  </p>
                 </div>
-              </div>
-            ))}
+              )}
 
-          {/* Typing indicator */}
-          {isLoading && (
-            <div className="message-row assistant">
-              <div className="assistant-avatar">
-                <SparklesIcon className="h-4 w-4 text-indigo-400" />
-              </div>
-              <div className="typing-indicator">
-                <span />
-                <span />
-                <span />
-              </div>
+              <div ref={messagesEndRef} />
             </div>
-          )}
 
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input area */}
-        <div className="input-area">
-          <div className="input-wrapper">
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !isLoading) handleSend();
-              }}
-              placeholder="Talk to Livora Assistant..."
-              className="chat-input"
-              id="assistant-chat-input"
-              disabled={isLoading}
-              aria-label="Message input"
-            />
-            <button
-              id="assistant-send-btn"
-              onClick={() => handleSend()}
-              disabled={isLoading || !input.trim()}
-              className="send-btn"
-              aria-label="Send message"
-            >
-              <PaperAirplaneIcon className="h-5 w-5" />
-            </button>
+            {/* Input area */}
+            <div className="p-4 bg-white/60 backdrop-blur-sm border-t border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-300 transition-all duration-200">
+                <input
+                  ref={inputRef}
+                  id="assistant-chat-input"
+                  type="text"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey && !isLoading) handleSend();
+                  }}
+                  placeholder="Talk to Livora Assistant..."
+                  className="flex-1 bg-transparent py-2 text-gray-800 text-[15px] font-medium placeholder:text-gray-400 focus:outline-none"
+                  disabled={isLoading}
+                />
+                <button
+                  id="assistant-send-btn"
+                  onClick={() => handleSend()}
+                  disabled={isLoading || !input.trim()}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:shadow-none disabled:scale-100 transition-all duration-200"
+                  aria-label="Send"
+                >
+                  <PaperAirplaneIcon className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-center text-[10px] text-gray-400 font-semibold uppercase tracking-widest mt-2.5 flex items-center justify-center gap-1.5">
+                <ShieldCheckIcon className="h-3 w-3 text-green-500" />
+                Private Clinical Session · HIPAA Compliant
+              </p>
+            </div>
           </div>
-          <p className="input-disclaimer">
-            <ClockIcon className="h-3 w-3" />
-            Private Clinical Session · HIPAA Compliant
-          </p>
         </div>
-      </main>
-
-      {/* Styles */}
-      <style>{`
-        /* ── Layout ───────────────────────────────────────── */
-        .assistant-container {
-          display: flex;
-          height: calc(100vh - 5rem);
-          background: #0f1117;
-          border-radius: 1.25rem;
-          overflow: hidden;
-          position: relative;
-          box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-          border: 1px solid rgba(255,255,255,0.06);
-        }
-
-        /* ── Sidebar ──────────────────────────────────────── */
-        .assistant-sidebar {
-          width: 19rem;
-          background: #13151e;
-          border-right: 1px solid rgba(255,255,255,0.06);
-          display: flex;
-          flex-direction: column;
-          transition: width 0.3s ease, transform 0.3s ease;
-          flex-shrink: 0;
-          overflow: hidden;
-          z-index: 20;
-        }
-        .assistant-sidebar.closed {
-          width: 0;
-          transform: translateX(-100%);
-          position: absolute;
-          height: 100%;
-        }
-        .assistant-sidebar.open {
-          transform: translateX(0);
-        }
-        @media (max-width: 1023px) {
-          .assistant-sidebar {
-            position: absolute;
-            height: 100%;
-          }
-        }
-        @media (min-width: 1024px) {
-          .assistant-sidebar.closed {
-            transform: none;
-            width: 0;
-          }
-        }
-
-        .assistant-mobile-toggle {
-          position: absolute;
-          top: 1rem;
-          left: 1rem;
-          z-index: 30;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.1);
-          color: #c4c9d9;
-          border-radius: 0.5rem;
-          padding: 0.5rem;
-          transition: background 0.2s;
-        }
-        .assistant-mobile-toggle:hover { background: rgba(255,255,255,0.14); }
-        .lg-hidden { display: block; }
-        @media (min-width: 1024px) { .lg-hidden { display: none; } }
-
-        /* Sidebar Header */
-        .sidebar-header {
-          padding: 1.25rem 1rem;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-shrink: 0;
-        }
-        .sidebar-header-left {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .sidebar-title {
-          font-size: 0.8rem;
-          font-weight: 700;
-          color: #9ca3c4;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-        .sidebar-close-btn {
-          color: #6b7280;
-          padding: 0.25rem;
-          border-radius: 0.375rem;
-          transition: color 0.2s, background 0.2s;
-        }
-        .sidebar-close-btn:hover { color: #e5e7eb; background: rgba(255,255,255,0.07); }
-
-        /* New chat */
-        .sidebar-new-chat-area {
-          padding: 0.75rem 1rem;
-          flex-shrink: 0;
-        }
-        .new-chat-btn {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 0.7rem 1rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border-radius: 0.75rem;
-          font-weight: 700;
-          font-size: 0.875rem;
-          transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-          box-shadow: 0 4px 20px rgba(99,102,241,0.3);
-        }
-        .new-chat-btn:hover {
-          opacity: 0.92;
-          transform: translateY(-1px);
-          box-shadow: 0 6px 24px rgba(99,102,241,0.45);
-        }
-        .new-chat-btn:active { transform: translateY(0); }
-
-        /* Session list */
-        .session-list {
-          flex: 1;
-          overflow-y: auto;
-          padding: 0 0.75rem 1rem;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.1) transparent;
-        }
-        .session-empty {
-          text-align: center;
-          padding: 2.5rem 1rem;
-        }
-        .session-item {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.675rem 0.75rem;
-          border-radius: 0.75rem;
-          cursor: pointer;
-          transition: background 0.15s, border-color 0.15s;
-          border: 1px solid transparent;
-          margin-bottom: 0.25rem;
-          group: '';
-        }
-        .session-item:hover { background: rgba(255,255,255,0.05); }
-        .session-item.active {
-          background: rgba(99,102,241,0.12);
-          border-color: rgba(99,102,241,0.3);
-        }
-        .session-icon {
-          width: 2rem;
-          height: 2rem;
-          border-radius: 0.5rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255,255,255,0.07);
-          color: #6b7280;
-          flex-shrink: 0;
-        }
-        .session-icon.active { background: rgba(99,102,241,0.25); color: #818cf8; }
-        .session-info { flex: 1; min-width: 0; }
-        .session-title {
-          font-size: 0.8125rem;
-          font-weight: 600;
-          color: #d1d5db;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .session-item.active .session-title { color: #c7d2fe; }
-        .session-date {
-          font-size: 0.6875rem;
-          color: #6b7280;
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          margin-top: 0.125rem;
-        }
-        .session-delete-btn {
-          opacity: 0;
-          color: #6b7280;
-          padding: 0.25rem;
-          border-radius: 0.375rem;
-          transition: opacity 0.2s, color 0.2s, background 0.2s;
-          flex-shrink: 0;
-        }
-        .session-item:hover .session-delete-btn { opacity: 1; }
-        .session-delete-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
-
-        /* ── Main ──────────────────────────────────────────── */
-        .assistant-main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          background: #0f1117;
-          overflow: hidden;
-          min-width: 0;
-        }
-
-        /* Header */
-        .chat-header {
-          padding: 1rem 1.25rem;
-          background: #13151e;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          display: flex;
-          align-items: center;
-          gap: 0.875rem;
-          flex-shrink: 0;
-        }
-        .chat-header-menu-btn {
-          color: #9ca3af;
-          padding: 0.375rem;
-          border-radius: 0.5rem;
-          transition: color 0.2s, background 0.2s;
-        }
-        .chat-header-menu-btn:hover { color: #e5e7eb; background: rgba(255,255,255,0.07); }
-        .chat-header-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        .chat-header-icon {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          padding: 0.5rem;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 16px rgba(99,102,241,0.3);
-        }
-        .chat-header-title {
-          font-size: 1rem;
-          font-weight: 800;
-          color: #f1f5f9;
-          letter-spacing: -0.02em;
-        }
-        .chat-header-status {
-          font-size: 0.7rem;
-          color: #6b7280;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin-top: 0.125rem;
-          font-weight: 500;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-        }
-        .status-dot {
-          width: 0.5rem;
-          height: 0.5rem;
-          background: #34d399;
-          border-radius: 50%;
-          animation: pulse-dot 2s infinite;
-        }
-        @keyframes pulse-dot {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.2); opacity: 0.7; }
-        }
-
-        /* Messages */
-        .messages-area {
-          flex: 1;
-          overflow-y: auto;
-          padding: 1.5rem 1.25rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.08) transparent;
-        }
-        .messages-area::-webkit-scrollbar { width: 4px; }
-        .messages-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-        /* Empty state */
-        .empty-state {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 2rem;
-          gap: 1rem;
-        }
-        .empty-icon-ring {
-          background: rgba(99,102,241,0.12);
-          border: 1px solid rgba(99,102,241,0.25);
-          border-radius: 50%;
-          padding: 1.25rem;
-          animation: float 4s ease-in-out infinite;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-        .empty-title {
-          font-size: 1.3rem;
-          font-weight: 800;
-          color: #f1f5f9;
-          letter-spacing: -0.02em;
-        }
-        .empty-subtitle {
-          font-size: 0.875rem;
-          color: #6b7280;
-          max-width: 24rem;
-          line-height: 1.6;
-        }
-        .quick-actions-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0.625rem;
-          width: 100%;
-          max-width: 28rem;
-          margin-top: 0.5rem;
-        }
-        .quick-action-btn {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.75rem 1rem;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 0.875rem;
-          font-size: 0.8125rem;
-          font-weight: 600;
-          color: #c4c9d9;
-          text-align: left;
-          transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
-        }
-        .quick-action-btn:hover:not(:disabled) {
-          background: rgba(99,102,241,0.1);
-          border-color: rgba(99,102,241,0.3);
-          color: #c7d2fe;
-          transform: translateY(-1px);
-        }
-        .quick-action-btn:disabled { opacity: 0.5; }
-        .quick-action-arrow {
-          opacity: 0;
-          transition: opacity 0.2s, transform 0.2s;
-        }
-        .quick-action-btn:hover .quick-action-arrow {
-          opacity: 1;
-          transform: translateX(3px);
-        }
-
-        /* Loading skeleton */
-        .history-loading { display: flex; flex-direction: column; gap: 1rem; }
-        .skeleton-row { display: flex; }
-        .skeleton-row.right { justify-content: flex-end; }
-        .skeleton-row.left { justify-content: flex-start; }
-        .skeleton-bubble {
-          height: 3rem;
-          background: rgba(255,255,255,0.06);
-          border-radius: 1rem;
-          animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
-        }
-
-        /* Message rows */
-        .message-row {
-          display: flex;
-          align-items: flex-end;
-          gap: 0.625rem;
-          animation: msg-in 0.25s ease;
-        }
-        .message-row.user { flex-direction: row-reverse; }
-        @keyframes msg-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .message-group { display: flex; flex-direction: column; max-width: 78%; }
-        .message-row.user .message-group { align-items: flex-end; }
-        .message-row.assistant .message-group { align-items: flex-start; }
-
-        .assistant-avatar {
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-          background: rgba(99,102,241,0.15);
-          border: 1px solid rgba(99,102,241,0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          margin-bottom: 0.25rem;
-        }
-
-        /* Bubbles */
-        .message-bubble {
-          padding: 0.875rem 1.125rem;
-          border-radius: 1.25rem;
-          max-width: 100%;
-        }
-        .user-bubble {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border-bottom-right-radius: 0.25rem;
-          box-shadow: 0 4px 20px rgba(99,102,241,0.3);
-        }
-        .assistant-bubble {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: #e2e8f0;
-          border-bottom-left-radius: 0.25rem;
-        }
-        .emergency-bubble {
-          background: rgba(239,68,68,0.1);
-          border: 1px solid rgba(239,68,68,0.3);
-          color: #fca5a5;
-          border-bottom-left-radius: 0.25rem;
-        }
-        .message-text {
-          font-size: 0.9375rem;
-          line-height: 1.65;
-          white-space: pre-wrap;
-          font-weight: 450;
-        }
-        .message-timestamp {
-          font-size: 0.6875rem;
-          color: #4b5563;
-          margin-top: 0.25rem;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-        }
-
-        /* Emergency banner */
-        .emergency-banner {
-          margin-top: 0.75rem;
-          background: #ef4444;
-          color: white;
-          border-radius: 0.625rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.8125rem;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          animation: pulse-bg 2s infinite;
-        }
-        @keyframes pulse-bg {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.85; }
-        }
-
-        /* Doctor cards */
-        .doctor-grid {
-          margin-top: 1rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .doctor-card {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(99,102,241,0.2);
-          border-radius: 0.875rem;
-          padding: 0.75rem;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          transition: background 0.2s, border-color 0.2s;
-        }
-        .doctor-card:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.4); }
-        .doctor-card-avatar {
-          width: 2.25rem;
-          height: 2.25rem;
-          border-radius: 0.625rem;
-          background: rgba(99,102,241,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #818cf8;
-          flex-shrink: 0;
-        }
-        .doctor-card-info { flex: 1; min-width: 0; }
-        .doctor-name {
-          font-size: 0.8125rem;
-          font-weight: 700;
-          color: #c7d2fe;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .doctor-meta {
-          font-size: 0.7rem;
-          color: #818cf8;
-          margin-top: 0.125rem;
-        }
-        .book-now-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.375rem 0.75rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border-radius: 0.5rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-          transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-          white-space: nowrap;
-          box-shadow: 0 2px 10px rgba(99,102,241,0.35);
-        }
-        .book-now-btn:hover { opacity: 0.9; transform: scale(1.04); }
-        .book-now-btn:active { transform: scale(0.97); }
-
-        /* Booking confirmation */
-        .booking-confirmation {
-          margin-top: 0.875rem;
-          background: rgba(52,211,153,0.08);
-          border: 1px solid rgba(52,211,153,0.25);
-          border-radius: 0.875rem;
-          padding: 0.875rem 1rem;
-          position: relative;
-        }
-        .booking-badge {
-          display: inline-block;
-          background: #34d399;
-          color: #064e3b;
-          font-size: 0.6rem;
-          font-weight: 800;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          padding: 0.175rem 0.5rem;
-          border-radius: 999px;
-          margin-bottom: 0.375rem;
-        }
-        .booking-title {
-          font-size: 0.8125rem;
-          font-weight: 700;
-          color: #6ee7b7;
-        }
-        .booking-detail {
-          font-size: 0.75rem;
-          color: #a7f3d0;
-          margin-top: 0.25rem;
-          line-height: 1.5;
-        }
-        .booking-serial {
-          font-size: 0.6875rem;
-          color: #6ee7b7;
-          margin-top: 0.25rem;
-          font-weight: 600;
-        }
-
-        /* Typing indicator */
-        .typing-indicator {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          padding: 0.875rem 1.125rem;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 1.25rem;
-          border-bottom-left-radius: 0.25rem;
-        }
-        .typing-indicator span {
-          width: 0.5rem;
-          height: 0.5rem;
-          background: #6366f1;
-          border-radius: 50%;
-          animation: bounce-dot 1.2s infinite;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce-dot {
-          0%, 100% { transform: translateY(0); opacity: 0.6; }
-          50% { transform: translateY(-5px); opacity: 1; }
-        }
-
-        /* Input area */
-        .input-area {
-          padding: 1rem 1.25rem;
-          background: #13151e;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
-        }
-        .input-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 1rem;
-          padding: 0.375rem 0.375rem 0.375rem 1rem;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .input-wrapper:focus-within {
-          border-color: rgba(99,102,241,0.5);
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-        }
-        .chat-input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          color: #f1f5f9;
-          font-size: 0.9375rem;
-          font-weight: 450;
-          padding: 0.5rem 0;
-        }
-        .chat-input::placeholder { color: #4b5563; font-weight: 500; }
-        .chat-input:disabled { opacity: 0.6; }
-        .send-btn {
-          width: 2.75rem;
-          height: 2.75rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-          flex-shrink: 0;
-          box-shadow: 0 4px 16px rgba(99,102,241,0.4);
-        }
-        .send-btn:hover:not(:disabled) {
-          opacity: 0.9;
-          transform: scale(1.06);
-          box-shadow: 0 6px 20px rgba(99,102,241,0.5);
-        }
-        .send-btn:active:not(:disabled) { transform: scale(0.95); }
-        .send-btn:disabled { opacity: 0.35; box-shadow: none; }
-        .input-disclaimer {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.375rem;
-          font-size: 0.6875rem;
-          color: #374151;
-          font-weight: 600;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-          margin-top: 0.625rem;
-        }
-      `}</style>
+      </div>
     </div>
   );
 };
