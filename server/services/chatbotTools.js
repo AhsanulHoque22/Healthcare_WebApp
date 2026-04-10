@@ -115,6 +115,37 @@ const TOOL_DEFINITIONS = [
   {
     type: "function",
     function: {
+      name: "cancel_appointment",
+      description: "Cancel an existing appointment. ONLY possible until the day before the appointment.",
+      parameters: {
+        type: "object",
+        properties: {
+          appointmentId: { type: "integer" },
+          reason: { type: "string" }
+        },
+        required: ["appointmentId"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "reschedule_appointment",
+      description: "Reschedule an existing appointment. ONLY possible until the day before the original appointment date.",
+      parameters: {
+        type: "object",
+        properties: {
+          appointmentId: { type: "integer" },
+          newDate: { type: "string", description: "YYYY-MM-DD" },
+          timeBlock: { type: "string", description: "e.g. '09:00 AM - 12:00 PM'" }
+        },
+        required: ["appointmentId", "newDate", "timeBlock"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "trigger_emergency",
       description: "ONLY call this if the user reports clear signs of a life-threatening crisis (chest pain, inability to breathe, etc.) AND has confirmed the severity via follow-up questions.",
       parameters: {
@@ -128,6 +159,34 @@ const TOOL_DEFINITIONS = [
     }
   }
 ];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function canModifyAppointment(appointmentDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const apptDate = new Date(appointmentDate);
+  apptDate.setHours(0, 0, 0, 0);
+  
+  // Appt date must be at least 1 day in the future from today
+  return apptDate.getTime() > today.getTime();
+}
+
+function parseTimeBlock(timeBlock) {
+  let appointmentTime = '09:00:00';
+  try {
+    const firstPart = timeBlock.split('-')[0].trim();
+    const [timePart, meridiem] = firstPart.split(' ');
+    if (timePart && meridiem) {
+      let [hours, minutes] = timePart.split(':');
+      let h = parseInt(hours);
+      if (meridiem === 'PM' && h < 12) h += 12;
+      if (meridiem === 'AM' && h === 12) h = 0;
+      appointmentTime = `${h.toString().padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}:00`;
+    }
+  } catch (e) { /* fallback */ }
+  return appointmentTime;
+}
 
 // ─── TOOL IMPLEMENTATIONS ─────────────────────────────────────────────────────
 
@@ -284,18 +343,7 @@ const implementations = {
     });
     if (!patient || !doctor) throw new Error("Entity mismatch during booking.");
     
-    let appointmentTime = '09:00:00';
-    try {
-      const firstPart = params.timeBlock.split('-')[0].trim();
-      const [timePart, meridiem] = firstPart.split(' ');
-      if (timePart && meridiem) {
-        let [hours, minutes] = timePart.split(':');
-        let h = parseInt(hours);
-        if (meridiem === 'PM' && h < 12) h += 12;
-        if (meridiem === 'AM' && h === 12) h = 0;
-        appointmentTime = `${h.toString().padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}:00`;
-      }
-    } catch (e) { /* fallback */ }
+    const appointmentTime = parseTimeBlock(params.timeBlock);
     
     const appointment = await Appointment.create({
       patientId: patient.id,
@@ -312,6 +360,61 @@ const implementations = {
       date: params.appointmentDate,
       doctorName: `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`,
       note: "Requested successfully. Awaiting confirmation."
+    };
+  },
+
+  cancel_appointment: async (params, userId) => {
+    const patient = await Patient.findOne({ where: { userId } });
+    if (!patient) throw new Error("Patient not found.");
+    
+    const appointment = await Appointment.findOne({ 
+      where: { id: params.appointmentId, patientId: patient.id } 
+    });
+    
+    if (!appointment) return { error: true, message: "Appointment not found or not yours." };
+    
+    if (!canModifyAppointment(appointment.appointmentDate)) {
+      return { 
+        error: true, 
+        message: "Cancellations are only allowed until the day before the appointment. Please contact the hospital directly." 
+      };
+    }
+
+    await appointment.update({ status: 'cancelled' });
+    
+    return { success: true, message: `Appointment ${params.appointmentId} cancelled successfully.` };
+  },
+
+  reschedule_appointment: async (params, userId) => {
+    const patient = await Patient.findOne({ where: { userId } });
+    if (!patient) throw new Error("Patient not found.");
+    
+    const appointment = await Appointment.findOne({ 
+      where: { id: params.appointmentId, patientId: patient.id } 
+    });
+    
+    if (!appointment) return { error: true, message: "Appointment not found or not yours." };
+    
+    if (!canModifyAppointment(appointment.appointmentDate)) {
+      return { 
+        error: true, 
+        message: "Rescheduling is only allowed until the day before the original appointment date." 
+      };
+    }
+
+    const appointmentTime = parseTimeBlock(params.timeBlock);
+
+    // Update to requested status for re-approval
+    await appointment.update({ 
+      appointmentDate: params.newDate,
+      appointmentTime: appointmentTime,
+      status: 'requested' 
+    });
+
+    return { 
+      success: true, 
+      message: `Reschedule requested for ${params.newDate}. Awaiting new approval.`,
+      newDate: params.newDate
     };
   },
 

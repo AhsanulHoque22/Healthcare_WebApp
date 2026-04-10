@@ -16,6 +16,8 @@ const RBAC_POLICIES = {
       'get_lab_orders', 
       'get_medical_records', 
       'book_appointment', 
+      'cancel_appointment',
+      'reschedule_appointment',
       'trigger_emergency',
       'search_doctors'
     ]

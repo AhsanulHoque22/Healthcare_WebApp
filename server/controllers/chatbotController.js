@@ -51,7 +51,8 @@ class ChatbotController {
         content: aiResponse.message,
         intent: aiResponse.intent,
         context: null,
-        availableDoctors: aiResponse.availableDoctors || null
+        availableDoctors: aiResponse.availableDoctors || null,
+        bookingDetails: aiResponse.bookingDetails || null
       });
 
       return res.json({
@@ -78,7 +79,7 @@ class ChatbotController {
         where: { userId },
         order: [['created_at', 'ASC']],
         limit: 50,
-        attributes: ['id', 'role', 'content', 'intent', 'context', 'availableDoctors', 'createdAt']
+        attributes: ['id', 'role', 'content', 'intent', 'context', 'availableDoctors', 'bookingDetails', 'createdAt']
       });
 
       return res.json({

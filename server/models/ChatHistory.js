@@ -36,6 +36,11 @@ const ChatHistory = sequelize.define('ChatHistory', {
     type: DataTypes.JSON,
     allowNull: true,
     field: 'available_doctors'
+  },
+  bookingDetails: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    field: 'booking_details'
   }
 }, {
   tableName: 'chat_histories',

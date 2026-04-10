@@ -10,7 +10,8 @@ import {
   ExclamationTriangleIcon,
   CalendarIcon,
   UserIcon,
-  TrashIcon
+  TrashIcon,
+  PlusCircleIcon
 } from '@heroicons/react/24/outline';
 
 import API from '../api/api';
@@ -55,9 +56,15 @@ const ChatbotWidget: React.FC = () => {
             role: h.role,
             content: h.content,
             intent: h.intent,
+            isEmergency: h.intent === 'EMERGENCY',
+            availableDoctors: h.availableDoctors,
+            bookingDetails: h.bookingDetails,
             context: h.context
           }));
           setMessages(formattedHistory);
+          setTimeout(() => {
+            scrollRef.current?.scrollIntoView({ behavior: 'auto' });
+          }, 100);
         }
       } catch (error) {
         console.error("Failed to load history");
@@ -142,13 +149,19 @@ const ChatbotWidget: React.FC = () => {
   };
 
   const clearHistory = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete your chat history?")) return;
     try {
       await API.delete('/chatbot/history');
-      setMessages([{ role: 'assistant', content: "Fresh start! I'm here whenever you need me." }]);
-      toast.success('Chat cleared');
+      setMessages([{ role: 'assistant', content: "History deleted. I'm starting fresh!" }]);
+      toast.success('History wiped');
     } catch (e) {
       toast.error('Could not clear history');
     }
+  };
+
+  const startNewChat = () => {
+    setMessages([{ role: 'assistant', content: "Starting a new conversation. What's on your mind?" }]);
+    toast.success('New chat started');
   };
 
   const toggleRecording = async () => {
@@ -231,7 +244,10 @@ const ChatbotWidget: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-1">
-              <button onClick={clearHistory} className="hover:bg-white/20 p-2 rounded-full transition-all" title="Clear conversation">
+              <button onClick={startNewChat} className="hover:bg-white/20 p-2 rounded-full transition-all" title="New conversation">
+                <PlusCircleIcon className="h-5 w-5" />
+              </button>
+              <button onClick={clearHistory} className="hover:bg-white/20 p-2 rounded-full transition-all" title="Delete history">
                 <TrashIcon className="h-5 w-5" />
               </button>
               <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-all">

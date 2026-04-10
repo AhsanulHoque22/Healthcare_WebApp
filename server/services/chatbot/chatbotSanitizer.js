@@ -34,6 +34,12 @@ const TOOL_WHITELISTS = {
   book_appointment: [
     'success', 'appointmentId', 'date', 'doctorName', 'note'
   ],
+  cancel_appointment: [
+    'success', 'message', 'error'
+  ],
+  reschedule_appointment: [
+    'success', 'message', 'newDate', 'error'
+  ],
   trigger_emergency: [
     'triggered', 'symptoms'
   ]
