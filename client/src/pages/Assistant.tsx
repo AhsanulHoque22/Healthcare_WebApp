@@ -64,7 +64,7 @@ const Assistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await API.post('/chatbot/chat', { message: text });
+      const response = await API.post('/chatbot/message', { message: text });
       const aiResponse = response.data.data;
       
       const assistantMessage: Message = {
