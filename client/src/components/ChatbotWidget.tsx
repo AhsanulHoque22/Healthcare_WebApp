@@ -9,8 +9,10 @@ import {
   SparklesIcon,
   ExclamationTriangleIcon,
   CalendarIcon,
-  UserIcon
+  UserIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
+
 import API from '../api/api';
 import toast from 'react-hot-toast';
 
@@ -139,6 +141,16 @@ const ChatbotWidget: React.FC = () => {
     }
   };
 
+  const clearHistory = async () => {
+    try {
+      await API.delete('/chatbot/history');
+      setMessages([{ role: 'assistant', content: "Fresh start! I'm here whenever you need me." }]);
+      toast.success('Chat cleared');
+    } catch (e) {
+      toast.error('Could not clear history');
+    }
+  };
+
   const toggleRecording = async () => {
     if (isRecording) {
       stopVoice();
@@ -217,9 +229,15 @@ const ChatbotWidget: React.FC = () => {
                 </p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-all">
-              <XMarkIcon className="h-6 w-6" />
-            </button>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={clearHistory} className="hover:bg-white/20 p-2 rounded-full transition-all" title="Clear conversation">
+                <TrashIcon className="h-5 w-5" />
+              </button>
+              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-all">
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}

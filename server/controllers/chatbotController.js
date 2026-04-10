@@ -1,121 +1,116 @@
+/**
+ * chatbotController.js
+ * 
+ * Handles HTTP requests for the Livora AI chatbot.
+ * The service does all heavy lifting via the agentic loop —
+ * the controller is lean: auth, persistence, response shaping.
+ */
+
 const chatbotService = require('../services/chatbotService');
-const appointmentController = require('./appointmentController');
-const { Patient, ChatHistory } = require('../models');
+const { Patient, ChatHistory, Notification } = require('../models');
 
 class ChatbotController {
+
   /**
-   * Main entry point for chatbot messages (text or voice-to-text)
+   * POST /api/chatbot/message
+   * Main entry point for user messages (text or voice-transcribed text).
    */
   async handleMessage(req, res, next) {
     try {
       const { message, history } = req.body;
       const userId = req.user.id;
 
-      if (!message) {
-        return res.status(400).json({ success: false, message: 'Message is required' });
+      if (!message || !message.trim()) {
+        return res.status(400).json({ success: false, message: 'Message cannot be empty' });
       }
 
-      // 1. Save User Message to DB (Isolation to account)
+      // 1. Persist the user's message
       await ChatHistory.create({
         userId,
         role: 'user',
-        content: message
+        content: message.trim()
       });
 
-      // 2. Get AI reasoning and module outputs
-      const aiResponse = await chatbotService.processMessage(userId, message, history);
+      // 2. Run the full agentic reasoning pipeline
+      const aiResponse = await chatbotService.processMessage(req.user, message.trim(), history || []);
 
-      // 3. Module: AI Appointment Booking Agent
-      if (aiResponse.intent === 'BOOKING' && aiResponse.context.doctorId && aiResponse.context.appointmentDate && aiResponse.context.timeBlock) {
-        
+      // 3. If an emergency was truly triggered, augment the message with emergency contact info
+      if (aiResponse.isEmergency) {
         const patient = await Patient.findOne({ where: { userId } });
-        if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
+        const contactInfo = patient?.emergencyContact
+          ? `\n\n🆘 Emergency contact on file: **${patient.emergencyContact}** — ${patient.emergencyPhone || 'no phone listed'}. Please call **999** or go to your nearest emergency room immediately.`
+          : `\n\n🆘 Please call **999** or go to your nearest emergency room immediately.`;
 
-        req.body = {
-          patientId: patient.id,
-          doctorId: aiResponse.context.doctorId,
-          appointmentDate: aiResponse.context.appointmentDate,
-          timeBlock: aiResponse.context.timeBlock,
-          reason: aiResponse.context.reason || `AI-Assisted Booking: ${aiResponse.context.symptoms?.join(', ')}`,
-          symptoms: aiResponse.context.symptoms?.join(', '),
-          type: 'in_person'
-        };
-
-        const mockRes = {
-          status: (code) => ({
-            json: (data) => {
-              // Capture confirming message
-              if (data.success) {
-                aiResponse.message += `\n\n✅ CONFIRMED: Your appointment is booked for ${aiResponse.context.appointmentDate} at ${aiResponse.context.timeBlock}.`;
-                aiResponse.bookingDetails = data.data.appointment;
-              } else {
-                aiResponse.message += `\n\n❌ Booking Error: ${data.message}`;
-              }
-              
-              // Save Assistant Response to DB (isolated to account)
-              ChatHistory.create({
-                userId,
-                role: 'assistant',
-                content: aiResponse.message,
-                intent: aiResponse.intent,
-                context: aiResponse.context,
-                availableDoctors: aiResponse.availableDoctors
-              }).catch(err => console.error("[ChatbotHistory] Save failed:", err.message));
-
-              return res.json({ success: true, data: aiResponse });
-            }
-          })
-        };
-
-        return appointmentController.createAppointment(req, mockRes, next);
+        aiResponse.message += contactInfo;
       }
 
-      // 4. Save Assistant Response if not booking
+      // 4. Persist the assistant's response
       await ChatHistory.create({
         userId,
         role: 'assistant',
         content: aiResponse.message,
         intent: aiResponse.intent,
-        context: aiResponse.context,
-        availableDoctors: aiResponse.availableDoctors
+        context: null,
+        availableDoctors: aiResponse.availableDoctors || null
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: aiResponse
       });
+
     } catch (error) {
-       console.error("[ChatbotController] Error:", error.message);
-       next(error);
+      console.error('[ChatbotController] handleMessage error:', error.message);
+      next(error);
     }
   }
 
   /**
-   * Get chat history for the authenticated user (Account Isolation)
+   * GET /api/chatbot/history
+   * Returns the authenticated user's chat history (account-isolated).
+   * Limit to 50 most recent messages to keep context manageable.
    */
   async getHistory(req, res, next) {
     try {
       const userId = req.user.id;
+
       const history = await ChatHistory.findAll({
         where: { userId },
         order: [['created_at', 'ASC']],
-        limit: 50
+        limit: 50,
+        attributes: ['id', 'role', 'content', 'intent', 'context', 'availableDoctors', 'createdAt']
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: history
       });
+
     } catch (error) {
       next(error);
     }
   }
 
   /**
-   * Unified voice handler
+   * POST /api/chatbot/voice
+   * Unified handler for voice-to-text input — same pipeline as text.
    */
   async handleVoice(req, res, next) {
     return this.handleMessage(req, res, next);
+  }
+
+  /**
+   * DELETE /api/chatbot/history
+   * Clear chat history for the authenticated user (fresh start).
+   */
+  async clearHistory(req, res, next) {
+    try {
+      const userId = req.user.id;
+      await ChatHistory.destroy({ where: { userId } });
+      return res.json({ success: true, message: 'Conversation history cleared.' });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
