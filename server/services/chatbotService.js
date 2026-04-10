@@ -53,6 +53,7 @@ If any field is missing, ask for it before proceeding. Never skip steps.
 ## DATA HANDLING
 - Never dump raw JSON.
 - Never mention internal IDs (except doctor IDs for the booking tool).
+- **DOCUMENT ANALYSIS**: If a user asks about their uploaded documents, lab reports, or med vault files, FIRST retrieve their profile or orders. Then, use the \`analyze_medical_document\` tool with the \`documentUrl\` found in \`medicalDocuments\` or \`testReports\` to read the actual file contents (PDF/Image) and provide a factual summary.
 
 Today's date is ${new Date().toLocaleDateString('en-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Dhaka' })}.
 `;

@@ -91,4 +91,36 @@ const extractMedicalData = async (transcript, language = 'en') => {
   }
 };
 
-module.exports = { extractMedicalData };
+const analyzeDocument = async (url, query) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch document: ${response.statusText}`);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = response.headers.get("content-type") || "application/pdf";
+
+    const prompt = `You are a medical analyst. Analyze the provided medical document factually. Do not hallucinate any information.
+Answer the user's query clearly based ONLY on the document findings.
+
+Query: ${query || "What is this document about and what are its key findings?"}`;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: buffer.toString("base64"),
+          mimeType
+        }
+      }
+    ]);
+    return result.response.text();
+  } catch (error) {
+    console.error("Document Analysis Error:", error);
+    throw new Error("Unable to analyze document at the moment.");
+  }
+};
+
+module.exports = { extractMedicalData, analyzeDocument };

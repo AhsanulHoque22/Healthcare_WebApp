@@ -13,6 +13,7 @@ const {
 } = require('../models');
 
 const { secureExecute } = require('./chatbot/secureToolWrapper');
+const { analyzeDocument } = require('./extractionService');
 
 // ─── TOOL DEFINITIONS (JSON Schema for LLM) ───────────────────────────────────
 
@@ -92,6 +93,21 @@ const TOOL_DEFINITIONS = [
           },
           limit: { type: "integer", maximum: 5 }
         }
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "analyze_medical_document",
+      description: "ONLY call this if the user asks you to analyze a specific medical document, prescription, lab report, or med vault file by providing its documentUrl. This will read the image or PDF and return factual insights.",
+      parameters: {
+        type: "object",
+        properties: {
+          documentUrl: { type: "string" },
+          query: { type: "string" }
+        },
+        required: ["documentUrl"]
       }
     }
   },
@@ -205,9 +221,11 @@ const implementations = {
       height: p.height,
       weight: p.weight,
       allergies: p.allergies,
+      allergies: p.allergies,
       chronicConditions: p.chronicConditions,
       currentMedications: p.currentMedications,
-      physicalActivity: p.physicalActivity
+      physicalActivity: p.physicalActivity,
+      medicalDocuments: p.medicalDocuments || "None"
     };
   },
 
@@ -290,10 +308,16 @@ const implementations = {
       id: p.id,
       createdAt: p.createdAt,
       doctorName: p.doctor ? `Dr. ${p.doctor.user.firstName} ${p.doctor.user.lastName}` : 'Unknown',
+      department: p.doctor?.department,
+      status: p.status,
+      symptoms: p.symptoms,
+      vitalSigns: p.vitalSigns,
+      clinicalFindings: p.clinicalFindings,
       diagnosis: p.diagnosis,
       medicines: p.medicines,
       suggestions: p.suggestions,
-      tests: p.tests
+      tests: p.tests,
+      testReports: p.testReports
     }));
   },
 
@@ -309,11 +333,21 @@ const implementations = {
   get_lab_orders: async (_, userId) => {
     const patient = await Patient.findOne({ where: { userId } });
     if (!patient) return [];
-    return await LabTestOrder.findAll({ 
+    const raw = await LabTestOrder.findAll({ 
       where: { patientId: patient.id }, 
       limit: 5,
       order: [['createdAt', 'DESC']]
     });
+    
+    return raw.map(l => ({
+      orderNumber: l.orderNumber,
+      status: l.status,
+      createdAt: l.createdAt,
+      testIds: l.testIds,
+      testReports: l.testReports,
+      resultUrl: l.resultUrl,
+      notes: l.notes
+    }));
   },
 
   get_medical_records: async (params, userId) => {
@@ -433,6 +467,16 @@ const implementations = {
       type: 'error'
     });
     return { triggered: true, symptoms: params.symptoms };
+  },
+
+  analyze_medical_document: async (params, userId) => {
+    // We let the user pass any documentUrl, usually returned from other tools.
+    if (!params.documentUrl) return { error: true, message: "documentUrl is required." };
+    const findings = await analyzeDocument(params.documentUrl, params.query);
+    return { 
+      documentUrl: params.documentUrl, 
+      findings 
+    };
   }
 };
 
