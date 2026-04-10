@@ -444,7 +444,7 @@ const rescheduleAppointment = async (req, res, next) => {
       appointmentDate,
       appointmentTime,
       duration: duration || appointment.duration,
-      status: 'scheduled'
+      status: req.user.role === 'patient' ? 'requested' : 'scheduled'
     });
 
     const updatedAppointment = await Appointment.findByPk(id, {

@@ -396,7 +396,7 @@ const Appointments: React.FC = () => {
         appointmentTime: parseTimeBlock(bookingForm.timeBlock),
         duration: 180
       });
-      toast.success('Appointment rescheduled successfully!');
+      toast.success('Reschedule request submitted successfully!');
       setShowRescheduleModal(false);
       await refetchAppointments();
     } catch (error: any) {
@@ -731,7 +731,7 @@ const Appointments: React.FC = () => {
                           </button>
                         )}
                         
-                        {(appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
+                        {(appointment.status === 'requested' || appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
                           <>
                             <button 
                               onClick={() => handleRescheduleClick(appointment)}
