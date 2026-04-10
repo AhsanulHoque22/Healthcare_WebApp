@@ -172,7 +172,6 @@ class ChatbotController {
       }
 
       // Step 2: For each conversation, get the title from the FIRST message
-      const ChatHistory = require('../models').ChatHistory;
       const sessions = await Promise.all(
         sessionMeta.map(async (session) => {
           const firstMsg = await ChatHistory.findOne({
