@@ -17,7 +17,7 @@ class ChatbotController {
    */
   async handleMessage(req, res, next) {
     try {
-      const { message, history } = req.body;
+      const { message, history, conversationId, title } = req.body;
       const userId = req.user.id;
 
       if (!message || !message.trim()) {
@@ -28,7 +28,9 @@ class ChatbotController {
       await ChatHistory.create({
         userId,
         role: 'user',
-        content: message.trim()
+        content: message.trim(),
+        conversationId: conversationId || null,
+        title: title || null
       });
 
       // 2. Run the full agentic reasoning pipeline
@@ -52,7 +54,9 @@ class ChatbotController {
         intent: aiResponse.intent,
         context: null,
         availableDoctors: aiResponse.availableDoctors || null,
-        bookingDetails: aiResponse.bookingDetails || null
+        bookingDetails: aiResponse.bookingDetails || null,
+        conversationId: conversationId || null,
+        title: title || null
       });
 
       return res.json({
@@ -74,12 +78,16 @@ class ChatbotController {
   async getHistory(req, res, next) {
     try {
       const userId = req.user.id;
+      const { conversationId } = req.query;
+
+      const where = { userId };
+      if (conversationId) where.conversationId = conversationId;
 
       const history = await ChatHistory.findAll({
-        where: { userId },
+        where,
         order: [['created_at', 'ASC']],
-        limit: 50,
-        attributes: ['id', 'role', 'content', 'intent', 'context', 'availableDoctors', 'bookingDetails', 'createdAt']
+        limit: 100,
+        attributes: ['id', 'role', 'content', 'intent', 'availableDoctors', 'bookingDetails', 'createdAt', 'conversationId']
       });
 
       return res.json({
@@ -101,13 +109,41 @@ class ChatbotController {
   }
 
   /**
+   * GET /api/chatbot/sessions
+   */
+  async getSessions(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const { Sequelize } = require('../models');
+      const sessions = await ChatHistory.findAll({
+        where: { userId, conversationId: { [Sequelize.Op.ne]: null } },
+        attributes: [
+          'conversationId', 
+          'title', 
+          [Sequelize.fn('MAX', Sequelize.col('created_at')), 'lastMessageAt']
+        ],
+        group: ['conversationId', 'title'],
+        order: [[Sequelize.fn('MAX', Sequelize.col('created_at')), 'DESC']]
+      });
+
+      return res.json({ success: true, data: sessions });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * DELETE /api/chatbot/history
-   * Clear chat history for the authenticated user (fresh start).
    */
   async clearHistory(req, res, next) {
     try {
       const userId = req.user.id;
-      await ChatHistory.destroy({ where: { userId } });
+      const { conversationId } = req.query;
+      
+      const where = { userId };
+      if (conversationId) where.conversationId = conversationId;
+
+      await ChatHistory.destroy({ where });
       return res.json({ success: true, message: 'Conversation history cleared.' });
     } catch (error) {
       next(error);

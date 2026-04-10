@@ -67,7 +67,11 @@ class ChatbotService {
       try {
         llmResponse = await this._callGroq(messages);
       } catch (err) {
-        console.error("[LLM-ERROR]", err.message);
+        console.error("[LLM-ERROR] Full Details:", {
+          message: err.message,
+          data: err.response?.data,
+          status: err.response?.status
+        });
         return this._buildResponse("I'm having trouble connecting to my reasoning engine. Please try again.", null, null, false);
       }
 
@@ -106,10 +110,16 @@ class ChatbotService {
   }
 
   _formatHistory(history) {
-    return history.slice(-12).map(h => {
+    return history.slice(-10).map(h => {
       let content = h.content;
-      if (h.availableDoctors && h.availableDoctors.length > 0) {
-        content += `\n[Context: Previous doctors found: ${JSON.stringify(h.availableDoctors)}]`;
+      // Reduce token bloat by only passing essential doctor info in context
+      if (h.availableDoctors && Array.isArray(h.availableDoctors)) {
+        const docSummaries = h.availableDoctors.map(d => ({
+          id: d.id,
+          name: d.doctorName || d.name,
+          specialty: d.department
+        }));
+        content += `\n[Context: Previous doctors displayed: ${JSON.stringify(docSummaries)}]`;
       }
       return { role: h.role, content };
     });
