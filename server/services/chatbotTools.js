@@ -21,7 +21,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_patient_profile",
-      description: "Retrieve basic health profile (allergies, blood type, vitals).",
+      description: "ONLY call this if the user asks about their own health profile, allergies, or basic vitals. Do NOT call proactively.",
       parameters: { type: "object", properties: {}, required: [] }
     }
   },
@@ -29,7 +29,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_appointments",
-      description: "Fetch upcoming or past appointments.",
+      description: "ONLY call this if the user asks about their upcoming or past appointments.",
       parameters: {
         type: "object",
         properties: {
@@ -43,7 +43,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "search_doctors",
-      description: "Search verified doctors by department/name.",
+      description: "ONLY call this if the user explicitly asks to find a doctor or specialist. You MUST call this before mentioning any doctor name.",
       parameters: {
         type: "object",
         properties: {
@@ -57,7 +57,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_prescriptions",
-      description: "Get patient's medication history and past diagnoses.",
+      description: "ONLY call this if the user asks about their medications, prescriptions, or past doctor suggestions.",
       parameters: { type: "object", properties: { limit: { type: "integer", maximum: 5 } } }
     }
   },
@@ -65,7 +65,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_active_medicines",
-      description: "List currently active medications.",
+      description: "ONLY call this if the user asks what medicines they are currently taking.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -73,7 +73,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_lab_orders",
-      description: "Track status of lab test orders.",
+      description: "ONLY call this if the user asks about their lab tests or test status.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -81,7 +81,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_medical_records",
-      description: "Fetch visit history, past treatments, and diagnostic history.",
+      description: "ONLY call this if the user asks about their medical history, visit history, or past diagnoses.",
       parameters: {
         type: "object",
         properties: {
@@ -99,7 +99,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "book_appointment",
-      description: "Book an appointment. Requires doctorId from search_doctors.",
+      description: "ONLY call this if the user explicitly confirms they want to book an appointment with a specific doctor and provides a date/time. Requires doctorId from search_doctors.",
       parameters: {
         type: "object",
         properties: {
@@ -116,7 +116,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "trigger_emergency",
-      description: "Trigger emergency alert for high-risk symptoms.",
+      description: "ONLY call this if the user reports clear signs of a life-threatening crisis (chest pain, inability to breathe, etc.) AND has confirmed the severity via follow-up questions.",
       parameters: {
         type: "object",
         properties: {
@@ -284,7 +284,6 @@ const implementations = {
     });
     if (!patient || !doctor) throw new Error("Entity mismatch during booking.");
     
-    // Parse timeBlock to approximate appointmentTime (e.g. "09:00 AM - 12:00 PM" -> "09:00:00")
     let appointmentTime = '09:00:00';
     try {
       const firstPart = params.timeBlock.split('-')[0].trim();

@@ -229,7 +229,7 @@ const ChatbotWidget: React.FC = () => {
                 </p>
               </div>
             </div>
-            </div>
+            
             <div className="flex items-center gap-1">
               <button onClick={clearHistory} className="hover:bg-white/20 p-2 rounded-full transition-all" title="Clear conversation">
                 <TrashIcon className="h-5 w-5" />
