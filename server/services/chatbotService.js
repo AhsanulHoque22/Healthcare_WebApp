@@ -64,7 +64,11 @@ class ChatbotService {
 
   async processMessage(user, message, history = []) {
     if (!process.env.GROQ_API_KEY) {
-      return this._buildResponse("AI service configuration missing.", null, null, false);
+      console.error('[ChatbotService] GROQ_API_KEY is not set. Add it to .env and Railway environment variables.');
+      return this._buildResponse(
+        "⚠️ The AI service is not configured. Please contact support.",
+        null, null, false
+      );
     }
 
     const messages = [
@@ -88,12 +92,33 @@ class ChatbotService {
       try {
         llmResponse = await this._callGroq(messages);
       } catch (err) {
-        console.error("[LLM-ERROR] Full Details:", {
-          message: err.message,
-          data: err.response?.data,
-          status: err.response?.status
-        });
-        return this._buildResponse("I'm having trouble connecting to my reasoning engine. Please try again.", null, null, false);
+        const status = err.response?.status;
+        const errBody = err.response?.data;
+        console.error('[LLM-ERROR]', { status, message: err.message, body: errBody });
+
+        // Return specific, actionable error messages
+        if (status === 401) {
+          return this._buildResponse(
+            "The AI service API key is invalid or expired. Please update GROQ_API_KEY in Railway environment variables.",
+            null, null, false
+          );
+        }
+        if (status === 429) {
+          return this._buildResponse(
+            "The AI service is temporarily rate-limited. Please wait a moment and try again.",
+            null, null, false
+          );
+        }
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          return this._buildResponse(
+            "The AI took too long to respond. Please try a shorter message or try again.",
+            null, null, false
+          );
+        }
+        return this._buildResponse(
+          "I'm having trouble reaching the AI service. Please try again in a moment.",
+          null, null, false
+        );
       }
 
       const choice = llmResponse.choices[0];
