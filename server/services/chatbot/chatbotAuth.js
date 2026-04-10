@@ -9,6 +9,7 @@ const { Appointment, Patient, Doctor } = require('../../models');
 const RBAC_POLICIES = {
   patient: {
     allowedTools: [
+      'generate_medical_summary',
       'get_patient_profile', 
       'get_appointments', 
       'get_prescriptions', 

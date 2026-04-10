@@ -9,8 +9,8 @@ const axios = require('axios');
 const { TOOL_DEFINITIONS, executeTool } = require('./chatbotTools');
 const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 
-const CHATBOT_MODEL = "llama-3.3-70b-versatile";
-const MAX_TOOL_ROUNDS = 5;
+const CHATBOT_MODEL = "llama-3.1-8b-instant";
+const MAX_TOOL_ROUNDS = 4;
 
 // ─── HARDENED SYSTEM PROMPT ──────────────────────────────────────────────────
 
