@@ -9,8 +9,9 @@ const axios = require('axios');
 const { TOOL_DEFINITIONS, executeTool } = require('./chatbotTools');
 const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 
-const CHATBOT_MODEL = "llama-3.1-8b-instant";
+const CHATBOT_MODEL = "mixtral-8x7b-32768"; // Higher TPM context
 const MAX_TOOL_ROUNDS = 4;
+const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 // ─── HARDENED SYSTEM PROMPT ──────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ class ChatbotService {
     const context = { userId: user.id, role: user.role };
 
     while (rounds < MAX_TOOL_ROUNDS) {
+      if (rounds > 0) await sleep(1200); // 1.2s delay to allow TPM recovery
       rounds++;
 
       let llmResponse;
@@ -167,7 +169,7 @@ class ChatbotService {
   }
 
   _formatHistory(history) {
-    return history.slice(-10).map(h => {
+    return history.slice(-5).map(h => {
       let content = h.content;
       // Reduce token bloat by only passing essential doctor info in context
       if (h.availableDoctors && Array.isArray(h.availableDoctors)) {

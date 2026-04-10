@@ -42,6 +42,12 @@ const TOOL_WHITELISTS = {
   ],
   trigger_emergency: [
     'triggered', 'symptoms'
+  ],
+  generate_medical_summary: [
+    'patientProfile', 'databaseRecords', 'extractedDataFromFiles', 'status'
+  ],
+  analyze_medical_document: [
+    'documentUrl', 'findings'
   ]
 };
 
