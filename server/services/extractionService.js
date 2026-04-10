@@ -123,4 +123,50 @@ Query: ${query || "What is this document about and what are its key findings?"}`
   }
 };
 
-module.exports = { extractMedicalData, analyzeDocument };
+const extractDataFromDocument = async (url) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch document: ${response.statusText}`);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = response.headers.get("content-type") || "application/pdf";
+
+    const prompt = `You are an expert medical data extractor. Your task is to extract complete structured medical data from this document.
+Extract all diagnoses, test names, test results (values + units), reference ranges, medications, dosage instructions, and doctor notes.
+
+You MUST return ONLY a valid JSON object matching this structure loosely:
+{
+  "diagnoses": [{"condition": "...", "status": "..."}],
+  "labResults": [{"test": "...", "value": "10.2", "unit": "g/dL", "referenceRange": "12.0 - 15.5", "status": "low"}],
+  "medications": [{"name": "...", "dosage": "...", "instructions": "..."}],
+  "doctorNotes": "...",
+  "documentType": "lab_report|prescription|medical_record|scan",
+  "patientName": "...",
+  "date": "YYYY-MM-DD"
+}
+
+If a field is not present in the document, use an empty array, empty string, or null.
+DO NOT include markdown tags like \`\`\`json. Return RAW JSON ONLY.`;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: buffer.toString("base64"),
+          mimeType
+        }
+      }
+    ]);
+    const responseText = result.response.text();
+    let jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    return { error: "Failed to parse JSON" };
+  } catch (error) {
+    console.error("Document Data Extraction Error:", error);
+    throw new Error("Unable to extract data from document.");
+  }
+};
+
+module.exports = { extractMedicalData, analyzeDocument, extractDataFromDocument };

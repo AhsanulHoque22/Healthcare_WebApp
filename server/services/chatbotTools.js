@@ -14,10 +14,19 @@ const {
 
 const { secureExecute } = require('./chatbot/secureToolWrapper');
 const { analyzeDocument } = require('./extractionService');
+const { aggregateMedicalData } = require('./chatbot/medicalDataAggregator');
 
 // ─── TOOL DEFINITIONS (JSON Schema for LLM) ───────────────────────────────────
 
 const TOOL_DEFINITIONS = [
+  {
+    type: "function",
+    function: {
+      name: "generate_medical_summary",
+      description: "Generates a complete, accurate, and consistent medical summary for a patient by aggregating ALL available data sources: database structured fields, fetched prescriptions/labs, AND extracting data from all uploaded unstructured PDFs, images, and reports via OCR/PDF parsing. ALWAYS use this FIRST to get a holistic view when the user asks for a health summary, test results overview, or checking data consistency. This automatically handles fetching profile, appointments, prescriptions, labs, and processing attachments.",
+      parameters: { type: "object", properties: {}, required: [] }
+    }
+  },
   {
     type: "function",
     function: {
@@ -207,6 +216,10 @@ function parseTimeBlock(timeBlock) {
 // ─── TOOL IMPLEMENTATIONS ─────────────────────────────────────────────────────
 
 const implementations = {
+  generate_medical_summary: async (_, userId) => {
+    return await aggregateMedicalData(userId);
+  },
+
   get_patient_profile: async (_, userId) => {
     const p = await Patient.findOne({
       where: { userId },

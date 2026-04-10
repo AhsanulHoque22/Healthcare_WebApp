@@ -17,6 +17,7 @@ const Notification = require('./Notification');
 const WebsiteReview = require('./WebsiteReview');
 const MedicineLog = require('./MedicineLog');
 const ChatHistory = require('./ChatHistory');
+const DocumentCache = require('./DocumentCache');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
@@ -140,5 +141,6 @@ module.exports = {
   Notification,
   WebsiteReview,
   MedicineLog,
-  ChatHistory
+  ChatHistory,
+  DocumentCache
 };
