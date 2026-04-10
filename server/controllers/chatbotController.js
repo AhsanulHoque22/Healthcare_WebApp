@@ -149,21 +149,21 @@ class ChatbotController {
   async getSessions(req, res, next) {
     try {
       const userId = req.user.id;
-      const { Sequelize, sequelize } = require('../models');
-      const { Op } = Sequelize;
+      const { Op, fn, col } = require('sequelize');
+      const ChatHistory = require('../models').ChatHistory;
 
       // Step 1: Get all distinct conversationIds with their latest activity time
-      const sessionMeta = await require('../models').ChatHistory.findAll({
+      const sessionMeta = await ChatHistory.findAll({
         where: {
           userId,
           conversationId: { [Op.ne]: null }
         },
         attributes: [
           'conversationId',
-          [Sequelize.fn('MAX', Sequelize.col('created_at')), 'lastMessageAt']
+          [fn('MAX', col('created_at')), 'lastMessageAt']
         ],
-        group: ['conversation_id'],
-        order: [[Sequelize.fn('MAX', Sequelize.col('created_at')), 'DESC']],
+        group: ['conversationId'],
+        order: [[fn('MAX', col('created_at')), 'DESC']],
         raw: true
       });
 
