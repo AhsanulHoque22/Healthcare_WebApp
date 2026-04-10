@@ -11,16 +11,16 @@ const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 
 const CHATBOT_MODEL = "llama-3.1-8b-instant";
 const MAX_TOOL_ROUNDS = 3;
-const MAX_TOOL_OUTPUT_LENGTH = 1000; // Even tighter for TPM safety
+const MAX_TOOL_OUTPUT_LENGTH = 800; // Even tighter for TPM safety
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 const SYSTEM_PROMPT = `
 You are Livora AI. Concise instructions:
-1. ONLY use data from tool calls. NO fabrication.
-2. Greeting: "Hi, I'm Livora. How can I help?" (No tools).
-3. Booking: search_doctors -> ask choice -> date -> time -> symptoms -> CONFIRM -> book.
+1. ONLY use data from tool calls.
+2. Greeting: "Hi, I'm Livora. How can I help?"
+3. Booking: search_doctors -> date -> time -> symptoms -> book.
 4. Summary: Use generate_medical_summary.
-5. Analysis: For specific files, use analyze_medical_document(url).
+5. Analysis: For files, use analyze_medical_document(url).
 Today: ${new Date().toLocaleDateString('en-BD', { year: 'numeric', month: 'long', day: 'numeric' })}.
 `;
 
@@ -30,7 +30,6 @@ class ChatbotService {
 
   async processMessage(user, message, history = []) {
     if (!process.env.GROQ_API_KEY) {
-      console.error('[ChatbotService] GROQ_API_KEY is not set.');
       return this._buildResponse("⚠️ AI service not configured.", null, null, false);
     }
 
@@ -49,19 +48,16 @@ class ChatbotService {
     const context = { userId: user.id, role: user.role };
 
     while (rounds < MAX_TOOL_ROUNDS) {
-      if (rounds > 0) await sleep(1500); // Wait for rate limit refill
+      if (rounds > 0) await sleep(2000); // Wait for rate limit refill
       rounds++;
 
       let llmResponse;
       try {
-        llmResponse = await this._callGroq(messages);
+        llmResponse = await this._callGroqWithRetry(messages);
       } catch (err) {
-        const status = err.response?.status;
-        const errData = err.response?.data ? JSON.stringify(err.response.data) : 'No body';
-        console.error('[LLM-ERROR]', { status, message: err.message, body: errData });
-
+        console.error('[LLM-ERROR]', err.message);
         return this._buildResponse(
-          `DEBUG ERROR: Status ${status} | Message: ${err.message} | Body: ${errData}`,
+          "I'm experiencing high traffic. Please try again in a few moments.",
           null, null, false
         );
       }
@@ -82,7 +78,7 @@ class ChatbotService {
             // SECURITY & PERFORMANCE: Hard Truncate Large Outputs
             let content = JSON.stringify(result);
             if (content.length > MAX_TOOL_OUTPUT_LENGTH) {
-              content = content.substring(0, MAX_TOOL_OUTPUT_LENGTH) + "... [Truncated for Token Limits]";
+              content = content.substring(0, MAX_TOOL_OUTPUT_LENGTH) + "... [Truncated]";
             }
 
             if (toolName === 'search_doctors' && result.length > 0) availableDoctors = result;
@@ -102,29 +98,40 @@ class ChatbotService {
     }
 
     lastAssistantMessage = detectSensitiveLeak(lastAssistantMessage);
-
     return this._buildResponse(lastAssistantMessage, bookedAppointment, availableDoctors, emergencyTriggered);
   }
 
   _formatHistory(history) {
-    // MINIMAL HISTORY: Only the very last exchange to stay under 6000 TPM
+    // MINIMAL HISTORY: Only the very last exchange to stay under TPM limits
     return history.slice(-2).map(h => ({ role: h.role, content: h.content }));
   }
 
-  async _callGroq(messages) {
-    const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: CHATBOT_MODEL,
-      messages,
-      tools: TOOL_DEFINITIONS,
-      tool_choice: "auto",
-      temperature: 0.0 // Zero temperature for deterministic tool calling
-    }, {
-      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-      timeout: 25000
-    });
-    return res.data;
+  async _callGroqWithRetry(messages, retries = 2) {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+          model: CHATBOT_MODEL,
+          messages,
+          tools: TOOL_DEFINITIONS,
+          tool_choice: "auto",
+          temperature: 0.0
+        }, {
+          headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+          timeout: 25000
+        });
+        return res.data;
+      } catch (err) {
+        const is429 = err.response?.status === 429;
+        if (is429 && i < retries) {
+          const wait = (i + 1) * 3000;
+          console.warn(`[Groq] 429 Rate Limit. Retrying in ${wait}ms...`);
+          await sleep(wait);
+          continue;
+        }
+        throw err;
+      }
+    }
   }
-
   _buildResponse(message, booking, doctors, emergency) {
     return {
       message,

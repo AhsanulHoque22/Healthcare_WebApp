@@ -23,7 +23,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "generate_medical_summary",
-      description: "Generates a complete, accurate, and consistent medical summary for a patient by aggregating ALL available data sources: database structured fields, fetched prescriptions/labs, AND extracting data from all uploaded unstructured PDFs, images, and reports via OCR/PDF parsing. ALWAYS use this FIRST to get a holistic view when the user asks for a health summary, test results overview, or checking data consistency. This automatically handles fetching profile, appointments, prescriptions, labs, and processing attachments.",
+      description: "Aggregates ALL patient data (profile, appointments, prescriptions, labs, Med Vault docs) into a holistic summary. Use for general health queries or 'how am I doing?'.",
       parameters: { type: "object", properties: {}, required: [] }
     }
   },
@@ -31,7 +31,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_patient_profile",
-      description: "ONLY call this if the user asks about their own health profile, allergies, or basic vitals. Do NOT call proactively.",
+      description: "Gets basic info (allergies, blood type, vitals).",
       parameters: { type: "object", properties: {}, required: [] }
     }
   },
@@ -39,12 +39,12 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_appointments",
-      description: "ONLY call this if the user asks about their upcoming or past appointments.",
+      description: "Gets patient appointments (past/upcoming).",
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["requested", "scheduled", "confirmed", "completed", "all", "upcoming"] },
-          limit: { type: "integer", minimum: 1, maximum: 10 }
+          status: { type: "string", enum: ["scheduled", "confirmed", "completed", "all", "upcoming"] },
+          limit: { type: "integer", maximum: 5 }
         }
       }
     }
@@ -53,7 +53,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "search_doctors",
-      description: "ONLY call this if the user explicitly asks to find a doctor or specialist. You MUST call this before mentioning any doctor name.",
+      description: "Finds doctors by department or keyword.",
       parameters: {
         type: "object",
         properties: {
@@ -67,15 +67,15 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_prescriptions",
-      description: "ONLY call this if the user asks about their medications, prescriptions, or past doctor suggestions.",
-      parameters: { type: "object", properties: { limit: { type: "integer", maximum: 5 } } }
+      description: "Gets medications/prescriptions with history.",
+      parameters: { type: "object", properties: { limit: { type: "integer", maximum: 3 } } }
     }
   },
   {
     type: "function",
     function: {
       name: "get_active_medicines",
-      description: "ONLY call this if the user asks what medicines they are currently taking.",
+      description: "Gets currently active medications.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -83,7 +83,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_lab_orders",
-      description: "ONLY call this if the user asks about their lab tests or test status.",
+      description: "Gets status/results of lab tests.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -91,16 +91,12 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_medical_records",
-      description: "ONLY call this if the user asks about their medical history, visit history, or past diagnoses.",
+      description: "Gets patient medical history records.",
       parameters: {
         type: "object",
         properties: {
-          recordType: {
-            type: "string",
-            enum: ["consultation", "lab_result", "imaging", "prescription", "vaccination", "surgery", "all"],
-            description: "Type of medical record to filter by. Default is 'all'."
-          },
-          limit: { type: "integer", maximum: 5 }
+          recordType: { type: "string", enum: ["consultation", "lab_result", "imaging", "prescription", "all"] },
+          limit: { type: "integer", maximum: 3 }
         }
       }
     }
@@ -109,7 +105,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "analyze_medical_document",
-      description: "ONLY call this if the user asks you to analyze a specific medical document, prescription, lab report, or med vault file by providing its documentUrl. This will read the image or PDF and return factual insights.",
+      description: "Analyzes specific medical PDF/Image via OCR. Needs documentUrl.",
       parameters: {
         type: "object",
         properties: {
@@ -124,7 +120,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "book_appointment",
-      description: "ONLY call this if the user explicitly confirms they want to book an appointment with a specific doctor and provides a date/time. Requires doctorId from search_doctors.",
+      description: "Books an appointment with doctorId, date, time, symptoms.",
       parameters: {
         type: "object",
         properties: {
@@ -141,12 +137,11 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "cancel_appointment",
-      description: "Cancel an existing appointment. ONLY possible until the day before the appointment.",
+      description: "Cancels an appointment by ID.",
       parameters: {
         type: "object",
         properties: {
-          appointmentId: { type: "integer" },
-          reason: { type: "string" }
+          appointmentId: { type: "integer" }
         },
         required: ["appointmentId"]
       }
@@ -156,13 +151,13 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "reschedule_appointment",
-      description: "Reschedule an existing appointment. ONLY possible until the day before the original appointment date.",
+      description: "Reschedules an appointment.",
       parameters: {
         type: "object",
         properties: {
           appointmentId: { type: "integer" },
-          newDate: { type: "string", description: "YYYY-MM-DD" },
-          timeBlock: { type: "string", description: "e.g. '09:00 AM - 12:00 PM'" }
+          newDate: { type: "string" },
+          timeBlock: { type: "string" }
         },
         required: ["appointmentId", "newDate", "timeBlock"]
       }
@@ -172,7 +167,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "trigger_emergency",
-      description: "ONLY call this if the user reports clear signs of a life-threatening crisis (chest pain, inability to breathe, etc.) AND has confirmed the severity via follow-up questions.",
+      description: "Only for life-threatening crisis symptoms.",
       parameters: {
         type: "object",
         properties: {

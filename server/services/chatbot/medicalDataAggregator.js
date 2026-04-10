@@ -50,10 +50,10 @@ async function aggregateMedicalData(userId) {
       info: `Allergies: ${patient.allergies || 'None'}, History: ${patient.chronicConditions || 'None'}`
     },
     records: {
-      appointments: appointments.slice(0, 3).map(a => `${a.appointmentDate}: ${a.reason}`),
-      prescriptions: prescriptions.slice(0, 3).map(p => `${p.createdAt}: ${p.diagnosis}`),
+      appointments: appointments.slice(0, 3).map(a => `${a.appointmentDate} (Dr. ${a.doctor?.user?.lastName || '?'})`),
+      prescriptions: prescriptions.slice(0, 3).map(p => `${p.createdAt.toISOString().split('T')[0]} (Dr. ${p.doctor?.user?.lastName || '?'}) - ${p.diagnosis || 'No Diagnosis'}`),
       activeMeds: activeMedicines.slice(0, 5).map(m => `${m.medicineName} (${m.dosage})`),
-      labs: labTestOrders.slice(0, 3).map(l => `${l.createdAt}: ${l.status}`)
+      labs: labTestOrders.slice(0, 3).map(l => `${l.createdAt.toISOString().split('T')[0]} - Status: ${l.status}`)
     },
     summaryOfFiles: extractedDocuments.length > 0 
       ? `Extracted data found in ${extractedDocuments.length} files. Detected metrics: ${[...new Set(extractedDocuments.flatMap(d => (d.labResults || []).map(r => r.testName)))].join(', ') || 'N/A'}`
