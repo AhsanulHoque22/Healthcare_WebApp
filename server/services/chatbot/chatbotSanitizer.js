@@ -44,7 +44,7 @@ const TOOL_WHITELISTS = {
     'triggered', 'symptoms'
   ],
   generate_medical_summary: [
-    'patientProfile', 'databaseRecords', 'extractedDataFromFiles', 'status'
+    'patient', 'records', 'fileData', 'status'
   ],
   analyze_medical_document: [
     'documentUrl', 'findings'

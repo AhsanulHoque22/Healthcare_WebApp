@@ -44,35 +44,19 @@ async function aggregateMedicalData(userId) {
   if (labTestOrders.length === 0) missingData.push("No lab test orders found");
   if (extractedDocuments.length === 0) missingData.push("No uploaded documents or reports found");
 
-  return {
-    patientProfile: {
-      demographics: {
-         name: `${patient.user.firstName} ${patient.user.lastName}`,
-         age: patient.user.dateOfBirth ? Math.floor((Date.now() - new Date(patient.user.dateOfBirth)) / 31557600000) : 'N/A',
-         gender: patient.user.gender,
-         bloodType: patient.bloodType || 'Unknown',
-         height: patient.height || 'Unknown',
-         weight: patient.weight || 'Unknown',
-      },
-      risks: {
-         allergies: patient.allergies || "None documented",
-         chronicConditions: patient.chronicConditions || "None recorded",
-         smokingStatus: patient.smokingStatus || "Unknown",
-         alcoholConsumption: patient.alcoholConsumption || "Unknown"
-      }
+   return {
+    patient: {
+      demographics: `${patient.user.firstName}, ${patient.user.gender}, ${patient.bloodType || 'Unk'}`,
+      info: `Allergies: ${patient.allergies || 'None'}, History: ${patient.chronicConditions || 'None'}`
     },
-    databaseRecords: {
-      appointments: appointments.map(a => ({ date: a.appointmentDate, reason: a.reason, doctor: a.doctor ? `${a.doctor.user.firstName} ${a.doctor.user.lastName}` : 'N/A' })),
-      prescriptions: prescriptions.map(p => ({ date: p.createdAt, diagnosis: p.diagnosis, medicines: p.medicines })),
-      labOrders: labTestOrders.map(l => ({ date: l.createdAt, status: l.status, tests: l.testIds })),
-      activeMedicines: activeMedicines.map(m => ({ name: m.medicineName, dosage: m.dosage, frequency: m.frequency })),
-      historicalRecords: medicalRecords.map(r => ({ date: r.recordDate, type: r.recordType, diagnosis: r.diagnosis, treatment: r.treatment }))
+    records: {
+      appointments: appointments.slice(0, 3).map(a => `${a.appointmentDate}: ${a.reason}`),
+      prescriptions: prescriptions.slice(0, 3).map(p => `${p.createdAt}: ${p.diagnosis}`),
+      activeMeds: activeMedicines.slice(0, 5).map(m => `${m.medicineName} (${m.dosage})`),
+      labs: labTestOrders.slice(0, 3).map(l => `${l.createdAt}: ${l.status}`)
     },
-    extractedDataFromFiles: extractedDocuments,
-    status: {
-      missingData,
-      instructionForLLM: "Perform consistency check. If structured data contradicts extracted file data, explicitly flag it to the user. Present summary encompassing A. Patient Overview, B. Recent Activity, C. Lab Results, D. Medications, E. Risks, F. Missing Data."
-    }
+    fileData: extractedDocuments.slice(0, 5), // Already parsed JSON snippets
+    status: { missing: missingData.join(', ') }
   };
 }
 
