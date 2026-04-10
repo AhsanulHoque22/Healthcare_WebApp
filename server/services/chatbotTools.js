@@ -68,7 +68,13 @@ const TOOL_DEFINITIONS = [
     function: {
       name: "get_prescriptions",
       description: "Gets medications/prescriptions with history.",
-      parameters: { type: "object", properties: { limit: { type: "integer", maximum: 3 } } }
+      parameters: { 
+        type: "object", 
+        properties: { 
+          limit: { type: "integer", maximum: 3 },
+          doctorName: { type: "string", description: "Filter by doctor's name" }
+        } 
+      }
     }
   },
   {
@@ -305,10 +311,26 @@ const implementations = {
   get_prescriptions: async (params, userId) => {
     const patient = await Patient.findOne({ where: { userId } });
     if (!patient) return [];
+    
+    const where = { patientId: patient.id };
+    const include = [{ 
+      association: 'doctor', 
+      include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] 
+    }];
+
+    if (params.doctorName) {
+      include[0].include[0].where = {
+        [Op.or]: [
+          { firstName: { [Op.like]: `%${params.doctorName}%` } },
+          { lastName: { [Op.like]: `%${params.doctorName}%` } }
+        ]
+      };
+    }
+
     const raw = await Prescription.findAll({
-      where: { patientId: patient.id },
-      include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }],
-      limit: params.limit || 3,
+      where,
+      include,
+      limit: params.limit || 5,
       order: [['createdAt', 'DESC']]
     });
 
@@ -318,14 +340,10 @@ const implementations = {
       doctorName: p.doctor ? `Dr. ${p.doctor.user.firstName} ${p.doctor.user.lastName}` : 'Unknown',
       department: p.doctor?.department,
       status: p.status,
-      symptoms: p.symptoms,
-      vitalSigns: p.vitalSigns,
-      clinicalFindings: p.clinicalFindings,
       diagnosis: p.diagnosis,
       medicines: p.medicines,
       suggestions: p.suggestions,
-      tests: p.tests,
-      testReports: p.testReports
+      tests: p.tests
     }));
   },
 
