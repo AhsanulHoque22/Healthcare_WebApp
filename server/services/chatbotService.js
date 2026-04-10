@@ -9,8 +9,9 @@ const axios = require('axios');
 const { TOOL_DEFINITIONS, executeTool } = require('./chatbotTools');
 const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 
-const CHATBOT_MODEL = "llama-3.1-8b-instant";
+const CHATBOT_MODEL = "gemma2-9b-it";
 const MAX_TOOL_ROUNDS = 3;
+const MAX_TOOL_OUTPUT_LENGTH = 1500; // Hard truncate to save tokens
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 const SYSTEM_PROMPT = `
@@ -18,12 +19,10 @@ You are Livora AI. Concise instructions:
 1. ONLY use data from tool calls. NO fabrication.
 2. Greeting: "Hi, I'm Livora. How can I help?" (No tools).
 3. Booking: search_doctors -> ask choice -> date -> time -> symptoms -> CONFIRM -> book.
-4. Summary: Use generate_medical_summary. Mention demographics, activity, labs, meds, risks.
+4. Summary: Use generate_medical_summary.
 5. Analysis: For specific files, use analyze_medical_document(url).
-6. Consistency: Flag contradictions between DB and files.
 Today: ${new Date().toLocaleDateString('en-BD', { year: 'numeric', month: 'long', day: 'numeric' })}.
 `;
-
 
 // ─── MAIN SERVICE ────────────────────────────────────────────────────────────
 
@@ -31,11 +30,8 @@ class ChatbotService {
 
   async processMessage(user, message, history = []) {
     if (!process.env.GROQ_API_KEY) {
-      console.error('[ChatbotService] GROQ_API_KEY is not set. Add it to .env and Railway environment variables.');
-      return this._buildResponse(
-        "⚠️ The AI service is not configured. Please contact support.",
-        null, null, false
-      );
+      console.error('[ChatbotService] GROQ_API_KEY is not set.');
+      return this._buildResponse("⚠️ AI service not configured.", null, null, false);
     }
 
     const messages = [
@@ -53,7 +49,7 @@ class ChatbotService {
     const context = { userId: user.id, role: user.role };
 
     while (rounds < MAX_TOOL_ROUNDS) {
-      if (rounds > 0) await sleep(1200); // 1.2s delay to allow TPM recovery
+      if (rounds > 0) await sleep(1500); // Wait for rate limit refill
       rounds++;
 
       let llmResponse;
@@ -61,32 +57,12 @@ class ChatbotService {
         llmResponse = await this._callGroq(messages);
       } catch (err) {
         const status = err.response?.status;
-        const errBody = err.response?.data;
-        console.error('[LLM-ERROR]', { status, message: err.message, body: errBody });
+        console.error('[LLM-ERROR]', { status, message: err.message, body: err.response?.data });
 
-        // Return specific, actionable error messages
-        if (status === 401) {
-          return this._buildResponse(
-            "The AI service API key is invalid or expired. Please update GROQ_API_KEY in Railway environment variables.",
-            null, null, false
-          );
-        }
         if (status === 429) {
-          return this._buildResponse(
-            "The AI service is temporarily rate-limited. Please wait a moment and try again.",
-            null, null, false
-          );
+          return this._buildResponse("AI service is busy (rate limit). Try again in 30 seconds.", null, null, false);
         }
-        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-          return this._buildResponse(
-            "The AI took too long to respond. Please try a shorter message or try again.",
-            null, null, false
-          );
-        }
-        return this._buildResponse(
-          "I'm having trouble reaching the AI service. Please try again in a moment.",
-          null, null, false
-        );
+        return this._buildResponse("I'm having trouble connecting to the AI. Please try again.", null, null, false);
       }
 
       const choice = llmResponse.choices[0];
@@ -100,13 +76,19 @@ class ChatbotService {
             let args = {};
             try { args = JSON.parse(tc.function.arguments); } catch (e) {}
 
-            const result = await executeTool(toolName, args, context);
+            let result = await executeTool(toolName, args, context);
+            
+            // SECURITY & PERFORMANCE: Hard Truncate Large Outputs
+            let content = JSON.stringify(result);
+            if (content.length > MAX_TOOL_OUTPUT_LENGTH) {
+              content = content.substring(0, MAX_TOOL_OUTPUT_LENGTH) + "... [Truncated for Token Limits]";
+            }
 
             if (toolName === 'search_doctors' && result.length > 0) availableDoctors = result;
             if (toolName === 'book_appointment' && result.success) bookedAppointment = result;
             if (toolName === 'trigger_emergency' && result.triggered) emergencyTriggered = true;
 
-            return { role: "tool", tool_call_id: tc.id, content: JSON.stringify(result) };
+            return { role: "tool", tool_call_id: tc.id, content };
           })
         );
 
@@ -124,19 +106,7 @@ class ChatbotService {
   }
 
   _formatHistory(history) {
-    return history.slice(-5).map(h => {
-      let content = h.content;
-      // Reduce token bloat by only passing essential doctor info in context
-      if (h.availableDoctors && Array.isArray(h.availableDoctors)) {
-        const docSummaries = h.availableDoctors.map(d => ({
-          id: d.id,
-          name: d.doctorName || d.name,
-          specialty: d.department
-        }));
-        content += `\n[Context: Previous doctors displayed: ${JSON.stringify(docSummaries)}]`;
-      }
-      return { role: h.role, content };
-    });
+    return history.slice(-3).map(h => ({ role: h.role, content: h.content }));
   }
 
   async _callGroq(messages) {
