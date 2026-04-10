@@ -9,9 +9,9 @@ const axios = require('axios');
 const { TOOL_DEFINITIONS, executeTool } = require('./chatbotTools');
 const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 
-const CHATBOT_MODEL = "gemma2-9b-it";
+const CHATBOT_MODEL = "llama-3.1-8b-instant";
 const MAX_TOOL_ROUNDS = 3;
-const MAX_TOOL_OUTPUT_LENGTH = 1500; // Hard truncate to save tokens
+const MAX_TOOL_OUTPUT_LENGTH = 1000; // Even tighter for TPM safety
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 const SYSTEM_PROMPT = `
@@ -106,7 +106,8 @@ class ChatbotService {
   }
 
   _formatHistory(history) {
-    return history.slice(-3).map(h => ({ role: h.role, content: h.content }));
+    // MINIMAL HISTORY: Only the very last exchange to stay under 6000 TPM
+    return history.slice(-2).map(h => ({ role: h.role, content: h.content }));
   }
 
   async _callGroq(messages) {

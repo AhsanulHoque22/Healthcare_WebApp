@@ -55,7 +55,9 @@ async function aggregateMedicalData(userId) {
       activeMeds: activeMedicines.slice(0, 5).map(m => `${m.medicineName} (${m.dosage})`),
       labs: labTestOrders.slice(0, 3).map(l => `${l.createdAt}: ${l.status}`)
     },
-    fileData: extractedDocuments.slice(0, 5), // Already parsed JSON snippets
+    summaryOfFiles: extractedDocuments.length > 0 
+      ? `Extracted data found in ${extractedDocuments.length} files. Detected metrics: ${[...new Set(extractedDocuments.flatMap(d => (d.labResults || []).map(r => r.testName)))].join(', ') || 'N/A'}`
+      : "No file data available.",
     status: { missing: missingData.join(', ') }
   };
 }
