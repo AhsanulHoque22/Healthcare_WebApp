@@ -4,14 +4,17 @@ const { cleanOCRText } = require('./cleaning');
 const { parseMedicalText } = require('./parsing');
 const { normalizeAndValidate } = require('./validation');
 const { DocumentCache } = require('../../models');
+const crypto = require('crypto');
 
 /**
  * Process a single document through the full pipeline
  */
 async function processDocument(url) {
+   const urlHash = crypto.createHash('sha256').update(url).digest('hex');
+   let cached = null;
    try {
      // CACHING LOOKUP
-     const cached = await DocumentCache.findByPk(url);
+     cached = await DocumentCache.findOne({ where: { urlHash } });
      if (cached && cached.extractedData && !cached.extractedData.error) {
         return cached.extractedData;
      }
@@ -29,10 +32,11 @@ async function processDocument(url) {
      const validatedData = normalizeAndValidate(parsedData);
 
      // 4. CACHE RESULTS
-     await DocumentCache.upsert({
-        url,
-        extractedData: validatedData
-     });
+     if (cached) {
+        await cached.update({ extractedData: validatedData });
+     } else {
+        await DocumentCache.create({ urlHash, url, extractedData: validatedData });
+     }
 
      return validatedData;
    } catch (error) {
@@ -40,10 +44,15 @@ async function processDocument(url) {
      const failureData = { error: true, reason: "Extraction failed or unreadable document" };
      
      // Cache the failure conditionally so we don't spam retries on broken files
-     await DocumentCache.upsert({
-        url,
-        extractedData: failureData
-     });
+     try {
+       if (cached) {
+           await cached.update({ extractedData: failureData });
+       } else {
+           await DocumentCache.create({ urlHash, url, extractedData: failureData });
+       }
+     } catch (cacheError) {
+       console.error(`[Pipeline Orchestrator] Fatal: Failed to cache failure for ${url}:`, cacheError.message);
+     }
 
      return failureData;
    }
