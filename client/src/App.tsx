@@ -24,6 +24,7 @@ import Appointments from './pages/Appointments';
 import DoctorAppointments from './pages/DoctorAppointments';
 import MedicalRecords from './pages/MedicalRecords';
 import Users from './pages/Users';
+import Assistant from './pages/Assistant';
 
 import Patients from './pages/Patients';
 import AdminDoctors from './pages/AdminDoctors';
@@ -104,6 +105,11 @@ function App() {
                 <Route path="medical-records" element={
                   <ProtectedRoute requiredRole="patient">
                     <MedicalRecords />
+                  </ProtectedRoute>
+                } />
+                <Route path="assistant" element={
+                  <ProtectedRoute requiredRole="patient">
+                    <Assistant />
                   </ProtectedRoute>
                 } />
                 <Route path="lab-reports" element={

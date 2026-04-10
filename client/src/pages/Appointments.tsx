@@ -16,7 +16,8 @@ import {
   EyeIcon,
   XCircleIcon,
   CheckCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
@@ -33,6 +34,7 @@ const Appointments: React.FC = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [prescriptionData, setPrescriptionData] = useState<any>(null);
   const [bookingForm, setBookingForm] = useState({
@@ -338,18 +340,84 @@ const Appointments: React.FC = () => {
 
 
   // Handle cancel appointment
-  const handleCancelAppointment = async (appointmentId: number) => {
+  const handleCancelAppointment = async (appointmentId: number, appointmentDate: string) => {
+    const apptDate = new Date(appointmentDate);
+    apptDate.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (apptDate.getTime() <= today.getTime()) {
+      toast.error('Appointments can only be cancelled until the day before the scheduled date.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to cancel this appointment?')) {
       try {
         await API.put(`/appointments/${appointmentId}/cancel`);
         toast.success('Appointment cancelled successfully!');
-        // Refresh appointments list and dashboard stats
         await refetchAppointments();
         queryClient.invalidateQueries({ queryKey: ['patient-dashboard-stats'] });
       } catch (error: any) {
         toast.error(error.response?.data?.message || 'Failed to cancel appointment');
       }
     }
+  };
+
+  const handleRescheduleClick = (appointment: any) => {
+    const apptDate = new Date(appointment.appointmentDate);
+    apptDate.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (apptDate.getTime() <= today.getTime()) {
+      toast.error('Appointments can only be rescheduled until the day before the scheduled date.');
+      return;
+    }
+
+    setSelectedAppointment(appointment);
+    setBookingForm({
+      doctorId: appointment.doctorId.toString(),
+      appointmentDate: '',
+      timeBlock: '',
+      type: appointment.type,
+      reason: appointment.reason || '',
+      symptoms: appointment.symptoms || '',
+      chamber: appointment.chamber || ''
+    });
+    fetchDoctors();
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      await API.put(`/appointments/${selectedAppointment.id}/reschedule`, {
+        appointmentDate: bookingForm.appointmentDate,
+        appointmentTime: parseTimeBlock(bookingForm.timeBlock),
+        duration: 180
+      });
+      toast.success('Appointment rescheduled successfully!');
+      setShowRescheduleModal(false);
+      await refetchAppointments();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to reschedule appointment');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const parseTimeBlock = (timeBlockStr: string) => {
+    // Simple parser for the timeBlock format "Chamber|09:00 AM - 12:00 PM"
+    try {
+      const timePart = timeBlockStr.split('|')[1] || timeBlockStr;
+      const firstPart = timePart.split('-')[0].trim();
+      const [time, meridiem] = firstPart.split(' ');
+      let [hours, minutes] = time.split(':');
+      let h = parseInt(hours);
+      if (meridiem === 'PM' && h < 12) h += 12;
+      if (meridiem === 'AM' && h === 12) h = 0;
+      return `${h.toString().padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
+    } catch (e) { return '09:00'; }
   };
 
   // Load appointments when component mounts
@@ -664,13 +732,22 @@ const Appointments: React.FC = () => {
                         )}
                         
                         {(appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
-                          <button 
-                            onClick={() => handleCancelAppointment(appointment.id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-bounce"
-                          >
-                            <XCircleIcon className="h-4 w-4" />
-                            Cancel
-                          </button>
+                          <>
+                            <button 
+                              onClick={() => handleRescheduleClick(appointment)}
+                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-pulse"
+                            >
+                              <ArrowPathIcon className="h-4 w-4" />
+                              Reschedule
+                            </button>
+                            <button 
+                              onClick={() => handleCancelAppointment(appointment.id, appointment.appointmentDate)}
+                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-bounce"
+                            >
+                              <XCircleIcon className="h-4 w-4" />
+                              Cancel
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1260,6 +1337,93 @@ const Appointments: React.FC = () => {
           userEmail={user?.email || ''}
           userRole="patient"
         />
+      )}
+
+      {/* Reschedule Modal */}
+      {showRescheduleModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <ArrowPathIcon className="h-6 w-6 mr-2 text-indigo-600" />
+                Reschedule Appointment
+              </h2>
+              <button 
+                onClick={() => setShowRescheduleModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:scale-110"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-sm text-blue-800">
+                Rescheduling <strong>Dr. {selectedAppointment.doctor.user.firstName} {selectedAppointment.doctor.user.lastName}</strong>
+                <br/>
+                Original Date: {new Date(selectedAppointment.appointmentDate).toLocaleDateString()} at {selectedAppointment.appointmentTime}
+              </p>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleRescheduleSubmit(); }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">New Date</label>
+                  <input
+                    type="date"
+                    value={bookingForm.appointmentDate}
+                    onChange={(e) => {
+                      setBookingForm({...bookingForm, appointmentDate: e.target.value, timeBlock: ''});
+                      setAvailableTimeBlocks(getAvailableTimeBlocks(bookingForm.doctorId));
+                    }}
+                    min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Available Times</label>
+                  <select
+                    value={`${bookingForm.chamber}|${bookingForm.timeBlock}`}
+                    onChange={(e) => {
+                       const val = e.target.value;
+                       if(val && val !== '|') {
+                           const [chamber, timeBlock] = val.split('|');
+                           setBookingForm({...bookingForm, chamber: chamber, timeBlock: timeBlock});
+                       }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-white"
+                    required
+                  >
+                    <option value="|">Select a time block</option>
+                    {availableTimeBlocks.map((block) => (
+                      <option key={block.value} value={block.value}>
+                        {block.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowRescheduleModal(false)}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading || !bookingForm.appointmentDate || !bookingForm.timeBlock}
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                >
+                  {isLoading ? 'Processing...' : 'Request Reschedule'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

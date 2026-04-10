@@ -11,7 +11,8 @@ import {
   CalendarIcon,
   UserIcon,
   TrashIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 
 import API from '../api/api';
@@ -244,6 +245,16 @@ const ChatbotWidget: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-1">
+              <button 
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/app/assistant');
+                }} 
+                className="hover:bg-white/20 p-2 rounded-full transition-all" 
+                title="Full screen history"
+              >
+                <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+              </button>
               <button onClick={startNewChat} className="hover:bg-white/20 p-2 rounded-full transition-all" title="New conversation">
                 <PlusCircleIcon className="h-5 w-5" />
               </button>

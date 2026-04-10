@@ -314,6 +314,19 @@ const cancelAppointment = async (req, res, next) => {
       });
     }
 
+    // POLICY: Only allowed until the day before for patients
+    const apptDate = new Date(appointment.appointmentDate);
+    apptDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (req.user.role === 'patient' && apptDate <= today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cancellations are only allowed until the day before the appointment.'
+      });
+    }
+
     if (appointment.status === 'cancelled') {
       return res.status(400).json({
         success: false,
@@ -375,6 +388,19 @@ const rescheduleAppointment = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'Appointment not found'
+      });
+    }
+
+    // POLICY: Only allowed until the day before for patients
+    const originalDate = new Date(appointment.appointmentDate);
+    originalDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (req.user.role === 'patient' && originalDate <= today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rescheduling is only allowed until the day before the original appointment date.'
       });
     }
 
