@@ -57,12 +57,13 @@ class ChatbotService {
         llmResponse = await this._callGroq(messages);
       } catch (err) {
         const status = err.response?.status;
-        console.error('[LLM-ERROR]', { status, message: err.message, body: err.response?.data });
+        const errData = err.response?.data ? JSON.stringify(err.response.data) : 'No body';
+        console.error('[LLM-ERROR]', { status, message: err.message, body: errData });
 
-        if (status === 429) {
-          return this._buildResponse("AI service is busy (rate limit). Try again in 30 seconds.", null, null, false);
-        }
-        return this._buildResponse("I'm having trouble connecting to the AI. Please try again.", null, null, false);
+        return this._buildResponse(
+          `DEBUG ERROR: Status ${status} | Message: ${err.message} | Body: ${errData}`,
+          null, null, false
+        );
       }
 
       const choice = llmResponse.choices[0];
