@@ -52,9 +52,12 @@ const options = {
   }
 };
 
-// Prefer DATABASE_URL if provided; otherwise fall back to individual params
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, options)
-  : new Sequelize(dbName, dbUser, dbPass, options);
+// Prefer individual parameters for better stability with special characters (#, $)
+// Fall back to DATABASE_URL only if individual core params are missing
+const sequelize = (dbHost && dbUser && dbPass)
+  ? new Sequelize(dbName, dbUser, dbPass, options)
+  : process.env.DATABASE_URL
+    ? new Sequelize(process.env.DATABASE_URL, options)
+    : new Sequelize(dbName, dbUser, dbPass, options);
 
 module.exports = { sequelize };
