@@ -382,7 +382,7 @@ const MedicalRecords: React.FC = () => {
                           <SparklesIcon className="h-4 w-4" />
                         </div>
                         <h4 className="text-md font-bold text-indigo-900 uppercase tracking-wider">AI Patient Insights</h4>
-                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">POWERED BY GEMINI 1.5</span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">POWERED BY LLAMA 3.1</span>
                       </div>
                       <p className="text-indigo-950 font-medium leading-relaxed italic border-l-4 border-indigo-400 pl-4 py-1">
                         "{medicalSummary?.aiClinicalNarrative || "Analyzing patient health trends..."}"

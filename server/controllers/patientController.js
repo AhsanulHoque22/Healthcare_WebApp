@@ -2,10 +2,8 @@ const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder } 
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const path = require('path');
+const axios = require('axios');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
 
 // Get patient profile
 const getPatientProfile = async (req, res, next) => {
@@ -643,12 +641,10 @@ const getPatientMedicalSummary = async (req, res, next) => {
       reports: order.testReports || []
     }));
 
-    // 4. Generate AI Clinical Narrative using Gemini
+    // 4. Generate AI Clinical Narrative using Groq (Llama-3.1-8b-instant)
     let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";
     try {
-      if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        
+      if (process.env.GROQ_API_KEY) {
         const summaryPrompt = `
           You are a professional medical assistant. Analyze the following patient data and write a 2-3 sentence concise clinical status summary.
           Focused on: Current health status, primary concerns based on diagnoses, and medication adherence.
@@ -663,13 +659,25 @@ const getPatientMedicalSummary = async (req, res, next) => {
           Output: Just the 2-3 sentences of text.
         `;
 
-        const result = await model.generateContent(summaryPrompt);
-        aiClinicalNarrative = result.response.text().trim();
+        const groqResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: "You are a professional medical scribe." },
+            { role: "user", content: summaryPrompt }
+          ],
+          temperature: 0.1,
+          max_tokens: 150
+        }, {
+          headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+          timeout: 10000
+        });
+
+        aiClinicalNarrative = groqResponse.data.choices[0].message.content.trim();
       } else {
-        aiClinicalNarrative = "AI Summary unavailable (API Key not configured). Displaying raw data only.";
+        aiClinicalNarrative = "AI Summary unavailable (Groq API Key not configured). Displaying raw data only.";
       }
     } catch (aiError) {
-      console.error("[patientController] Gemini Summary Error:", aiError.message);
+      console.error("[patientController] Groq Summary Error:", aiError.response?.data || aiError.message);
       aiClinicalNarrative = "Clinical analysis currently unavailable. Please review raw records below.";
     }
 
