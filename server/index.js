@@ -216,8 +216,9 @@ const startServer = async () => {
         await sequelize.query("ALTER TABLE doctors ADD COLUMN chambers JSON;");
         console.log("Successfully added chambers to doctors");
       } catch(e) {
-         if(e.message && e.message.includes("Duplicate column name")) {
-             console.log("Column chambers already exists");
+         // Silently handle if column already exists (MySQL and Postgres formats)
+         if(e.message && (e.message.includes("Duplicate column") || e.message.includes("already exists"))) {
+             console.log("[Database] Column 'chambers' in 'doctors' table: Verified");
          } else {
              console.error("Error adding chambers:", e.message);
          }
@@ -227,8 +228,8 @@ const startServer = async () => {
         await sequelize.query("ALTER TABLE appointments ADD COLUMN chamber VARCHAR(255);");
         console.log("Successfully added chamber to appointments");
       } catch(e) {
-         if(e.message && e.message.includes("Duplicate column name")) {
-             console.log("Column chamber already exists");
+         if(e.message && (e.message.includes("Duplicate column") || e.message.includes("already exists"))) {
+             console.log("[Database] Column 'chamber' in 'appointments' table: Verified");
           } else {
               console.error("Error adding chamber:", e.message);
           }

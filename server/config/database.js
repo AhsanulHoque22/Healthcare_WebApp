@@ -13,18 +13,17 @@ const dbUser = process.env.DB_USER;
 const dbPass = process.env.DB_PASSWORD;
 
 if (process.env.DATABASE_URL) {
-  const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
-  console.log('[Database] Using DATABASE_URL:', maskedUrl);
+  // Only log in development
+  if (process.env.NODE_ENV !== 'production') {
+    const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
+    console.log('[Database] Using DATABASE_URL:', maskedUrl);
+  }
 } else {
-  console.log('[Database] Using individual connection parameters:');
-  console.log('  - Host:', dbHost);
-  console.log('  - Port:', dbPort);
-  console.log('  - User:', dbUser);
-  console.log('  - DB Name:', dbName);
-  console.log('  - Dialect:', dbDialect);
-  
-  if (!dbUser || !dbUser.includes('.')) {
-    console.warn('[Database] WARNING: DB_USER does not contain a dot. Supabase pooler requires "postgres.project-ref"');
+  // Minimum logging for production security
+  console.log('[Database] Using individual connection parameters');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('  - Host:', dbHost);
+    console.log('  - User:', dbUser);
   }
 }
 
