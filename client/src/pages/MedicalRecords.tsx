@@ -390,59 +390,8 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    {/* Left Column - Vitals & General Profile */}
-                    <div className="lg:col-span-1 space-y-6">
-                      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 shadow-sm">
-                        <h4 className="text-md font-bold text-indigo-900 mb-4 flex items-center gap-2 border-b border-indigo-200 pb-2">
-                          <HeartIcon className="h-5 w-5 text-indigo-600" /> Vitals & Metrics
-                        </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Group</p>
-                          <p className="font-bold text-indigo-900 text-lg">{String(medicalSummary?.patientInfo?.bloodType || '—')}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Pressure</p>
-                          <p className="font-bold text-indigo-900 text-lg">{String(medicalSummary?.patientInfo?.bloodPressure || '—')}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-indigo-500 font-semibold uppercase">Weight / Height</p>
-                          <p className="font-bold text-indigo-900">
-                            {medicalSummary?.patientInfo?.weight ? `${medicalSummary.patientInfo.weight} kg` : '--'} / {medicalSummary?.patientInfo?.height ? `${medicalSummary.patientInfo.height} cm` : '--'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-indigo-500 font-semibold uppercase">Pulse</p>
-                          <p className="font-bold text-indigo-900">{medicalSummary?.patientInfo?.pulse ? `${medicalSummary.patientInfo.pulse} bpm` : '—'}</p>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="space-y-6">
 
-                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" /> Allergies & Conditions
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Allergies</span>
-                          <p className="text-sm text-gray-800">{String(medicalSummary?.patientInfo?.allergies || 'None reported')}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Chronic Conditions</span>
-                          <p className="text-sm text-gray-800">{String(medicalSummary?.patientInfo?.chronicConditions || 'None reported')}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Past Surgeries</span>
-                          <p className="text-sm text-gray-800">{String(medicalSummary?.patientInfo?.pastSurgeries || 'None reported')}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column - Diagnoses, Lab Reports & Medicines */}
-                  <div className="lg:col-span-2 space-y-6">
                     {/* Diagnoses and Symptoms */}
                     <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
                       <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
@@ -455,7 +404,7 @@ const MedicalRecords: React.FC = () => {
                             <ul className="space-y-2">
                               {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
                                 <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
-                                  <span>{String(diag?.condition || diag || 'Unknown')}</span>
+                                  <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
                                   <span className="text-xs text-emerald-600/70">
                                     {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
                                   </span>
@@ -472,7 +421,7 @@ const MedicalRecords: React.FC = () => {
                             <ul className="space-y-2">
                               {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
                                 <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
-                                  {String(symp?.symptom || symp || 'Unknown')} 
+                                  {typeof symp === 'object' ? (symp?.symptom || symp?.name || JSON.stringify(symp)) : (symp || 'Unknown')} 
                                   {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
                                     <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
                                   )}
@@ -486,26 +435,7 @@ const MedicalRecords: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Medications */}
-                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                        <FireIcon className="h-5 w-5 text-orange-500" /> Active Prescribed Medications
-                      </h4>
-                      {medicalSummary?.recentMedications && Array.isArray(medicalSummary.recentMedications) && medicalSummary.recentMedications.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {medicalSummary.recentMedications.map((med: any, idx: number) => (
-                            <div key={idx} className="bg-orange-50 border border-orange-100 p-3 rounded-lg">
-                              <p className="font-semibold text-orange-900 text-sm">{String(med?.name || med || 'Unknown Medicine')}</p>
-                              {med?.dosage && <p className="text-xs text-orange-700 mt-1">{String(med.dosage)} {med.duration ? `(${med.duration})` : ''}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-600">
-                           {String(medicalSummary?.patientInfo?.profileCurrentMedications || 'No active medications found in recent prescriptions.')}
-                        </p>
-                      )}
-                    </div>
+
 
                     {/* Recent Lab Reports */}
                     <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
