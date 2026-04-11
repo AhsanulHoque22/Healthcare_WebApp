@@ -1,8 +1,10 @@
-const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder } = require('../models');
+const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder, LabTest, DocumentCache } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const path = require('path');
 const axios = require('axios');
+const crypto = require('crypto');
+const extractionService = require('../services/extractionService');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Get patient profile
@@ -631,15 +633,57 @@ const getPatientMedicalSummary = async (req, res, next) => {
     const latestLabOrders = await LabTestOrder.findAll({
       where: { patientId, status: { [Op.in]: ['completed', 'results_ready'] } },
       order: [['createdAt', 'DESC']],
-      limit: 5
+      limit: 3
     });
 
-    // Structured Lab Results
-    let recentLabResults = latestLabOrders.map(order => ({
-      orderId: order.orderNumber,
-      date: order.createdAt,
-      reports: order.testReports || []
-    }));
+    // Structured Lab Results with AI Extraction
+    let recentLabResults = [];
+    for (const order of latestLabOrders) {
+      // Get test names from LabTest table
+      const testIds = order.testIds || [];
+      const tests = await LabTest.findAll({ 
+        where: { id: testIds }, 
+        attributes: ['name'] 
+      });
+      const testNames = tests.map(t => t.name).join(', ');
+
+      // Extract results from uploaded reports
+      let allFindings = [];
+      const reports = order.testReports || [];
+      
+      for (const report of reports) {
+        if (report.url) {
+          try {
+            const urlHash = crypto.createHash('sha256').update(report.url).digest('hex');
+            let docCache = await DocumentCache.findOne({ where: { urlHash } });
+
+            if (!docCache) {
+              const extracted = await extractionService.extractDataFromDocument(report.url);
+              if (extracted && !extracted.error) {
+                docCache = await DocumentCache.create({
+                  url: report.url,
+                  urlHash,
+                  extractedData: extracted
+                });
+              }
+            }
+
+            if (docCache && docCache.extractedData && docCache.extractedData.labResults) {
+              allFindings.push(...docCache.extractedData.labResults);
+            }
+          } catch (extractionError) {
+            console.error("[Lab Analysis] Extraction failed for", report.url, extractionError.message);
+          }
+        }
+      }
+
+      recentLabResults.push({
+        orderId: order.orderNumber,
+        date: order.createdAt,
+        testNames: testNames || 'Lab Investigation',
+        findings: allFindings.length > 0 ? allFindings : null
+      });
+    }
 
     // 4. Generate AI Clinical Narrative using Groq (Llama-3.1-8b-instant)
     let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";

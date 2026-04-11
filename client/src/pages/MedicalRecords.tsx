@@ -402,7 +402,7 @@ const MedicalRecords: React.FC = () => {
                           <ul className="space-y-2">
                             {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
                               <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
-                                <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
+                                <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || diag?.description || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
                                 <span className="text-xs text-emerald-600/70">
                                   {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
                                 </span>
@@ -419,7 +419,7 @@ const MedicalRecords: React.FC = () => {
                           <ul className="space-y-2">
                             {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
                               <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
-                                {typeof symp === 'object' ? (symp?.symptom || symp?.name || JSON.stringify(symp)) : (symp || 'Unknown')} 
+                                {typeof symp === 'object' ? (symp?.symptom || symp?.name || symp?.description || JSON.stringify(symp)) : (symp || 'Unknown')} 
                                 {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
                                   <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
                                 )}
@@ -441,22 +441,27 @@ const MedicalRecords: React.FC = () => {
                     {medicalSummary?.recentLabResults && Array.isArray(medicalSummary.recentLabResults) && medicalSummary.recentLabResults.length > 0 ? (
                       <div className="space-y-3">
                         {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
-                          <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                            <div>
-                              <span className="font-semibold text-sm text-gray-800">Order #{String(lab?.orderId || '—')}</span>
-                              <span className="text-xs text-gray-500 block">
-                                {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}
-                              </span>
+                          <div key={idx} className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3 shadow-sm">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-bold text-sm text-gray-900 block">{lab?.testNames || 'Laboratory Investigation'}</span>
+                                <span className="text-[11px] text-gray-500 font-medium">Order #{String(lab?.orderId || '—')} • {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}</span>
+                              </div>
+                              <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Ready</span>
                             </div>
-                            <div className="flex gap-2">
-                              {lab?.reports && Array.isArray(lab.reports) && lab.reports.length > 0 ? (
-                                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
-                                  {lab.reports.length} Reports Ready
-                                </span>
-                              ) : (
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Processing</span>
-                              )}
-                            </div>
+                            
+                            {lab?.findings && Array.isArray(lab.findings) && lab.findings.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                {lab.findings.slice(0, 4).map((f: any, fIdx: number) => (
+                                  <div key={fIdx} className="bg-white p-2 rounded-lg border border-purple-100 flex justify-between items-center shadow-sm">
+                                    <span className="text-[10px] font-medium text-gray-600 truncate mr-2">{f.test || 'Result'}</span>
+                                    <span className={`text-xs font-bold ${['abnormal', 'high', 'low', 'critical'].includes(String(f.status).toLowerCase()) ? 'text-red-600' : 'text-emerald-600'}`}>
+                                      {f.value} {f.unit}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
