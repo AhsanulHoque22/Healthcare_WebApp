@@ -370,6 +370,7 @@ const MedicalRecords: React.FC = () => {
                   <p className="text-gray-600 text-lg">Generating standard medical profile...</p>
                 </div>
               ) : medicalSummary ? (
+                <div className="space-y-6">
                   {/* AI Clinical Narrative Box */}
                   <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 border border-indigo-200 p-6 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
