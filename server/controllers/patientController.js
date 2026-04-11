@@ -3,6 +3,9 @@ const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const path = require('path');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
 
 // Get patient profile
 const getPatientProfile = async (req, res, next) => {
@@ -640,8 +643,39 @@ const getPatientMedicalSummary = async (req, res, next) => {
       reports: order.testReports || []
     }));
 
-    // 4. Construct Comprehensive Summary
+    // 4. Generate AI Clinical Narrative using Gemini
+    let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";
+    try {
+      if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        const summaryPrompt = `
+          You are a professional medical assistant. Analyze the following patient data and write a 2-3 sentence concise clinical status summary.
+          Focused on: Current health status, primary concerns based on diagnoses, and medication adherence.
+          
+          Patient Info: ${JSON.stringify(patient.dataValues)}
+          Recent Diagnoses: ${JSON.stringify(summarizedDiagnoses.slice(0, 5))}
+          Recent Symptoms: ${JSON.stringify(recentSymptoms.slice(0, 5))}
+          Active Meds: ${JSON.stringify(recentMedications)}
+          Lab Activity: ${latestLabOrders.length} completed tests recently.
+          
+          Tone: Professional, empathetic, and clinical. Avoid definitive medical advice; emphasize reporting findings.
+          Output: Just the 2-3 sentences of text.
+        `;
+
+        const result = await model.generateContent(summaryPrompt);
+        aiClinicalNarrative = result.response.text().trim();
+      } else {
+        aiClinicalNarrative = "AI Summary unavailable (API Key not configured). Displaying raw data only.";
+      }
+    } catch (aiError) {
+      console.error("[patientController] Gemini Summary Error:", aiError.message);
+      aiClinicalNarrative = "Clinical analysis currently unavailable. Please review raw records below.";
+    }
+
+    // 5. Construct Comprehensive Summary
     const medicalSummary = {
+      aiClinicalNarrative,
       patientInfo: {
         bloodType: patient.bloodType,
         height: patient.height,

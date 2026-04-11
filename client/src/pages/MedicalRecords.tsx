@@ -370,14 +370,34 @@ const MedicalRecords: React.FC = () => {
                   <p className="text-gray-600 text-lg">Generating standard medical profile...</p>
                 </div>
               ) : medicalSummary ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
-                  {/* Left Column - Vitals & General Profile */}
-                  <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 shadow-sm">
-                      <h4 className="text-md font-bold text-indigo-900 mb-4 flex items-center gap-2 border-b border-indigo-200 pb-2">
-                        <HeartIcon className="h-5 w-5 text-indigo-600" /> Vitals & Metrics
-                      </h4>
+                <div className="space-y-6">
+                  {/* AI Clinical Narrative Box */}
+                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 border border-indigo-200 p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <SparklesIcon className="h-16 w-16 text-indigo-600 animate-pulse" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="bg-indigo-600 text-white p-1 rounded-md">
+                          <SparklesIcon className="h-4 w-4" />
+                        </div>
+                        <h4 className="text-md font-bold text-indigo-900 uppercase tracking-wider">AI Patient Insights</h4>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">POWERED BY GEMINI 1.5</span>
+                      </div>
+                      <p className="text-indigo-950 font-medium leading-relaxed italic border-l-4 border-indigo-400 pl-4 py-1">
+                        "{medicalSummary?.aiClinicalNarrative || "Analyzing patient health trends..."}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Left Column - Vitals & General Profile */}
+                    <div className="lg:col-span-1 space-y-6">
+                      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 shadow-sm">
+                        <h4 className="text-md font-bold text-indigo-900 mb-4 flex items-center gap-2 border-b border-indigo-200 pb-2">
+                          <HeartIcon className="h-5 w-5 text-indigo-600" /> Vitals & Metrics
+                        </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Group</p>
