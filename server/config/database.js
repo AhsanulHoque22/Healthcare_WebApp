@@ -13,7 +13,8 @@ const dbUser = process.env.DB_USER;
 const dbPass = process.env.DB_PASSWORD;
 
 if (process.env.DATABASE_URL) {
-  console.log('[Database] Using DATABASE_URL connection string');
+  const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
+  console.log('[Database] Using DATABASE_URL:', maskedUrl);
 } else {
   console.log('[Database] Using individual connection parameters:');
   console.log('  - Host:', dbHost);
@@ -21,6 +22,10 @@ if (process.env.DATABASE_URL) {
   console.log('  - User:', dbUser);
   console.log('  - DB Name:', dbName);
   console.log('  - Dialect:', dbDialect);
+  
+  if (!dbUser || !dbUser.includes('.')) {
+    console.warn('[Database] WARNING: DB_USER does not contain a dot. Supabase pooler requires "postgres.project-ref"');
+  }
 }
 
 // SSL is required for Supabase
