@@ -629,63 +629,106 @@ const getPatientMedicalSummary = async (req, res, next) => {
       }
     });
 
-    // 3. Fetch Latest Lab Test Orders (completed ones have results)
+    // 3. Collect ALL Medical Documents (from Lab Orders and MedVault)
+    let allMedicalDocuments = [];
+
+    // A. Documents from Lab Orders
     const latestLabOrders = await LabTestOrder.findAll({
       where: { patientId, status: { [Op.in]: ['completed', 'results_ready'] } },
       order: [['createdAt', 'DESC']],
-      limit: 3
+      limit: 5
     });
 
-    // Structured Lab Results with AI Extraction
-    let recentLabResults = [];
     for (const order of latestLabOrders) {
-      // Get test names from LabTest table
-      const testIds = order.testIds || [];
-      const tests = await LabTest.findAll({ 
-        where: { id: testIds }, 
-        attributes: ['name'] 
-      });
-      const testNames = tests.map(t => t.name).join(', ');
-
-      // Extract results from uploaded reports
-      let allFindings = [];
       const reports = order.testReports || [];
-      
-      for (const report of reports) {
-        if (report.url) {
-          try {
-            const urlHash = crypto.createHash('sha256').update(report.url).digest('hex');
-            let docCache = await DocumentCache.findOne({ where: { urlHash } });
+      const testIds = order.testIds || [];
+      const tests = await LabTest.findAll({ where: { id: testIds }, attributes: ['name'] });
+      const testNames = tests.map(t => t.name).join(', ') || 'Lab Investigation';
 
-            if (!docCache) {
-              const extracted = await extractionService.extractDataFromDocument(report.url);
-              if (extracted && !extracted.error) {
-                docCache = await DocumentCache.create({
-                  url: report.url,
-                  urlHash,
-                  extractedData: extracted
-                });
-              }
-            }
-
-            if (docCache && docCache.extractedData && docCache.extractedData.labResults) {
-              allFindings.push(...docCache.extractedData.labResults);
-            }
-          } catch (extractionError) {
-            console.error("[Lab Analysis] Extraction failed for", report.url, extractionError.message);
-          }
+      reports.forEach(r => {
+        if (r.url || r.path) {
+          allMedicalDocuments.push({
+            url: r.url || r.path,
+            source: 'Lab Order',
+            orderId: order.orderNumber,
+            date: order.createdAt,
+            testNames
+          });
         }
-      }
-
-      recentLabResults.push({
-        orderId: order.orderNumber,
-        date: order.createdAt,
-        testNames: testNames || 'Lab Investigation',
-        findings: allFindings.length > 0 ? allFindings : null
       });
     }
 
-    // 4. Generate AI Clinical Narrative using Groq (Llama-3.1-8b-instant)
+    // B. Documents from MedVault (Patient Profile)
+    if (patient.medicalDocuments && Array.isArray(patient.medicalDocuments)) {
+      patient.medicalDocuments.forEach(doc => {
+        if (doc.url) {
+          allMedicalDocuments.push({
+            url: doc.url,
+            source: 'MedVault',
+            name: doc.name || 'Uploaded Document',
+            date: doc.uploadedAt || doc.createdAt || new Date()
+          });
+        }
+      });
+    }
+
+    // 4. Analyze All Documents and Aggregate Findings
+    let recentLabResults = [];
+    let extraDiagnoses = [];
+
+    // Sort documents by date DESC and limit analysis to 8 recent ones for performance
+    allMedicalDocuments.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const docsToAnalyze = allMedicalDocuments.slice(0, 8);
+
+    for (const doc of docsToAnalyze) {
+      try {
+        const urlHash = crypto.createHash('sha256').update(doc.url).digest('hex');
+        let docCache = await DocumentCache.findOne({ where: { urlHash } });
+
+        if (!docCache) {
+          const extracted = await extractionService.extractDataFromDocument(doc.url);
+          if (extracted && !extracted.error) {
+            docCache = await DocumentCache.create({
+              url: doc.url,
+              urlHash,
+              extractedData: extracted
+            });
+          }
+        }
+
+        if (docCache && docCache.extractedData) {
+          const data = docCache.extractedData;
+          
+          // If it's a lab report, add to recentLabResults
+          if (data.labResults && data.labResults.length > 0) {
+            recentLabResults.push({
+              orderId: doc.orderId || doc.name || 'Lab Report',
+              date: doc.date,
+              testNames: doc.testNames || data.testNames || (data.labResults.map(l => l.test).join(', ')) || 'Lab Extraction',
+              findings: data.labResults,
+              source: doc.source
+            });
+          }
+
+          // If it has diagnoses, add to extraDiagnoses
+          if (data.diagnoses && data.diagnoses.length > 0) {
+            extraDiagnoses.push(...data.diagnoses.map(d => ({
+              condition: d.condition,
+              status: d.status,
+              date: doc.date,
+              source: `Extracted from ${doc.source}`
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("[Medical Summary] Document Analysis Failed:", doc.url, err.message);
+      }
+    }
+
+    // Merge extra diagnoses into the list
+    summarizedDiagnoses.push(...extraDiagnoses);
+
+    // 5. Generate AI Clinical Narrative using Groq (Llama-3.1-8b-instant)
     let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";
     try {
       if (process.env.GROQ_API_KEY) {

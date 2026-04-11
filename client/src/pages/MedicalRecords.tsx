@@ -445,9 +445,11 @@ const MedicalRecords: React.FC = () => {
                             <div className="flex justify-between items-start">
                               <div>
                                 <span className="font-bold text-sm text-gray-900 block">{lab?.testNames || 'Laboratory Investigation'}</span>
-                                <span className="text-[11px] text-gray-500 font-medium">Order #{String(lab?.orderId || '—')} • {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}</span>
+                                <span className="text-[11px] text-gray-500 font-medium">{lab.source === 'MedVault' ? 'Self Uploaded' : `Order #${String(lab?.orderId || '—')}`} • {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}</span>
                               </div>
-                              <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Ready</span>
+                              <span className={`text-[10px] ${lab.source === 'MedVault' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'} px-2 py-0.5 rounded-full font-bold uppercase tracking-wider`}>
+                                {lab.source === 'MedVault' ? 'MedVault' : 'Result Ready'}
+                              </span>
                             </div>
                             
                             {lab?.findings && Array.isArray(lab.findings) && lab.findings.length > 0 && (
