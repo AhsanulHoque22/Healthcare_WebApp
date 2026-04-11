@@ -14,16 +14,16 @@ const { uploadToCloudinary } = require('../services/cloudinaryService');
 // Helper function to automatically determine test status based on payment and completion
 const determineAutomaticStatus = (test) => {
   // This function determines TEST PROCESSING STATUS based on logical workflow
-  // Test processing statuses: ordered, approved, sample_processing, sample_taken, reported, confirmed
+  // Test processing statuses: ordered, approved, sample_processing, sample_taken, results_ready, confirmed
   
   // If test is confirmed (finalized), preserve this status
   if (test.status === 'confirmed') {
     return 'confirmed';
   }
   
-  // If test has results uploaded, it's reported (regardless of payment status)
+  // If test has results uploaded, it's results_ready (regardless of payment status)
   if (test.testReports && test.testReports.length > 0) {
-    return 'reported';
+    return 'results_ready';
   }
   
   // If test is manually set to specific processing statuses, maintain them
@@ -32,7 +32,7 @@ const determineAutomaticStatus = (test) => {
   }
   
   // For prescription tests, default status should be 'ordered' until admin approves
-  // This ensures proper workflow: ordered -> approved -> sample_processing -> sample_taken -> reported -> confirmed
+  // This ensures proper workflow: ordered -> approved -> sample_processing -> sample_taken -> results_ready -> confirmed
   return 'ordered';
 };
 
@@ -637,7 +637,7 @@ const uploadLabResults = async (req, res, next) => {
       // Store files as JSON in resultUrl field for backward compatibility
       // If testReports field exists, use it; otherwise use resultUrl
       const updateData = {
-        status: 'reported',
+        status: 'results_ready',
         notes: notes || order.notes
       };
       
