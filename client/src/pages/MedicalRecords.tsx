@@ -370,7 +370,6 @@ const MedicalRecords: React.FC = () => {
                   <p className="text-gray-600 text-lg">Generating standard medical profile...</p>
                 </div>
               ) : medicalSummary ? (
-                <div className="space-y-6">
                   {/* AI Clinical Narrative Box */}
                   <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 border border-indigo-200 p-6 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -390,91 +389,86 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-
-                    {/* Diagnoses and Symptoms */}
-                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                        <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600" /> Recent Medical Findings
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
-                          {medicalSummary?.summarizedDiagnoses && Array.isArray(medicalSummary.summarizedDiagnoses) && medicalSummary.summarizedDiagnoses.length > 0 ? (
-                            <ul className="space-y-2">
-                              {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
-                                <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
-                                  <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
-                                  <span className="text-xs text-emerald-600/70">
-                                    {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-gray-500 italic">No recent diagnoses found.</p>
-                          )}
-                        </div>
-                        <div>
-                          <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms Reported</h5>
-                          {medicalSummary?.recentSymptoms && Array.isArray(medicalSummary.recentSymptoms) && medicalSummary.recentSymptoms.length > 0 ? (
-                            <ul className="space-y-2">
-                              {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
-                                <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
-                                  {typeof symp === 'object' ? (symp?.symptom || symp?.name || JSON.stringify(symp)) : (symp || 'Unknown')} 
-                                  {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
-                                    <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-gray-500 italic">No recent symptoms reported.</p>
-                          )}
-                        </div>
+                  {/* Diagnoses and Symptoms */}
+                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                    <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                      <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600" /> Recent Medical Findings
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
+                        {medicalSummary?.summarizedDiagnoses && Array.isArray(medicalSummary.summarizedDiagnoses) && medicalSummary.summarizedDiagnoses.length > 0 ? (
+                          <ul className="space-y-2">
+                            {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
+                              <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
+                                <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
+                                <span className="text-xs text-emerald-600/70">
+                                  {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">No recent diagnoses found.</p>
+                        )}
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms Reported</h5>
+                        {medicalSummary?.recentSymptoms && Array.isArray(medicalSummary.recentSymptoms) && medicalSummary.recentSymptoms.length > 0 ? (
+                          <ul className="space-y-2">
+                            {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
+                              <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
+                                {typeof symp === 'object' ? (symp?.symptom || symp?.name || JSON.stringify(symp)) : (symp || 'Unknown')} 
+                                {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
+                                  <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">No recent symptoms reported.</p>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-
-
-                    {/* Recent Lab Reports */}
-                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                        <BeakerIcon className="h-5 w-5 text-purple-600" /> Recent Laboratory Tests
-                      </h4>
-                      {medicalSummary?.recentLabResults && Array.isArray(medicalSummary.recentLabResults) && medicalSummary.recentLabResults.length > 0 ? (
-                        <div className="space-y-3">
-                          {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                              <div>
-                                <span className="font-semibold text-sm text-gray-800">Order #{String(lab?.orderId || '—')}</span>
-                                <span className="text-xs text-gray-500 block">
-                                  {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}
-                                </span>
-                              </div>
-                              <div className="flex gap-2">
-                                {lab?.reports && Array.isArray(lab.reports) && lab.reports.length > 0 ? (
-                                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
-                                    {lab.reports.length} Reports Ready
-                                  </span>
-                                ) : (
-                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Processing</span>
-                                )}
-                              </div>
+                  {/* Recent Lab Reports */}
+                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                    <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                      <BeakerIcon className="h-5 w-5 text-purple-600" /> Recent Laboratory Tests
+                    </h4>
+                    {medicalSummary?.recentLabResults && Array.isArray(medicalSummary.recentLabResults) && medicalSummary.recentLabResults.length > 0 ? (
+                      <div className="space-y-3">
+                        {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg">
+                            <div>
+                              <span className="font-semibold text-sm text-gray-800">Order #{String(lab?.orderId || '—')}</span>
+                              <span className="text-xs text-gray-500 block">
+                                {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500 italic">No recent lab tests found.</p>
-                      )}
-                    </div>
+                            <div className="flex gap-2">
+                              {lab?.reports && Array.isArray(lab.reports) && lab.reports.length > 0 ? (
+                                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
+                                  {lab.reports.length} Reports Ready
+                                </span>
+                              ) : (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Processing</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No recent lab tests found.</p>
+                    )}
                   </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
 
         {/* Tab Content - Appointments */}
         {activeTab === 'appointments' && (
