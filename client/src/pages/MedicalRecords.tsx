@@ -142,6 +142,24 @@ interface MedicalSummary {
   recentSymptoms: any[];
   recentMedications: ClinicalMedication[];
   recentLabResults: any[];
+  allLabResultsSummary?: {
+    totalReports: number;
+    totalFindings: number;
+    criticalCount: number;
+    cautionCount: number;
+    normalCount: number;
+    highlightedFindings: Array<{
+      test: string;
+      value: string | number;
+      unit?: string;
+      status: 'Normal' | 'Caution' | 'Critical';
+      rawStatus?: string;
+      referenceRange?: string;
+      date?: string | null;
+      source?: string;
+      reportName?: string;
+    }>;
+  };
 }
 
 const MedicalRecords: React.FC = () => {
@@ -626,13 +644,66 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Recent Lab Reports */}
+                  {/* All Lab Reports */}
                   <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
                     <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                      <BeakerIcon className="h-5 w-5 text-purple-600" /> Recent Laboratory Tests
+                      <BeakerIcon className="h-5 w-5 text-purple-600" /> All Laboratory Tests
                     </h4>
                     {medicalSummary?.recentLabResults && Array.isArray(medicalSummary.recentLabResults) && medicalSummary.recentLabResults.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
+                        {medicalSummary?.allLabResultsSummary ? (
+                          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                            <div className="rounded-xl bg-slate-50 p-3 text-center">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reports</p>
+                              <p className="text-lg font-bold text-slate-900">{medicalSummary.allLabResultsSummary.totalReports}</p>
+                            </div>
+                            <div className="rounded-xl bg-blue-50 p-3 text-center">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Findings</p>
+                              <p className="text-lg font-bold text-blue-900">{medicalSummary.allLabResultsSummary.totalFindings}</p>
+                            </div>
+                            <div className="rounded-xl bg-rose-50 p-3 text-center">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Critical</p>
+                              <p className="text-lg font-bold text-rose-900">{medicalSummary.allLabResultsSummary.criticalCount}</p>
+                            </div>
+                            <div className="rounded-xl bg-amber-50 p-3 text-center">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Caution</p>
+                              <p className="text-lg font-bold text-amber-900">{medicalSummary.allLabResultsSummary.cautionCount}</p>
+                            </div>
+                            <div className="rounded-xl bg-emerald-50 p-3 text-center">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Normal</p>
+                              <p className="text-lg font-bold text-emerald-900">{medicalSummary.allLabResultsSummary.normalCount}</p>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {medicalSummary?.allLabResultsSummary?.highlightedFindings?.length ? (
+                          <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                            <h5 className="mb-3 text-sm font-semibold text-gray-900">Highlighted Results Across All Lab Tests</h5>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                              {medicalSummary.allLabResultsSummary.highlightedFindings.map((finding, idx) => (
+                                <div key={idx} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+                                  <div className="mb-2 flex items-center justify-between gap-2">
+                                    <span className="text-sm font-semibold text-gray-900">{finding.test}</span>
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(finding.status)}`}>
+                                      {finding.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-medium text-gray-800">
+                                    {finding.value} {finding.unit}
+                                  </p>
+                                  {finding.referenceRange ? (
+                                    <p className="text-xs text-gray-500">Reference: {finding.referenceRange}</p>
+                                  ) : null}
+                                  <p className="mt-1 text-[11px] text-gray-500">
+                                    {finding.reportName || finding.source}
+                                    {finding.date ? ` • ${new Date(finding.date).toLocaleDateString()}` : ''}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
                         {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
                           <div key={idx} className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3 shadow-sm">
                             <div className="flex justify-between items-start">
@@ -661,7 +732,7 @@ const MedicalRecords: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">No recent lab tests found.</p>
+                      <p className="text-sm text-gray-500 italic">No lab tests found for this patient.</p>
                     )}
                   </div>
                 </div>

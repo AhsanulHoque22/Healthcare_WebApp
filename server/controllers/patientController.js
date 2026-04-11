@@ -85,6 +85,41 @@ const dedupeMedications = (medications = []) => {
   });
 };
 
+const buildLabResultsSummary = (labReports = []) => {
+  const flattenedFindings = labReports.flatMap((report) =>
+    (report.findings || []).map((finding) => ({
+      test: finding?.test || 'Result',
+      value: finding?.value ?? '',
+      unit: finding?.unit || '',
+      status: normalizeUiStatus(finding?.status),
+      rawStatus: finding?.status || 'unknown',
+      referenceRange: finding?.referenceRange || '',
+      date: report?.date || null,
+      source: report?.source || 'Lab report',
+      reportName: report?.testNames || report?.orderId || 'Lab Report'
+    }))
+  );
+
+  return {
+    totalReports: labReports.length,
+    totalFindings: flattenedFindings.length,
+    criticalCount: flattenedFindings.filter((finding) => finding.status === 'Critical').length,
+    cautionCount: flattenedFindings.filter((finding) => finding.status === 'Caution').length,
+    normalCount: flattenedFindings.filter((finding) => finding.status === 'Normal').length,
+    highlightedFindings: flattenedFindings
+      .sort((left, right) => {
+        const severityRank = { Critical: 0, Caution: 1, Normal: 2 };
+        const severityDifference = (severityRank[left.status] ?? 3) - (severityRank[right.status] ?? 3);
+        if (severityDifference !== 0) {
+          return severityDifference;
+        }
+
+        return new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime();
+      })
+      .slice(0, 12)
+  };
+};
+
 const buildFallbackClinicalInsight = ({ diagnoses, medications, labResults }) => {
   const flattenedLabs = labResults.flatMap((lab) => lab.findings || []);
   const keyFindings = flattenedLabs.slice(0, 5).map((finding) => ({
@@ -843,13 +878,12 @@ const getPatientMedicalSummary = async (req, res, next) => {
     let allMedicalDocuments = [];
 
     // A. Documents from Lab Orders
-    const latestLabOrders = await LabTestOrder.findAll({
+    const allLabOrders = await LabTestOrder.findAll({
       where: { patientId, status: { [Op.in]: ['completed', 'results_ready'] } },
-      order: [['createdAt', 'DESC']],
-      limit: 5
+      order: [['createdAt', 'DESC']]
     });
 
-    for (const order of latestLabOrders) {
+    for (const order of allLabOrders) {
       const reports = order.testReports || [];
       const testIds = order.testIds || [];
       const tests = await LabTest.findAll({ where: { id: testIds }, attributes: ['name'] });
@@ -891,9 +925,9 @@ const getPatientMedicalSummary = async (req, res, next) => {
     let reusableCacheCount = 0;
     let legacyCacheCount = 0;
 
-    // Sort documents by date DESC and limit analysis to 8 recent ones for performance
+    // Sort documents by date DESC and analyze all associated documents
     allMedicalDocuments.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const docsToAnalyze = allMedicalDocuments.slice(0, 8);
+    const docsToAnalyze = allMedicalDocuments;
 
     for (const doc of docsToAnalyze) {
       try {
@@ -990,7 +1024,7 @@ const getPatientMedicalSummary = async (req, res, next) => {
         diagnoses: summarizedDiagnoses,
         symptoms: recentSymptoms,
         medications: reconciledMedications,
-        labCount: latestLabOrders.length
+        labCount: allLabOrders.length
       });
     } catch (aiError) {
       console.error('[patientController] Groq Summary Error:', aiError.response?.data || aiError.message);
@@ -1015,6 +1049,8 @@ const getPatientMedicalSummary = async (req, res, next) => {
         labResults: recentLabResults
       });
     }
+
+    const allLabResultsSummary = buildLabResultsSummary(recentLabResults);
 
     // 6. Construct Comprehensive Summary
     const medicalSummary = {
@@ -1048,7 +1084,8 @@ const getPatientMedicalSummary = async (req, res, next) => {
       summarizedDiagnoses: summarizedDiagnoses.slice(0, 10), // Keep top 10 recent
       recentSymptoms: recentSymptoms.slice(0, 10),
       recentMedications: reconciledMedications,
-      recentLabResults: recentLabResults
+      recentLabResults: recentLabResults,
+      allLabResultsSummary
     };
 
     res.json({
