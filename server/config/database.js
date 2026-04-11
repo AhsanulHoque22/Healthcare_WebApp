@@ -1,25 +1,37 @@
 const { Sequelize } = require('sequelize');
 
-// Debug logging for production connectivity
-if (process.env.NODE_ENV === 'production') {
-  console.log('[Database] Checking connection variables...');
-  if (process.env.MYSQL_URL) console.log('[Database] Using MYSQL_URL');
-  else if (process.env.MYSQLHOST) console.log('[Database] Using MYSQLHOST:', process.env.MYSQLHOST);
-  else console.warn('[Database] WARNING: No Railway MySQL variables found. Falling back to localhost.');
+// ============================================================
+// DATABASE CONFIGURATION — Supabase (PostgreSQL)
+// ============================================================
+console.log('[Database] Initializing Supabase/PostgreSQL connection...');
+
+const dbDialect = process.env.DB_DIALECT || 'postgres';
+const dbHost = process.env.DB_HOST;
+const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
+const dbName = process.env.DB_NAME || 'postgres';
+const dbUser = process.env.DB_USER;
+const dbPass = process.env.DB_PASSWORD;
+
+if (process.env.DATABASE_URL) {
+  console.log('[Database] Using DATABASE_URL connection string');
+} else {
+  console.log('[Database] Using individual connection parameters:');
+  console.log('  - Host:', dbHost);
+  console.log('  - Port:', dbPort);
+  console.log('  - User:', dbUser);
+  console.log('  - DB Name:', dbName);
+  console.log('  - Dialect:', dbDialect);
 }
 
-const dbName = process.env.MYSQLDATABASE || process.env.DB_NAME || 'healthcare_db';
-const dbUser = process.env.MYSQLUSER || process.env.DB_USER || 'root';
-const dbPass = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '';
-const dbHost = process.env.MYSQLHOST || process.env.DB_HOST || 'localhost';
-const dbPort = parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306', 10);
+// SSL is required for Supabase
+const sslEnabled = process.env.DB_SSL === 'true' || dbDialect === 'postgres';
 
 const options = {
   host: dbHost,
   port: dbPort,
-  dialect: 'mysql',
+  dialect: dbDialect,
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  dialectOptions: process.env.DB_SSL === 'true'
+  dialectOptions: sslEnabled
     ? { ssl: { require: true, rejectUnauthorized: false } }
     : {},
   pool: {
@@ -35,8 +47,9 @@ const options = {
   }
 };
 
-const sequelize = process.env.MYSQL_URL 
-  ? new Sequelize(process.env.MYSQL_URL, options)
+// Prefer DATABASE_URL if provided; otherwise fall back to individual params
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, options)
   : new Sequelize(dbName, dbUser, dbPass, options);
 
 module.exports = { sequelize };

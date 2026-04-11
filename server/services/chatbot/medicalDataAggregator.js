@@ -14,24 +14,29 @@ async function aggregateMedicalData(userId) {
 
   const appointments = await Appointment.findAll({
     where: { patientId: patient.id },
-    include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }]
+    include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }],
+    order: [['appointmentDate', 'DESC'], ['appointmentTime', 'DESC']]
   });
 
   const prescriptions = await Prescription.findAll({
     where: { patientId: patient.id },
-    include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }]
+    include: [{ association: 'doctor', include: [{ association: 'user', attributes: ['firstName', 'lastName'] }] }],
+    order: [['createdAt', 'DESC']]
   });
 
   const labTestOrders = await LabTestOrder.findAll({
-    where: { patientId: patient.id }
+    where: { patientId: patient.id },
+    order: [['createdAt', 'DESC']]
   });
 
   const medicalRecords = await MedicalRecord.findAll({
-    where: { patientId: patient.id }
+    where: { patientId: patient.id },
+    order: [['createdAt', 'DESC']]
   });
 
   const activeMedicines = await Medicine.findAll({
-    where: { patientId: patient.id, isActive: true }
+    where: { patientId: patient.id, isActive: true },
+    order: [['createdAt', 'DESC']]
   });
 
   // 2 & 3. Retrieve and Extract Unstructured Data via Automated Pipeline

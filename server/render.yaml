@@ -1,0 +1,73 @@
+services:
+  - type: web
+    name: livora-backend
+    env: node
+    plan: free
+    region: oregon
+    rootDir: .  # render.yaml is inside /server, so root is /server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # ── App ──────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000   # Render uses port 10000 internally (it maps to 443 externally)
+
+      # ── Database (Supabase) ───────────────────────────
+      - key: DB_HOST
+        value: aws-1-ap-northeast-1.pooler.supabase.com
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres.kalupffchmgcdljjgwbf
+      - key: DB_PASSWORD
+        sync: false  # Set in Render dashboard — never commit passwords
+      - key: DB_DIALECT
+        value: postgres
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SYNC
+        value: "false"
+
+      # ── Auth ─────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true   # Render auto-generates a secure secret
+
+      # ── CORS (Vercel frontend URL) ────────────────────
+      - key: CLIENT_URL
+        value: https://livoracu48.vercel.app
+
+      # ── Cloudinary ───────────────────────────────────
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dfnaaukdq
+      - key: CLOUDINARY_API_KEY
+        value: "475256397831856"
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Set in Render dashboard
+
+      # ── Email (Brevo) ─────────────────────────────────
+      - key: BREVO_API_KEY
+        sync: false  # Set in Render dashboard
+      - key: FROM_EMAIL
+        value: ahsanulhoque22701048@gmail.com
+      - key: FROM_NAME
+        value: Livora Healthcare
+      - key: SMTP_HOST
+        value: smtp-relay.brevo.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: ahsanulhoque22701048@gmail.com
+      - key: SMTP_PASS
+        sync: false  # Set in Render dashboard
+
+      # ── AI / APIs ─────────────────────────────────────
+      - key: GROQ_API_KEY
+        sync: false  # Set in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false

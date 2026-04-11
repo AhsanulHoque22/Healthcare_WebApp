@@ -1,0 +1,28 @@
+# Supabase Configuration
+
+project_id = "kalupffchmgcdljjgwbf"
+
+[api]
+port = 54321
+schemas = ["public", "auth"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+shadow_port = 54323
+
+[studio]
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://livoracu48.vercel.app"]
+jwt_expiry = 3600
+
+[storage]
+enabled = true
+
+[functions]
+# To use Edge Functions
+# port = 54321
