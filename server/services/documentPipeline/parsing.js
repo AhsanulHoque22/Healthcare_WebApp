@@ -1,7 +1,5 @@
 const { normalizeFrequency, standardizeUnitAndValue, MED_KNOWLEDGE } = require('./normalization');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+const { hasGroqApiKey, LLAMA_MODELS, requestStructuredJson } = require('../groqLlamaService');
 
 /**
  * Stage: Entity Extraction Core
@@ -93,8 +91,11 @@ function deterministicParse(cleanedText) {
  */
 async function extractWithLLM(rawText, baseData) {
   try {
-     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-     const prompt = `As a meticulous medical data parsed, act as a fallback engine.
+     if (!hasGroqApiKey()) {
+        return { ...baseData, fallback_triggered: false };
+     }
+
+     const prompt = `As a meticulous medical data parser, act as a fallback engine.
 Extract strictly in JSON format. Do NOT hallucinate values. Preserve uncertainty.
 For 'source', provide the exact snippet from the text proving the extraction.
 
@@ -107,20 +108,20 @@ For 'source', provide the exact snippet from the text proving the extraction.
 Text to parse:
 """${rawText.substring(0, 6000)}"""`;
 
-     const result = await model.generateContent(prompt);
-     const resText = result.response.text();
-     const match = resText.match(/\{[\s\S]*\}/);
-     
-     if (match) {
-        const parsed = JSON.parse(match[0]);
-        return {
-           diagnoses: [...baseData.diagnoses, ...(parsed.diagnoses || [])],
-           labResults: [...baseData.labResults, ...(parsed.labResults || [])],
-           medications: [...baseData.medications, ...(parsed.medications || [])],
-           fallback_triggered: true
-        };
-     }
-     return { ...baseData, fallback_triggered: false };
+     const parsed = await requestStructuredJson({
+        model: LLAMA_MODELS.documentExtraction,
+        systemPrompt: 'You are a careful clinical information extractor. Return JSON only.',
+        userPrompt: prompt,
+        temperature: 0.1,
+        maxTokens: 1200
+     });
+
+     return {
+        diagnoses: [...baseData.diagnoses, ...(parsed.diagnoses || [])],
+        labResults: [...baseData.labResults, ...(parsed.labResults || [])],
+        medications: [...baseData.medications, ...(parsed.medications || [])],
+        fallback_triggered: true
+     };
   } catch(e) {
      return { ...baseData, fallback_triggered: false };
   }

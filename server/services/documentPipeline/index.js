@@ -5,17 +5,26 @@ const { parseMedicalText } = require('./parsing');
 const { normalizeAndValidate } = require('./validation');
 const { DocumentCache } = require('../../models');
 const crypto = require('crypto');
+const { MODEL_VERSIONS, isLegacyGeminiModelVersion } = require('../groqLlamaService');
 
 /**
  * Process a single document through the full pipeline
  */
-async function processDocument(url) {
+async function processDocument(url, options = {}) {
    const urlHash = crypto.createHash('sha256').update(url).digest('hex');
    let cached = null;
+   const forceRefresh = options.forceRefresh === true;
    try {
      // CACHING LOOKUP
      cached = await DocumentCache.findOne({ where: { urlHash } });
-     if (cached && cached.extractedData && !cached.extractedData.error) {
+     const shouldReuseCache =
+       cached &&
+       cached.extractedData &&
+       !cached.extractedData.error &&
+       !forceRefresh &&
+       !isLegacyGeminiModelVersion(cached.modelVersion);
+
+     if (shouldReuseCache) {
         return cached.extractedData;
      }
 
@@ -33,9 +42,17 @@ async function processDocument(url) {
 
      // 4. CACHE RESULTS
      if (cached) {
-        await cached.update({ extractedData: validatedData });
+        await cached.update({
+          extractedData: validatedData,
+          modelVersion: MODEL_VERSIONS.documentExtraction
+        });
      } else {
-        await DocumentCache.create({ urlHash, url, extractedData: validatedData });
+        await DocumentCache.create({
+          urlHash,
+          url,
+          extractedData: validatedData,
+          modelVersion: MODEL_VERSIONS.documentExtraction
+        });
      }
 
      return validatedData;
@@ -46,9 +63,17 @@ async function processDocument(url) {
      // Cache the failure conditionally so we don't spam retries on broken files
      try {
        if (cached) {
-           await cached.update({ extractedData: failureData });
+           await cached.update({
+             extractedData: failureData,
+             modelVersion: MODEL_VERSIONS.documentExtraction
+           });
        } else {
-           await DocumentCache.create({ urlHash, url, extractedData: failureData });
+           await DocumentCache.create({
+             urlHash,
+             url,
+             extractedData: failureData,
+             modelVersion: MODEL_VERSIONS.documentExtraction
+           });
        }
      } catch (cacheError) {
        console.error(`[Pipeline Orchestrator] Fatal: Failed to cache failure for ${url}:`, cacheError.message);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -98,8 +98,55 @@ interface PrescriptionData {
   createdAt: string;
 }
 
+interface ClinicalFinding {
+  title: string;
+  status: 'Normal' | 'Caution' | 'Critical';
+  reason: string;
+  source: string;
+  date?: string | null;
+}
+
+interface ClinicalMedication {
+  name: string;
+  dosage?: string;
+  instructions?: string;
+  frequency?: string;
+  status?: string;
+}
+
+interface LlamaClinicalInsight {
+  overallStatus: 'Normal' | 'Caution' | 'Critical';
+  summary: string;
+  improved: string[];
+  worsened: string[];
+  stable: string[];
+  activeMedications: ClinicalMedication[];
+  keyFindings: ClinicalFinding[];
+  followUpConsiderations: string[];
+}
+
+interface MedicalSummary {
+  aiClinicalNarrative: string;
+  aiClinicalNarrativeModel?: string;
+  llamaClinicalInsight?: LlamaClinicalInsight;
+  llamaReasoningModel?: string;
+  cacheMeta?: {
+    modelVersion?: string;
+    analyzedDocuments?: number;
+    reusableCacheCount?: number;
+    legacyCacheCount?: number;
+    upgradedDocumentCount?: number;
+    reanalysisPerformed?: boolean;
+  };
+  summarizedDiagnoses: any[];
+  recentSymptoms: any[];
+  recentMedications: ClinicalMedication[];
+  recentLabResults: any[];
+}
+
 const MedicalRecords: React.FC = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [recordTypeFilter, setRecordTypeFilter] = useState<string>('all');
   const [selectedRecord, setSelectedRecord] = useState<AppointmentMedicalRecord | null>(null);
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
@@ -135,7 +182,7 @@ const MedicalRecords: React.FC = () => {
   });
 
   // Fetch Medical Summary
-  const { data: medicalSummary, isLoading: isLoadingSummary } = useQuery({
+  const { data: medicalSummary, isLoading: isLoadingSummary } = useQuery<MedicalSummary>({
     queryKey: ['patient-medical-summary', patientProfile?.id],
     queryFn: async () => {
       const response = await API.get(`/patients/${patientProfile.id}/medical-summary`);
@@ -143,6 +190,22 @@ const MedicalRecords: React.FC = () => {
     },
     enabled: !!patientProfile?.id,
     refetchInterval: 10000, 
+  });
+
+  const { mutate: reanalyzeWithLlama, isPending: isReanalyzing } = useMutation({
+    mutationFn: async () => {
+      const response = await API.get(`/patients/${patientProfile.id}/medical-summary`, {
+        params: { reanalyze: 'true' }
+      });
+      return response.data.data.summary as MedicalSummary;
+    },
+    onSuccess: (updatedSummary) => {
+      queryClient.setQueryData(['patient-medical-summary', patientProfile?.id], updatedSummary);
+      toast.success('Legacy document cache refreshed with Llama analysis.');
+    },
+    onError: () => {
+      toast.error('Could not re-analyze documents right now. Please try again.');
+    }
   });
 
   // Filter appointments based on selected filter
@@ -234,6 +297,24 @@ const MedicalRecords: React.FC = () => {
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
     }
+  };
+
+  const getInsightStatusStyles = (status?: string) => {
+    switch (status) {
+      case 'Critical':
+        return 'bg-rose-100 text-rose-700 border border-rose-200';
+      case 'Caution':
+        return 'bg-amber-100 text-amber-700 border border-amber-200';
+      default:
+        return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+    }
+  };
+
+  const getLabStatus = (status?: string) => {
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'critical') return 'Critical';
+    if (['abnormal', 'high', 'low', 'caution'].includes(normalized)) return 'Caution';
+    return 'Normal';
   };
 
   return (
@@ -367,10 +448,28 @@ const MedicalRecords: React.FC = () => {
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                  <p className="text-gray-600 text-lg">Generating standard medical profile...</p>
+                  <p className="text-gray-600 text-lg">Running Llama clinical reconciliation...</p>
                 </div>
               ) : medicalSummary ? (
                 <div className="space-y-6">
+                  {medicalSummary?.cacheMeta?.legacyCacheCount ? (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">Legacy AI cache detected</p>
+                        <p className="text-sm text-amber-700">
+                          {medicalSummary.cacheMeta.legacyCacheCount} document{medicalSummary.cacheMeta.legacyCacheCount > 1 ? 's were' : ' was'} analyzed before the Llama migration.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => reanalyzeWithLlama()}
+                        disabled={isReanalyzing}
+                        className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isReanalyzing ? 'Refreshing...' : 'Re-analyze with Llama'}
+                      </button>
+                    </div>
+                  ) : null}
+
                   {/* AI Clinical Narrative Box */}
                   <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 border border-indigo-200 p-6 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -382,13 +481,107 @@ const MedicalRecords: React.FC = () => {
                           <SparklesIcon className="h-4 w-4" />
                         </div>
                         <h4 className="text-md font-bold text-indigo-900 uppercase tracking-wider">AI Patient Insights</h4>
-                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">POWERED BY LLAMA 3.1</span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">LLAMA 3.1 8B</span>
                       </div>
                       <p className="text-indigo-950 font-medium leading-relaxed italic border-l-4 border-indigo-400 pl-4 py-1">
                         "{String(medicalSummary?.aiClinicalNarrative || "Analyzing patient health trends...")}"
                       </p>
                     </div>
                   </div>
+
+                  {medicalSummary?.llamaClinicalInsight ? (
+                    <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 shadow-sm">
+                      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <div className="rounded-md bg-violet-600 p-1 text-white">
+                              <FireIcon className="h-4 w-4" />
+                            </div>
+                            <h4 className="text-md font-bold uppercase tracking-wider text-violet-900">Llama Clinical Insight</h4>
+                            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
+                              LLAMA 3.1 70B
+                            </span>
+                          </div>
+                          <p className="text-sm text-violet-700">
+                            Deep reconciliation across prescriptions, lab reports, and uploaded records.
+                          </p>
+                        </div>
+                        <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold ${getInsightStatusStyles(medicalSummary.llamaClinicalInsight.overallStatus)}`}>
+                          {medicalSummary.llamaClinicalInsight.overallStatus}
+                        </span>
+                      </div>
+
+                      <p className="mb-4 rounded-xl border border-violet-100 bg-white/80 p-4 text-sm font-medium leading-relaxed text-gray-700">
+                        {medicalSummary.llamaClinicalInsight.summary}
+                      </p>
+
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                        <div className="rounded-xl bg-white/80 p-4">
+                          <h5 className="mb-2 text-sm font-semibold text-emerald-700">Improved</h5>
+                          {medicalSummary.llamaClinicalInsight.improved?.length ? (
+                            <ul className="space-y-2 text-sm text-gray-700">
+                              {medicalSummary.llamaClinicalInsight.improved.map((item, idx) => (
+                                <li key={idx} className="rounded-lg bg-emerald-50 px-3 py-2">{item}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm italic text-gray-500">No clear improvement trend identified yet.</p>
+                          )}
+                        </div>
+                        <div className="rounded-xl bg-white/80 p-4">
+                          <h5 className="mb-2 text-sm font-semibold text-amber-700">Needs Attention</h5>
+                          {medicalSummary.llamaClinicalInsight.worsened?.length ? (
+                            <ul className="space-y-2 text-sm text-gray-700">
+                              {medicalSummary.llamaClinicalInsight.worsened.map((item, idx) => (
+                                <li key={idx} className="rounded-lg bg-amber-50 px-3 py-2">{item}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm italic text-gray-500">No worsening trend flagged from the recent records.</p>
+                          )}
+                        </div>
+                        <div className="rounded-xl bg-white/80 p-4">
+                          <h5 className="mb-2 text-sm font-semibold text-blue-700">Active Medications</h5>
+                          {medicalSummary.llamaClinicalInsight.activeMedications?.length ? (
+                            <ul className="space-y-2 text-sm text-gray-700">
+                              {medicalSummary.llamaClinicalInsight.activeMedications.slice(0, 5).map((medication, idx) => (
+                                <li key={idx} className="rounded-lg bg-blue-50 px-3 py-2">
+                                  <span className="font-semibold text-gray-900">{medication.name}</span>
+                                  <div className="text-xs text-gray-600">
+                                    {[medication.dosage, medication.instructions || medication.frequency].filter(Boolean).join(' • ')}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm italic text-gray-500">No current medications were confidently reconciled.</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {medicalSummary.llamaClinicalInsight.keyFindings?.length ? (
+                        <div className="mt-4 rounded-xl bg-white/80 p-4">
+                          <h5 className="mb-3 text-sm font-semibold text-gray-900">Key Findings</h5>
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            {medicalSummary.llamaClinicalInsight.keyFindings.map((finding, idx) => (
+                              <div key={idx} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                <div className="mb-2 flex items-center justify-between gap-2">
+                                  <span className="text-sm font-semibold text-gray-900">{finding.title}</span>
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(finding.status)}`}>
+                                    {finding.status}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700">{finding.reason}</p>
+                                <p className="mt-1 text-[11px] text-gray-500">
+                                  {finding.source}{finding.date ? ` • ${new Date(finding.date).toLocaleDateString()}` : ''}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   {/* Diagnoses and Symptoms */}
                   <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
@@ -457,8 +650,8 @@ const MedicalRecords: React.FC = () => {
                                 {lab.findings.slice(0, 4).map((f: any, fIdx: number) => (
                                   <div key={fIdx} className="bg-white p-2 rounded-lg border border-purple-100 flex justify-between items-center shadow-sm">
                                     <span className="text-[10px] font-medium text-gray-600 truncate mr-2">{f.test || 'Result'}</span>
-                                    <span className={`text-xs font-bold ${['abnormal', 'high', 'low', 'critical'].includes(String(f.status).toLowerCase()) ? 'text-red-600' : 'text-emerald-600'}`}>
-                                      {f.value} {f.unit}
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(getLabStatus(f.status))}`}>
+                                      {f.value} {f.unit} • {getLabStatus(f.status)}
                                     </span>
                                   </div>
                                 ))}

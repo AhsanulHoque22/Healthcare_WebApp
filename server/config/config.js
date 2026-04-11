@@ -1,33 +1,43 @@
 require('dotenv').config();
 
-module.exports = {
-  development: {
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "healthcare_db",
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 3306,
-    dialect: "mysql"
-  },
-  test: {
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "healthcare_db_test",
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || 3306,
-    dialect: "mysql"
-  },
-  production: {
-    use_env_variable: process.env.MYSQL_URL ? 'MYSQL_URL' : undefined,
-    username: process.env.MYSQLUSER || process.env.DB_USER || "root",
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
-    database: process.env.MYSQLDATABASE || process.env.DB_NAME || "healthcare_db",
-    host: process.env.MYSQLHOST || process.env.DB_HOST || "localhost",
-    port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || "3306", 10),
-    dialect: "mysql",
-    logging: false,
-    dialectOptions: process.env.DB_SSL === 'true'
-      ? { ssl: { require: true, rejectUnauthorized: false } }
-      : {}
+function buildConfig(defaultDatabase) {
+  const dialect = process.env.DB_DIALECT || 'postgres';
+  const common = {
+    dialect,
+    seederStorage: 'sequelize',
+    migrationStorage: 'sequelize',
+    logging: false
+  };
+
+  const sslEnabled = process.env.DB_SSL === 'true' || dialect === 'postgres';
+  if (sslEnabled) {
+    common.dialectOptions = {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    };
   }
+
+  if (process.env.DATABASE_URL) {
+    return {
+      ...common,
+      use_env_variable: 'DATABASE_URL'
+    };
+  }
+
+  return {
+    ...common,
+    username: process.env.DB_USER || undefined,
+    password: process.env.DB_PASSWORD || undefined,
+    database: process.env.DB_NAME || defaultDatabase,
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || (dialect === 'postgres' ? '5432' : '3306'), 10)
+  };
+}
+
+module.exports = {
+  development: buildConfig('postgres'),
+  test: buildConfig('postgres'),
+  production: buildConfig('postgres')
 };

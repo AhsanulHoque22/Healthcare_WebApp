@@ -1,171 +1,285 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { cleanOCRText } = require('./documentPipeline/cleaning');
+const { extractTextFromURL } = require('./documentPipeline/extraction');
+const { normalizeAndValidate } = require('./documentPipeline/validation');
+const { parseMedicalText } = require('./documentPipeline/parsing');
+const {
+  LLAMA_MODELS,
+  MODEL_VERSIONS,
+  hasGroqApiKey,
+  createChatCompletion,
+  requestStructuredJson
+} = require('./groqLlamaService');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+const DOCUMENT_EXTRACTION_SYSTEM_PROMPT = `You are Livora's clinical document extraction engine.
+Extract only facts explicitly present in the source material.
+Return JSON only. Never wrap output in markdown.
+Use empty arrays, empty strings, or null when a field is absent.
+Do not infer diagnoses, medications, or interpretations that are not directly supported by the document.`;
+
+const DOCUMENT_EXTRACTION_SCHEMA_PROMPT = `Return a JSON object with this exact top-level shape:
+{
+  "documentType": "lab_report|prescription|medical_record|scan|other",
+  "patientName": "string",
+  "date": "YYYY-MM-DD|null",
+  "diagnoses": [{"condition": "string", "status": "active|resolved|history|suspected|unknown", "notes": "string"}],
+  "labResults": [{"test": "string", "value": "string", "unit": "string", "referenceRange": "string", "status": "normal|low|high|abnormal|critical|pending|unknown"}],
+  "medications": [{"name": "string", "dosage": "string", "instructions": "string", "frequency": "string", "duration": "string", "status": "active|completed|held|unknown"}],
+  "doctorNotes": "string"
+}`;
+
+const PRESCRIPTION_SYSTEM_PROMPT = `You are a specialized medical scribe.
+Convert the doctor's dictation into valid JSON only.
+Do not output markdown. Do not add commentary.`;
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeDate(dateValue) {
+  if (!dateValue) {
+    return null;
+  }
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString().split('T')[0];
+}
+
+function normalizeDocumentType(type) {
+  const allowedTypes = new Set(['lab_report', 'prescription', 'medical_record', 'scan', 'other']);
+  return allowedTypes.has(type) ? type : 'other';
+}
+
+function normalizeStatus(status, fallback = 'unknown') {
+  if (!status) {
+    return fallback;
+  }
+
+  const normalized = String(status).toLowerCase();
+  return normalized;
+}
+
+function normalizeExtractedDocument(data, metadata = {}) {
+  const normalized = {
+    documentType: normalizeDocumentType(data?.documentType),
+    patientName: typeof data?.patientName === 'string' ? data.patientName.trim() : '',
+    date: normalizeDate(data?.date),
+    diagnoses: normalizeArray(data?.diagnoses).map((diagnosis) => ({
+      condition: diagnosis?.condition || diagnosis?.diagnosis || '',
+      status: normalizeStatus(diagnosis?.status),
+      notes: diagnosis?.notes || ''
+    })).filter((diagnosis) => diagnosis.condition),
+    labResults: normalizeArray(data?.labResults).map((labResult) => ({
+      test: labResult?.test || '',
+      value: labResult?.value == null ? '' : String(labResult.value).trim(),
+      unit: labResult?.unit || '',
+      referenceRange: labResult?.referenceRange || '',
+      status: normalizeStatus(labResult?.status)
+    })).filter((labResult) => labResult.test),
+    medications: normalizeArray(data?.medications).map((medication) => ({
+      name: medication?.name || '',
+      dosage: medication?.dosage || '',
+      instructions: medication?.instructions || '',
+      frequency: medication?.frequency || '',
+      duration: medication?.duration || '',
+      status: normalizeStatus(medication?.status)
+    })).filter((medication) => medication.name),
+    doctorNotes: typeof data?.doctorNotes === 'string' ? data.doctorNotes.trim() : '',
+    extractionMethod: metadata.extractionMethod || 'ocr_text_llama',
+    modelVersion: metadata.modelVersion || MODEL_VERSIONS.documentExtraction,
+    analyzedAt: metadata.analyzedAt || new Date().toISOString()
+  };
+
+  const validatedLabs = normalizeAndValidate({
+    labResults: normalized.labResults.map((labResult) => ({
+      ...labResult,
+      value: Number.parseFloat(labResult.value)
+    })),
+    diagnoses: normalized.diagnoses,
+    medications: normalized.medications,
+    confidence_score: 0.9
+  }).labResults;
+
+  normalized.labResults = normalized.labResults.map((labResult) => {
+    const validated = validatedLabs.find((item) => item.test === labResult.test);
+    if (!validated) {
+      return labResult;
+    }
+
+    if (Number.isNaN(Number.parseFloat(labResult.value))) {
+      return labResult;
+    }
+
+    const computedStatus = String(validated.status || labResult.status || 'unknown').toLowerCase();
+    return {
+      ...labResult,
+      status: computedStatus === 'normal' ? 'normal' : computedStatus
+    };
+  });
+
+  return normalized;
+}
+
+async function extractStructuredDataFromText(rawText) {
+  if (!hasGroqApiKey()) {
+    const fallback = await parseMedicalText(rawText);
+    return normalizeExtractedDocument({
+      documentType: 'other',
+      patientName: '',
+      date: null,
+      diagnoses: fallback.diagnoses,
+      labResults: fallback.labResults,
+      medications: fallback.medications,
+      doctorNotes: ''
+    }, {
+      extractionMethod: 'ocr_text_deterministic',
+      modelVersion: 'deterministic-fallback'
+    });
+  }
+
+  const prompt = `${DOCUMENT_EXTRACTION_SCHEMA_PROMPT}
+
+Source text:
+"""${rawText.slice(0, 14000)}"""`;
+
+  const extracted = await requestStructuredJson({
+    model: LLAMA_MODELS.documentExtraction,
+    systemPrompt: DOCUMENT_EXTRACTION_SYSTEM_PROMPT,
+    userPrompt: prompt,
+    temperature: 0.1,
+    maxTokens: 2000,
+    timeoutMs: 25000
+  });
+
+  return normalizeExtractedDocument(extracted, {
+    extractionMethod: 'ocr_text_llama',
+    modelVersion: MODEL_VERSIONS.documentExtraction
+  });
+}
+
+async function extractStructuredDataFromVision(url) {
+  const extracted = await requestStructuredJson({
+    model: LLAMA_MODELS.documentVision,
+    systemPrompt: DOCUMENT_EXTRACTION_SYSTEM_PROMPT,
+    userContent: [
+      { type: 'text', text: `${DOCUMENT_EXTRACTION_SCHEMA_PROMPT}\n\nExtract directly from this image medical document.` },
+      { type: 'image_url', image_url: { url } }
+    ],
+    temperature: 0.1,
+    maxTokens: 1800,
+    timeoutMs: 25000
+  });
+
+  return normalizeExtractedDocument(extracted, {
+    extractionMethod: 'llama_vision',
+    modelVersion: MODEL_VERSIONS.documentVision
+  });
+}
+
+function isLikelyImageUrl(url) {
+  return /\.(png|jpe?g|webp|bmp|gif|tiff?)($|\?)/i.test(url || '');
+}
 
 const extractMedicalData = async (transcript, language = 'en') => {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  
-  // � ONE-TIME DISCOVERY ON RAILWAY
-  try {
-    const discoUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-    const discoRes = await fetch(discoUrl);
-    const discoData = await discoRes.json();
-    if (discoData.models) {
-      console.log("[RAILWAY DISCOVERY] Available Models:", discoData.models.map(m => m.name.replace('models/', '')).join(', '));
-    }
-  } catch (e) {}
+  const prompt = `
+MATCH THESE UI FIELDS EXACTLY:
+{
+  "medicines": [{
+    "name": "string",
+    "type": "Tablet|Syrup|Injection|Capsule",
+    "dosage": "string",
+    "morning": 0,
+    "lunch": 0,
+    "dinner": 0,
+    "mealTiming": "Before Meal|After Meal",
+    "duration": 0,
+    "instructions": "string"
+  }],
+  "vitalSigns": {
+    "bloodPressure": "string",
+    "heartRate": 0,
+    "temperature": "string",
+    "respiratoryRate": 0,
+    "oxygenSaturation": 0
+  },
+  "clinicalFindings": "string",
+  "symptoms": [{"description": "string"}],
+  "diagnosis": [{"description": "string", "date": "YYYY-MM-DD"}],
+  "tests": [{"name": "string", "description": "string"}]
+}
 
-  const maxRetries = 3;
-  let attempt = 0;
+Language context: ${language}
+Transcript:
+"""${transcript}"""
 
-  while (attempt < maxRetries) {
-    try {
-      // 🛠️ Using the stable discovery-verified alias
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+Rules:
+- Interpret "three times a day" as morning: 1, lunch: 1, dinner: 1.
+- Default mealTiming to "After Meal" if not specified.
+- Return JSON only.`;
 
-      const prompt = `
-        As a specialized medical scribe, convert this doctor's dictation into a structured JSON prescription.
-        MATCH THESE UI FIELDS EXACTLY:
-
-        1. medicines: Array of {
-           name: string,
-           type: "Tablet" | "Syrup" | "Injection" | "Capsule",
-           dosage: string (mg calculation),
-           morning: number (how many units),
-           lunch: number (how many units),
-           dinner: number (how many units),
-           mealTiming: "Before Meal" | "After Meal",
-           duration: number (days),
-           instructions: string
-        }
-        2. vitalSigns: {
-           bloodPressure: string (e.g. "120/80"),
-           heartRate: number,
-           temperature: string (e.g. "98.6"),
-           respiratoryRate: number,
-           oxygenSaturation: number
-        }
-        3. clinicalFindings: string (detailed examination summary)
-        4. symptoms: Array of { description: string }
-        5. diagnosis: Array of { description: string, date: string (YYYY-MM-DD) }
-        6. tests: Array of { name: string, description: string }
-
-        TRANSCRIPT:
-        "${transcript}"
-
-        RULES:
-        - Interpret "Three times a day" as morning:1, lunch:1, dinner:1.
-        - Default mealTiming to "After Meal" if not specified.
-        - Return ONLY a valid JSON object.
-      `;
-
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      
-      // Extract JSON from response (handling potential markdown blocks)
-      let jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          return JSON.parse(jsonMatch[0]);
-        } catch (e) {
-          console.error("Failed to parse extracted JSON:", e);
-          throw new Error("Invalid format in extraction result");
-        }
-      }
-      
-      throw new Error("No structured data found in extraction result");
-    } catch (error) {
-      attempt++;
-      const isRetryable = error.status === 429 || error.status === 503 || error.message?.includes("High Demand");
-      
-      if (isRetryable && attempt < maxRetries) {
-        const delay = Math.pow(2, attempt) * 1000;
-        console.warn(`[Extraction] Gemini error (${error.status}). Retrying in ${delay}ms... (Attempt ${attempt}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      
-      console.error("Extraction Service Error:", error);
-      throw error;
-    }
-  }
+  return requestStructuredJson({
+    model: LLAMA_MODELS.documentExtraction,
+    systemPrompt: PRESCRIPTION_SYSTEM_PROMPT,
+    userPrompt: prompt,
+    temperature: 0.1,
+    maxTokens: 1800,
+    timeoutMs: 20000
+  });
 };
 
 const analyzeDocument = async (url, query) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch document: ${response.statusText}`);
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const mimeType = response.headers.get("content-type") || "application/pdf";
+    const extracted = await extractDataFromDocument(url);
+    const question = query || 'What is this document about and what are its key findings?';
 
-    const prompt = `You are a medical analyst. Analyze the provided medical document factually. Do not hallucinate any information.
-Answer the user's query clearly based ONLY on the document findings.
+    if (!hasGroqApiKey()) {
+      return `Structured findings: ${JSON.stringify(extracted)}`;
+    }
 
-Query: ${query || "What is this document about and what are its key findings?"}`;
-
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: buffer.toString("base64"),
-          mimeType
+    return createChatCompletion({
+      model: LLAMA_MODELS.documentExtraction,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a medical analyst. Answer using only the provided extracted findings. If information is unavailable, say so plainly.'
+        },
+        {
+          role: 'user',
+          content: `Question: ${question}\n\nExtracted findings:\n${JSON.stringify(extracted)}`
         }
-      }
-    ]);
-    return result.response.text();
+      ],
+      temperature: 0.1,
+      maxTokens: 500,
+      timeoutMs: 15000
+    });
   } catch (error) {
-    console.error("Document Analysis Error:", error);
-    throw new Error("Unable to analyze document at the moment.");
+    console.error('Document Analysis Error:', error);
+    throw new Error('Unable to analyze document at the moment.');
   }
 };
 
 const extractDataFromDocument = async (url) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch document: ${response.statusText}`);
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const mimeType = response.headers.get("content-type") || "application/pdf";
-
-    const prompt = `You are an expert medical data extractor. Your task is to extract complete structured medical data from this document.
-Extract all diagnoses, test names, test results (values + units), reference ranges, medications, dosage instructions, and doctor notes.
-
-You MUST return ONLY a valid JSON object matching this structure loosely:
-{
-  "diagnoses": [{"condition": "...", "status": "..."}],
-  "labResults": [{"test": "...", "value": "10.2", "unit": "g/dL", "referenceRange": "12.0 - 15.5", "status": "low"}],
-  "medications": [{"name": "...", "dosage": "...", "instructions": "..."}],
-  "doctorNotes": "...",
-  "documentType": "lab_report|prescription|medical_record|scan",
-  "patientName": "...",
-  "date": "YYYY-MM-DD"
-}
-
-If a field is not present in the document, use an empty array, empty string, or null.
-DO NOT include markdown tags like \`\`\`json. Return RAW JSON ONLY.`;
-
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: buffer.toString("base64"),
-          mimeType
-        }
+    if (isLikelyImageUrl(url) && hasGroqApiKey()) {
+      try {
+        return await extractStructuredDataFromVision(url);
+      } catch (visionError) {
+        console.warn('[Extraction Service] Vision extraction failed, falling back to OCR:', visionError.message);
       }
-    ]);
-    const responseText = result.response.text();
-    let jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    return { error: "Failed to parse JSON" };
+    }
+
+    const rawText = cleanOCRText(await extractTextFromURL(url));
+    if (!rawText) {
+      throw new Error('No readable text extracted from document.');
+    }
+
+    return await extractStructuredDataFromText(rawText);
   } catch (error) {
-    console.error("Document Data Extraction Error:", error);
-    throw new Error("Unable to extract data from document.");
+    console.error('Document Data Extraction Error:', error);
+    throw new Error('Unable to extract data from document.');
   }
 };
 

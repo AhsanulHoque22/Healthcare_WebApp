@@ -20,6 +20,11 @@ const DocumentCache = sequelize.define('DocumentCache', {
   extractedData: {
     type: DataTypes.JSON,
     allowNull: false
+  },
+  modelVersion: {
+    type: DataTypes.STRING(120),
+    allowNull: true,
+    field: 'model_version'
   }
 }, {
   tableName: 'document_cache',

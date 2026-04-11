@@ -1,11 +1,231 @@
 const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder, LabTest, DocumentCache } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
-const path = require('path');
-const axios = require('axios');
 const crypto = require('crypto');
 const extractionService = require('../services/extractionService');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const {
+  LLAMA_MODELS,
+  MODEL_VERSIONS,
+  hasGroqApiKey,
+  createChatCompletion,
+  requestStructuredJson,
+  isLegacyGeminiModelVersion
+} = require('../services/groqLlamaService');
+
+const SUMMARY_MODEL_VERSION = MODEL_VERSIONS.patientInsight;
+const RECONCILIATION_MODEL_VERSION = MODEL_VERSIONS.documentExtraction;
+
+const parseFlexibleArray = (value, mapper) => {
+  if (!value) {
+    return [];
+  }
+
+  let parsedValue = value;
+
+  if (typeof value === 'string') {
+    try {
+      parsedValue = value.startsWith('[') || value.startsWith('{') ? JSON.parse(value) : value;
+    } catch (error) {
+      parsedValue = value;
+    }
+  }
+
+  if (Array.isArray(parsedValue)) {
+    return mapper ? parsedValue.map(mapper).filter(Boolean) : parsedValue;
+  }
+
+  if (typeof parsedValue === 'string') {
+    return mapper ? [mapper(parsedValue)].filter(Boolean) : [parsedValue];
+  }
+
+  return mapper ? [mapper(parsedValue)].filter(Boolean) : [parsedValue];
+};
+
+const normalizeUiStatus = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  if (['critical', 'abnormal', 'high', 'low', 'urgent'].includes(normalized)) {
+    return normalized === 'critical' ? 'Critical' : 'Caution';
+  }
+
+  if (['normal', 'stable', 'resolved'].includes(normalized)) {
+    return 'Normal';
+  }
+
+  if (normalized === 'caution') {
+    return 'Caution';
+  }
+
+  return 'Normal';
+};
+
+const getOverallInsightStatus = (findings = []) => {
+  if (findings.some((finding) => normalizeUiStatus(finding.status) === 'Critical')) {
+    return 'Critical';
+  }
+
+  if (findings.some((finding) => normalizeUiStatus(finding.status) === 'Caution')) {
+    return 'Caution';
+  }
+
+  return 'Normal';
+};
+
+const dedupeMedications = (medications = []) => {
+  const seen = new Set();
+
+  return medications.filter((medication) => {
+    const key = `${String(medication?.name || '').toLowerCase()}::${String(medication?.dosage || '').toLowerCase()}`;
+    if (!medication?.name || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
+
+const buildFallbackClinicalInsight = ({ diagnoses, medications, labResults }) => {
+  const flattenedLabs = labResults.flatMap((lab) => lab.findings || []);
+  const keyFindings = flattenedLabs.slice(0, 5).map((finding) => ({
+    title: finding.test || 'Lab result',
+    status: normalizeUiStatus(finding.status),
+    reason: `${finding.value || 'N/A'} ${finding.unit || ''}`.trim(),
+    source: 'Laboratory data',
+    date: null
+  }));
+
+  const overallStatus = getOverallInsightStatus(keyFindings);
+
+  return {
+    overallStatus,
+    summary: overallStatus === 'Normal'
+      ? 'Recent records look broadly stable, with no clearly critical abnormalities detected in the cached data.'
+      : 'Recent records include findings that need closer review, especially in the latest labs and medication history.',
+    improved: [],
+    worsened: keyFindings.filter((finding) => finding.status !== 'Normal').map((finding) => finding.title),
+    stable: diagnoses.slice(0, 3).map((diagnosis) => diagnosis.condition || diagnosis.diagnosis).filter(Boolean),
+    activeMedications: dedupeMedications(medications).slice(0, 10).map((medication) => ({
+      name: medication.name,
+      dosage: medication.dosage || '',
+      instructions: medication.instructions || medication.frequency || '',
+      status: medication.status || 'active'
+    })),
+    keyFindings,
+    followUpConsiderations: overallStatus === 'Normal'
+      ? ['Continue monitoring routine follow-up records.']
+      : ['Review abnormal lab trends and reconcile them with the most recent prescriptions.']
+  };
+};
+
+const generateFastPatientNarrative = async ({ patient, diagnoses, symptoms, medications, labCount }) => {
+  if (!hasGroqApiKey()) {
+    return 'AI Summary unavailable (Groq API Key not configured). Displaying structured records only.';
+  }
+
+  const prompt = `
+You are Livora's patient insight assistant.
+Write a concise 2-3 sentence clinical narrative for a dashboard card.
+Stay factual, avoid definitive medical advice, and mention only information present in the input.
+
+Patient snapshot: ${JSON.stringify({
+  age: patient.user?.dateOfBirth,
+  gender: patient.user?.gender,
+  chronicConditions: patient.chronicConditions,
+  allergies: patient.allergies
+})}
+Recent diagnoses: ${JSON.stringify(diagnoses.slice(0, 5))}
+Recent symptoms: ${JSON.stringify(symptoms.slice(0, 5))}
+Active medications: ${JSON.stringify(medications.slice(0, 8))}
+Recent completed lab reports: ${labCount}
+`;
+
+  return createChatCompletion({
+    model: LLAMA_MODELS.patientInsight,
+    messages: [
+      { role: 'system', content: 'You are a professional medical scribe for patient-facing summaries.' },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.1,
+    maxTokens: 180,
+    timeoutMs: 12000
+  });
+};
+
+const generateClinicalReconciliation = async ({
+  patient,
+  diagnoses,
+  symptoms,
+  medications,
+  labResults,
+  documentEvidence
+}) => {
+  if (!hasGroqApiKey()) {
+    return buildFallbackClinicalInsight({ diagnoses, medications, labResults });
+  }
+
+  const prompt = `You are Livora's Llama Reasoning Engine for clinical reconciliation.
+Your task is to compare multiple extracted medical records and reconcile what has improved, worsened, and which medications are currently active.
+Use only the evidence provided. If something is unclear, say it is unclear.
+Return JSON only with this exact shape:
+{
+  "overallStatus": "Normal|Caution|Critical",
+  "summary": "string",
+  "improved": ["string"],
+  "worsened": ["string"],
+  "stable": ["string"],
+  "activeMedications": [{"name": "string", "dosage": "string", "instructions": "string", "status": "active|completed|held|unknown"}],
+  "keyFindings": [{"title": "string", "status": "Normal|Caution|Critical", "reason": "string", "source": "string", "date": "YYYY-MM-DD|null"}],
+  "followUpConsiderations": ["string"]
+}
+
+Patient profile: ${JSON.stringify({
+  chronicConditions: patient.chronicConditions,
+  allergies: patient.allergies,
+  bloodPressure: patient.bloodPressure,
+  pulse: patient.pulse,
+  weight: patient.weight,
+  height: patient.height
+})}
+Diagnoses: ${JSON.stringify(diagnoses.slice(0, 12))}
+Symptoms: ${JSON.stringify(symptoms.slice(0, 12))}
+Medication candidates: ${JSON.stringify(medications.slice(0, 15))}
+Lab report findings: ${JSON.stringify(labResults.slice(0, 8))}
+Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}
+`;
+
+  const insight = await requestStructuredJson({
+    model: LLAMA_MODELS.documentExtraction,
+    systemPrompt: 'You are a careful clinical reconciliation engine. Return JSON only and never invent evidence.',
+    userPrompt: prompt,
+    temperature: 0.1,
+    maxTokens: 2200,
+    timeoutMs: 25000
+  });
+
+  const normalizedKeyFindings = Array.isArray(insight?.keyFindings)
+    ? insight.keyFindings.map((finding) => ({
+        title: finding?.title || 'Clinical finding',
+        status: ['Normal', 'Caution', 'Critical'].includes(finding?.status) ? finding.status : normalizeUiStatus(finding?.status),
+        reason: finding?.reason || '',
+        source: finding?.source || 'Clinical reconciliation',
+        date: finding?.date || null
+      }))
+    : [];
+
+  return {
+    overallStatus: ['Normal', 'Caution', 'Critical'].includes(insight?.overallStatus)
+      ? insight.overallStatus
+      : getOverallInsightStatus(normalizedKeyFindings),
+    summary: insight?.summary || 'Clinical reconciliation is available, but a concise summary was not returned.',
+    improved: Array.isArray(insight?.improved) ? insight.improved : [],
+    worsened: Array.isArray(insight?.worsened) ? insight.worsened : [],
+    stable: Array.isArray(insight?.stable) ? insight.stable : [],
+    activeMedications: dedupeMedications(Array.isArray(insight?.activeMedications) ? insight.activeMedications : medications).slice(0, 10),
+    keyFindings: normalizedKeyFindings,
+    followUpConsiderations: Array.isArray(insight?.followUpConsiderations) ? insight.followUpConsiderations : []
+  };
+};
 
 // Get patient profile
 const getPatientProfile = async (req, res, next) => {
@@ -559,6 +779,7 @@ const uploadMedicalDocument = async (req, res, next) => {
 const getPatientMedicalSummary = async (req, res, next) => {
   try {
     const patientId = req.params.id;
+    const shouldReanalyzeLegacyDocs = ['true', '1', 'yes'].includes(String(req.query.reanalyze || '').toLowerCase());
     
     // 1. Fetch Patient Profile
     const patient = await Patient.findByPk(patientId, {
@@ -590,42 +811,31 @@ const getPatientMedicalSummary = async (req, res, next) => {
     latestPrescriptions.forEach(presc => {
       // Parse diagnosis
       if (presc.diagnosis) {
-        try {
-          const diagData = typeof presc.diagnosis === 'string' && presc.diagnosis.startsWith('[') ? JSON.parse(presc.diagnosis) : presc.diagnosis;
-          if (Array.isArray(diagData)) {
-            summarizedDiagnoses.push(...diagData.map(d => typeof d === 'string' ? { condition: d, date: presc.createdAt } : { ...d, date: presc.createdAt }));
-          } else if (typeof diagData === 'string') {
-            summarizedDiagnoses.push({ condition: diagData, date: presc.createdAt });
-          }
-        } catch (e) {
-          summarizedDiagnoses.push({ condition: presc.diagnosis, date: presc.createdAt });
-        }
+        const diagnoses = parseFlexibleArray(presc.diagnosis, (diagnosis) =>
+          typeof diagnosis === 'string'
+            ? { condition: diagnosis, date: presc.createdAt, source: 'Prescription' }
+            : { ...diagnosis, condition: diagnosis?.condition || diagnosis?.description, date: presc.createdAt, source: 'Prescription' }
+        );
+        summarizedDiagnoses.push(...diagnoses);
       }
 
       // Parse symptoms
       if (presc.symptoms) {
-        try {
-          const sympData = typeof presc.symptoms === 'string' && presc.symptoms.startsWith('[') ? JSON.parse(presc.symptoms) : presc.symptoms;
-          if (Array.isArray(sympData)) {
-            recentSymptoms.push(...sympData.map(s => typeof s === 'string' ? { symptom: s, date: presc.createdAt } : { ...s, date: presc.createdAt }));
-          } else if (typeof sympData === 'string') {
-            recentSymptoms.push({ symptom: sympData, date: presc.createdAt });
-          }
-        } catch (e) {
-          recentSymptoms.push({ symptom: presc.symptoms, date: presc.createdAt });
-        }
+        const symptoms = parseFlexibleArray(presc.symptoms, (symptom) =>
+          typeof symptom === 'string'
+            ? { symptom, date: presc.createdAt, source: 'Prescription' }
+            : { ...symptom, symptom: symptom?.symptom || symptom?.description, date: presc.createdAt, source: 'Prescription' }
+        );
+        recentSymptoms.push(...symptoms);
       }
 
       // Parse medicines (only from the most recent prescription to represent 'current')
       if (presc.medicines && recentMedications.length === 0) {
-        try {
-          const medData = typeof presc.medicines === 'string' && presc.medicines.startsWith('[') ? JSON.parse(presc.medicines) : presc.medicines;
-          if (Array.isArray(medData)) {
-            recentMedications = medData;
-          }
-        } catch (e) {
-          // Ignore parse errors
-        }
+        recentMedications = parseFlexibleArray(presc.medicines, (medicine) =>
+          typeof medicine === 'string'
+            ? { name: medicine, dosage: '', instructions: '', source: 'Prescription', status: 'active' }
+            : { ...medicine, source: 'Prescription', status: medicine?.status || 'active' }
+        );
       }
     });
 
@@ -675,6 +885,11 @@ const getPatientMedicalSummary = async (req, res, next) => {
     // 4. Analyze All Documents and Aggregate Findings
     let recentLabResults = [];
     let extraDiagnoses = [];
+    let documentMedications = [];
+    let documentEvidence = [];
+    let upgradedDocumentCount = 0;
+    let reusableCacheCount = 0;
+    let legacyCacheCount = 0;
 
     // Sort documents by date DESC and limit analysis to 8 recent ones for performance
     allMedicalDocuments.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -685,19 +900,38 @@ const getPatientMedicalSummary = async (req, res, next) => {
         const urlHash = crypto.createHash('sha256').update(doc.url).digest('hex');
         let docCache = await DocumentCache.findOne({ where: { urlHash } });
 
-        if (!docCache) {
+        const needsUpgrade = docCache && isLegacyGeminiModelVersion(docCache.modelVersion);
+        if (needsUpgrade) {
+          legacyCacheCount++;
+        }
+
+        if (!docCache || !docCache.extractedData || (shouldReanalyzeLegacyDocs && needsUpgrade)) {
           const extracted = await extractionService.extractDataFromDocument(doc.url);
-          if (extracted && !extracted.error) {
+          if (extracted && !extracted.error && !docCache) {
             docCache = await DocumentCache.create({
               url: doc.url,
               urlHash,
-              extractedData: extracted
+              extractedData: extracted,
+              modelVersion: extracted.modelVersion || RECONCILIATION_MODEL_VERSION
             });
+          } else if (extracted && !extracted.error && docCache) {
+            await docCache.update({
+              extractedData: extracted,
+              modelVersion: extracted.modelVersion || RECONCILIATION_MODEL_VERSION
+            });
+            await docCache.reload();
           }
+
+          if (needsUpgrade) {
+            upgradedDocumentCount++;
+          }
+        } else {
+          reusableCacheCount++;
         }
 
         if (docCache && docCache.extractedData) {
           const data = docCache.extractedData;
+          const documentModelVersion = docCache.modelVersion || data.modelVersion || null;
           
           // If it's a lab report, add to recentLabResults
           if (data.labResults && data.labResults.length > 0) {
@@ -706,7 +940,8 @@ const getPatientMedicalSummary = async (req, res, next) => {
               date: doc.date,
               testNames: doc.testNames || data.testNames || (data.labResults.map(l => l.test).join(', ')) || 'Lab Extraction',
               findings: data.labResults,
-              source: doc.source
+              source: doc.source,
+              modelVersion: documentModelVersion
             });
           }
 
@@ -719,6 +954,24 @@ const getPatientMedicalSummary = async (req, res, next) => {
               source: `Extracted from ${doc.source}`
             })));
           }
+
+          if (data.medications && data.medications.length > 0) {
+            documentMedications.push(...data.medications.map((medication) => ({
+              ...medication,
+              source: `Extracted from ${doc.source}`,
+              status: medication?.status || 'active'
+            })));
+          }
+
+          documentEvidence.push({
+            documentType: data.documentType || 'other',
+            source: doc.source,
+            date: doc.date,
+            modelVersion: documentModelVersion,
+            diagnoses: (data.diagnoses || []).slice(0, 4),
+            labResults: (data.labResults || []).slice(0, 6),
+            medications: (data.medications || []).slice(0, 6)
+          });
         }
       } catch (err) {
         console.error("[Medical Summary] Document Analysis Failed:", doc.url, err.message);
@@ -727,50 +980,56 @@ const getPatientMedicalSummary = async (req, res, next) => {
 
     // Merge extra diagnoses into the list
     summarizedDiagnoses.push(...extraDiagnoses);
+    const reconciledMedications = dedupeMedications([...recentMedications, ...documentMedications]);
 
-    // 5. Generate AI Clinical Narrative using Groq (Llama-3.1-8b-instant)
-    let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";
+    // 5. Generate fast dashboard narrative with Llama-3.1-8b-instant
+    let aiClinicalNarrative = 'Aggregating clinical data for AI analysis...';
     try {
-      if (process.env.GROQ_API_KEY) {
-        const summaryPrompt = `
-          You are a professional medical assistant. Analyze the following patient data and write a 2-3 sentence concise clinical status summary.
-          Focused on: Current health status, primary concerns based on diagnoses, and medication adherence.
-          
-          Patient Info: ${JSON.stringify(patient.dataValues)}
-          Recent Diagnoses: ${JSON.stringify(summarizedDiagnoses.slice(0, 5))}
-          Recent Symptoms: ${JSON.stringify(recentSymptoms.slice(0, 5))}
-          Active Meds: ${JSON.stringify(recentMedications)}
-          Lab Activity: ${latestLabOrders.length} completed tests recently.
-          
-          Tone: Professional, empathetic, and clinical. Avoid definitive medical advice; emphasize reporting findings.
-          Output: Just the 2-3 sentences of text.
-        `;
-
-        const groqResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: "You are a professional medical scribe." },
-            { role: "user", content: summaryPrompt }
-          ],
-          temperature: 0.1,
-          max_tokens: 150
-        }, {
-          headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-          timeout: 10000
-        });
-
-        aiClinicalNarrative = groqResponse.data.choices[0].message.content.trim();
-      } else {
-        aiClinicalNarrative = "AI Summary unavailable (Groq API Key not configured). Displaying raw data only.";
-      }
+      aiClinicalNarrative = await generateFastPatientNarrative({
+        patient,
+        diagnoses: summarizedDiagnoses,
+        symptoms: recentSymptoms,
+        medications: reconciledMedications,
+        labCount: latestLabOrders.length
+      });
     } catch (aiError) {
-      console.error("[patientController] Groq Summary Error:", aiError.response?.data || aiError.message);
-      aiClinicalNarrative = "Clinical analysis currently unavailable. Please review raw records below.";
+      console.error('[patientController] Groq Summary Error:', aiError.response?.data || aiError.message);
+      aiClinicalNarrative = 'Clinical analysis currently unavailable. Please review the structured records below.';
     }
 
-    // 5. Construct Comprehensive Summary
+    let llamaClinicalInsight;
+    try {
+      llamaClinicalInsight = await generateClinicalReconciliation({
+        patient,
+        diagnoses: summarizedDiagnoses,
+        symptoms: recentSymptoms,
+        medications: reconciledMedications,
+        labResults: recentLabResults,
+        documentEvidence
+      });
+    } catch (insightError) {
+      console.error('[patientController] Llama Reconciliation Error:', insightError.response?.data || insightError.message);
+      llamaClinicalInsight = buildFallbackClinicalInsight({
+        diagnoses: summarizedDiagnoses,
+        medications: reconciledMedications,
+        labResults: recentLabResults
+      });
+    }
+
+    // 6. Construct Comprehensive Summary
     const medicalSummary = {
       aiClinicalNarrative,
+      aiClinicalNarrativeModel: SUMMARY_MODEL_VERSION,
+      llamaClinicalInsight,
+      llamaReasoningModel: RECONCILIATION_MODEL_VERSION,
+      cacheMeta: {
+        modelVersion: RECONCILIATION_MODEL_VERSION,
+        analyzedDocuments: docsToAnalyze.length,
+        reusableCacheCount,
+        legacyCacheCount,
+        upgradedDocumentCount,
+        reanalysisPerformed: shouldReanalyzeLegacyDocs
+      },
       patientInfo: {
         bloodType: patient.bloodType,
         height: patient.height,
@@ -788,7 +1047,7 @@ const getPatientMedicalSummary = async (req, res, next) => {
       },
       summarizedDiagnoses: summarizedDiagnoses.slice(0, 10), // Keep top 10 recent
       recentSymptoms: recentSymptoms.slice(0, 10),
-      recentMedications: recentMedications, // From latest prescription
+      recentMedications: reconciledMedications,
       recentLabResults: recentLabResults
     };
 
