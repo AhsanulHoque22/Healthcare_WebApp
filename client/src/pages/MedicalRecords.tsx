@@ -17,7 +17,9 @@ import {
   HeartIcon,
   FunnelIcon,
   CheckCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  ClipboardDocumentCheckIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
 import PrescriptionView from '../components/PrescriptionView';
@@ -102,7 +104,7 @@ const MedicalRecords: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<AppointmentMedicalRecord | null>(null);
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'appointments' | 'medicines'>('appointments');
+  const [activeTab, setActiveTab] = useState<'summary' | 'appointments' | 'medicines'>('summary');
   const [pageLoaded, setPageLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isDownloading, setIsDownloading] = useState<number | null>(null);
@@ -130,6 +132,17 @@ const MedicalRecords: React.FC = () => {
     },
     enabled: !!patientProfile?.id,
     refetchInterval: 10000, // Refetch every 10 seconds for dynamic updates
+  });
+
+  // Fetch Medical Summary
+  const { data: medicalSummary, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ['patient-medical-summary', patientProfile?.id],
+    queryFn: async () => {
+      const response = await API.get(`/patients/${patientProfile.id}/medical-summary`);
+      return response.data.data.summary;
+    },
+    enabled: !!patientProfile?.id,
+    refetchInterval: 10000, 
   });
 
   // Filter appointments based on selected filter
@@ -273,7 +286,25 @@ const MedicalRecords: React.FC = () => {
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
           <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in' : ''}`}>
-            <nav className="flex space-x-8">
+            <nav className="flex space-x-4">
+              <div className="relative group">
+                <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
+                  activeTab === 'summary'
+                    ? 'bg-gradient-to-r from-blue-300/40 to-indigo-300/40 opacity-60'
+                    : 'bg-gradient-to-r from-gray-200/20 to-blue-200/20 opacity-0 group-hover:opacity-40'
+                }`}></div>
+                <button
+                  onClick={() => setActiveTab('summary')}
+                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-md ${
+                    activeTab === 'summary'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg animate-pulse'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <ClipboardDocumentCheckIcon className="h-5 w-5" />
+                  Medical Summary
+                </button>
+              </div>
               <div className="relative group">
                 <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
                   activeTab === 'appointments'
@@ -315,6 +346,180 @@ const MedicalRecords: React.FC = () => {
         </div>
 
         {/* Tab Content */}
+        {/* Medical Summary Tab */}
+        {activeTab === 'summary' && (
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+              <div className="flex items-center mb-6">
+                <div className="relative group mr-2">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+                  <ClipboardDocumentCheckIcon className="relative h-6 w-6 text-blue-600 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Comprehensive Medical Summary</h3>
+                  <p className="text-sm text-gray-600">Aggregated view of your recent medical history</p>
+                </div>
+              </div>
+              
+              {isLoadingSummary ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                  <p className="text-gray-600 text-lg">Generating standard medical profile...</p>
+                </div>
+              ) : medicalSummary ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  
+                  {/* Left Column - Vitals & General Profile */}
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 shadow-sm">
+                      <h4 className="text-md font-bold text-indigo-900 mb-4 flex items-center gap-2 border-b border-indigo-200 pb-2">
+                        <HeartIcon className="h-5 w-5 text-indigo-600" /> Vitals & Metrics
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Group</p>
+                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary.patientInfo.bloodType || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Pressure</p>
+                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary.patientInfo.bloodPressure || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-indigo-500 font-semibold uppercase">Weight / Height</p>
+                          <p className="font-bold text-indigo-900">
+                            {medicalSummary.patientInfo.weight ? `${medicalSummary.patientInfo.weight} kg` : '--'} / {medicalSummary.patientInfo.height ? `${medicalSummary.patientInfo.height} cm` : '--'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-indigo-500 font-semibold uppercase">Pulse</p>
+                          <p className="font-bold text-indigo-900">{medicalSummary.patientInfo.pulse ? `${medicalSummary.patientInfo.pulse} bpm` : '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                        <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" /> Allergies & Conditions
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">Allergies</span>
+                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.allergies || 'None reported'}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">Chronic Conditions</span>
+                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.chronicConditions || 'None reported'}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">Past Surgeries</span>
+                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.pastSurgeries || 'None reported'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Diagnoses, Lab Reports & Medicines */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Diagnoses and Symptoms */}
+                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                        <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600" /> Recent Medical Findings
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
+                          {medicalSummary.summarizedDiagnoses && medicalSummary.summarizedDiagnoses.length > 0 ? (
+                            <ul className="space-y-2">
+                              {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
+                                <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
+                                  <span>{diag.condition}</span>
+                                  <span className="text-xs text-emerald-600/70">{new Date(diag.date).toLocaleDateString()}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No recent diagnoses found.</p>
+                          )}
+                        </div>
+                        <div>
+                          <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms Reported</h5>
+                          {medicalSummary.recentSymptoms && medicalSummary.recentSymptoms.length > 0 ? (
+                            <ul className="space-y-2">
+                              {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
+                                <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
+                                  {symp.symptom} <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No recent symptoms reported.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Medications */}
+                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                        <FireIcon className="h-5 w-5 text-orange-500" /> Active Prescribed Medications
+                      </h4>
+                      {medicalSummary.recentMedications && medicalSummary.recentMedications.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {medicalSummary.recentMedications.map((med: any, idx: number) => (
+                            <div key={idx} className="bg-orange-50 border border-orange-100 p-3 rounded-lg">
+                              <p className="font-semibold text-orange-900 text-sm">{med.name || med}</p>
+                              {med.dosage && <p className="text-xs text-orange-700 mt-1">{med.dosage} ({med.duration})</p>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                           {medicalSummary.patientInfo.profileCurrentMedications || 'No active medications found in recent prescriptions.'}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Recent Lab Reports */}
+                    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                      <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                        <BeakerIcon className="h-5 w-5 text-purple-600" /> Recent Laboratory Tests
+                      </h4>
+                      {medicalSummary.recentLabResults && medicalSummary.recentLabResults.length > 0 ? (
+                        <div className="space-y-3">
+                          {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg">
+                              <div>
+                                <span className="font-semibold text-sm text-gray-800">Order #{lab.orderId}</span>
+                                <span className="text-xs text-gray-500 block">{new Date(lab.date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                {lab.reports && lab.reports.length > 0 ? (
+                                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
+                                    {lab.reports.length} Reports Ready
+                                  </span>
+                                ) : (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Processing</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No recent lab tests found.</p>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content - Appointments */}
         {activeTab === 'appointments' && (
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>

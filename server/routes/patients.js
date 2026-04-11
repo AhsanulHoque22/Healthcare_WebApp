@@ -111,4 +111,7 @@ router.get('/:id/appointments', authorizeRoles('patient', 'doctor', 'admin'), pa
 // Dashboard stats route
 router.get('/:id/dashboard/stats', authorizeRoles('patient', 'doctor', 'admin'), patientController.getPatientDashboardStats);
 
+// Medical Summary route
+router.get('/:id/medical-summary', authorizeRoles('patient', 'doctor', 'admin'), patientController.getPatientMedicalSummary);
+
 module.exports = router;

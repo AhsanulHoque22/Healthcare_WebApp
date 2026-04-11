@@ -1,4 +1,4 @@
-const { Patient, User, MedicalRecord, Appointment } = require('../models');
+const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const path = require('path');
@@ -552,6 +552,128 @@ const uploadMedicalDocument = async (req, res, next) => {
   }
 };
 
+// Get patient medical summary (aggregated from prescriptions, labs, and profile)
+const getPatientMedicalSummary = async (req, res, next) => {
+  try {
+    const patientId = req.params.id;
+    
+    // 1. Fetch Patient Profile
+    const patient = await Patient.findByPk(patientId, {
+      include: [{ association: 'user', attributes: ['firstName', 'lastName', 'dateOfBirth', 'gender', 'email', 'phone'] }]
+    });
+
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    // 2. Fetch Latest Prescriptions (to extract Diagnoses, Symptoms, and Medications)
+    const latestPrescriptions = await Prescription.findAll({
+      where: { patientId },
+      order: [['createdAt', 'DESC']],
+      limit: 5,
+      include: [
+        {
+          association: 'doctor',
+          include: [{ association: 'user', attributes: ['firstName', 'lastName'] }]
+        }
+      ]
+    });
+
+    // Extract aggregated data from prescriptions
+    let summarizedDiagnoses = [];
+    let recentSymptoms = [];
+    let recentMedications = [];
+
+    latestPrescriptions.forEach(presc => {
+      // Parse diagnosis
+      if (presc.diagnosis) {
+        try {
+          const diagData = typeof presc.diagnosis === 'string' && presc.diagnosis.startsWith('[') ? JSON.parse(presc.diagnosis) : presc.diagnosis;
+          if (Array.isArray(diagData)) {
+            summarizedDiagnoses.push(...diagData.map(d => typeof d === 'string' ? { condition: d, date: presc.createdAt } : { ...d, date: presc.createdAt }));
+          } else if (typeof diagData === 'string') {
+            summarizedDiagnoses.push({ condition: diagData, date: presc.createdAt });
+          }
+        } catch (e) {
+          summarizedDiagnoses.push({ condition: presc.diagnosis, date: presc.createdAt });
+        }
+      }
+
+      // Parse symptoms
+      if (presc.symptoms) {
+        try {
+          const sympData = typeof presc.symptoms === 'string' && presc.symptoms.startsWith('[') ? JSON.parse(presc.symptoms) : presc.symptoms;
+          if (Array.isArray(sympData)) {
+            recentSymptoms.push(...sympData.map(s => typeof s === 'string' ? { symptom: s, date: presc.createdAt } : { ...s, date: presc.createdAt }));
+          } else if (typeof sympData === 'string') {
+            recentSymptoms.push({ symptom: sympData, date: presc.createdAt });
+          }
+        } catch (e) {
+          recentSymptoms.push({ symptom: presc.symptoms, date: presc.createdAt });
+        }
+      }
+
+      // Parse medicines (only from the most recent prescription to represent 'current')
+      if (presc.medicines && recentMedications.length === 0) {
+        try {
+          const medData = typeof presc.medicines === 'string' && presc.medicines.startsWith('[') ? JSON.parse(presc.medicines) : presc.medicines;
+          if (Array.isArray(medData)) {
+            recentMedications = medData;
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+    });
+
+    // 3. Fetch Latest Lab Test Orders (completed ones have results)
+    const latestLabOrders = await LabTestOrder.findAll({
+      where: { patientId, status: { [Op.in]: ['completed', 'results_ready'] } },
+      order: [['createdAt', 'DESC']],
+      limit: 5
+    });
+
+    // Structured Lab Results
+    let recentLabResults = latestLabOrders.map(order => ({
+      orderId: order.orderNumber,
+      date: order.createdAt,
+      reports: order.testReports || []
+    }));
+
+    // 4. Construct Comprehensive Summary
+    const medicalSummary = {
+      patientInfo: {
+        bloodType: patient.bloodType,
+        height: patient.height,
+        weight: patient.weight,
+        bloodPressure: patient.bloodPressure,
+        pulse: patient.pulse,
+        allergies: patient.allergies,
+        chronicConditions: patient.chronicConditions,
+        pastSurgeries: patient.pastSurgeries,
+        familyMedicalHistory: patient.familyMedicalHistory,
+        smokingStatus: patient.smokingStatus,
+        alcoholConsumption: patient.alcoholConsumption,
+        physicalActivity: patient.physicalActivity,
+        profileCurrentMedications: patient.currentMedications
+      },
+      summarizedDiagnoses: summarizedDiagnoses.slice(0, 10), // Keep top 10 recent
+      recentSymptoms: recentSymptoms.slice(0, 10),
+      recentMedications: recentMedications, // From latest prescription
+      recentLabResults: recentLabResults
+    };
+
+    res.json({
+      success: true,
+      data: { summary: medicalSummary }
+    });
+
+  } catch (error) {
+    console.error('[patientController] getPatientMedicalSummary error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getPatientProfile,
   updatePatientProfile,
@@ -562,5 +684,6 @@ module.exports = {
   getMedicalRecords,
   getPatientAppointments,
   getPatientDashboardStats,
-  createMedicalRecord
+  createMedicalRecord,
+  getPatientMedicalSummary
 };
