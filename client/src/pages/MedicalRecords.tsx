@@ -381,21 +381,21 @@ const MedicalRecords: React.FC = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Group</p>
-                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary.patientInfo.bloodType || '—'}</p>
+                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary?.patientInfo?.bloodType || '—'}</p>
                         </div>
                         <div>
                           <p className="text-xs text-indigo-500 font-semibold uppercase">Blood Pressure</p>
-                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary.patientInfo.bloodPressure || '—'}</p>
+                          <p className="font-bold text-indigo-900 text-lg">{medicalSummary?.patientInfo?.bloodPressure || '—'}</p>
                         </div>
                         <div>
                           <p className="text-xs text-indigo-500 font-semibold uppercase">Weight / Height</p>
                           <p className="font-bold text-indigo-900">
-                            {medicalSummary.patientInfo.weight ? `${medicalSummary.patientInfo.weight} kg` : '--'} / {medicalSummary.patientInfo.height ? `${medicalSummary.patientInfo.height} cm` : '--'}
+                            {medicalSummary?.patientInfo?.weight ? `${medicalSummary.patientInfo.weight} kg` : '--'} / {medicalSummary?.patientInfo?.height ? `${medicalSummary.patientInfo.height} cm` : '--'}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-indigo-500 font-semibold uppercase">Pulse</p>
-                          <p className="font-bold text-indigo-900">{medicalSummary.patientInfo.pulse ? `${medicalSummary.patientInfo.pulse} bpm` : '—'}</p>
+                          <p className="font-bold text-indigo-900">{medicalSummary?.patientInfo?.pulse ? `${medicalSummary.patientInfo.pulse} bpm` : '—'}</p>
                         </div>
                       </div>
                     </div>
@@ -407,15 +407,15 @@ const MedicalRecords: React.FC = () => {
                       <div className="space-y-3">
                         <div>
                           <span className="text-xs font-semibold text-gray-500 uppercase">Allergies</span>
-                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.allergies || 'None reported'}</p>
+                          <p className="text-sm text-gray-800">{medicalSummary?.patientInfo?.allergies || 'None reported'}</p>
                         </div>
                         <div>
                           <span className="text-xs font-semibold text-gray-500 uppercase">Chronic Conditions</span>
-                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.chronicConditions || 'None reported'}</p>
+                          <p className="text-sm text-gray-800">{medicalSummary?.patientInfo?.chronicConditions || 'None reported'}</p>
                         </div>
                         <div>
                           <span className="text-xs font-semibold text-gray-500 uppercase">Past Surgeries</span>
-                          <p className="text-sm text-gray-800">{medicalSummary.patientInfo.pastSurgeries || 'None reported'}</p>
+                          <p className="text-sm text-gray-800">{medicalSummary?.patientInfo?.pastSurgeries || 'None reported'}</p>
                         </div>
                       </div>
                     </div>
@@ -431,12 +431,14 @@ const MedicalRecords: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
-                          {medicalSummary.summarizedDiagnoses && medicalSummary.summarizedDiagnoses.length > 0 ? (
+                          {medicalSummary?.summarizedDiagnoses && medicalSummary.summarizedDiagnoses.length > 0 ? (
                             <ul className="space-y-2">
                               {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
                                 <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
-                                  <span>{diag.condition}</span>
-                                  <span className="text-xs text-emerald-600/70">{new Date(diag.date).toLocaleDateString()}</span>
+                                  <span>{diag?.condition || diag || 'Unknown'}</span>
+                                  <span className="text-xs text-emerald-600/70">
+                                    {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
+                                  </span>
                                 </li>
                               ))}
                             </ul>
@@ -446,11 +448,14 @@ const MedicalRecords: React.FC = () => {
                         </div>
                         <div>
                           <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms Reported</h5>
-                          {medicalSummary.recentSymptoms && medicalSummary.recentSymptoms.length > 0 ? (
+                          {medicalSummary?.recentSymptoms && medicalSummary.recentSymptoms.length > 0 ? (
                             <ul className="space-y-2">
                               {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
                                 <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
-                                  {symp.symptom} <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
+                                  {symp?.symptom || symp || 'Unknown'} 
+                                  {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
+                                    <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
+                                  )}
                                 </li>
                               ))}
                             </ul>
@@ -466,18 +471,18 @@ const MedicalRecords: React.FC = () => {
                       <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
                         <FireIcon className="h-5 w-5 text-orange-500" /> Active Prescribed Medications
                       </h4>
-                      {medicalSummary.recentMedications && medicalSummary.recentMedications.length > 0 ? (
+                      {medicalSummary?.recentMedications && medicalSummary.recentMedications.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {medicalSummary.recentMedications.map((med: any, idx: number) => (
                             <div key={idx} className="bg-orange-50 border border-orange-100 p-3 rounded-lg">
-                              <p className="font-semibold text-orange-900 text-sm">{med.name || med}</p>
-                              {med.dosage && <p className="text-xs text-orange-700 mt-1">{med.dosage} ({med.duration})</p>}
+                              <p className="font-semibold text-orange-900 text-sm">{med?.name || med || 'Unknown Medicine'}</p>
+                              {med?.dosage && <p className="text-xs text-orange-700 mt-1">{med.dosage} {med.duration ? `(${med.duration})` : ''}</p>}
                             </div>
                           ))}
                         </div>
                       ) : (
                         <p className="text-sm text-gray-600">
-                           {medicalSummary.patientInfo.profileCurrentMedications || 'No active medications found in recent prescriptions.'}
+                           {medicalSummary?.patientInfo?.profileCurrentMedications || 'No active medications found in recent prescriptions.'}
                         </p>
                       )}
                     </div>
@@ -487,16 +492,18 @@ const MedicalRecords: React.FC = () => {
                       <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
                         <BeakerIcon className="h-5 w-5 text-purple-600" /> Recent Laboratory Tests
                       </h4>
-                      {medicalSummary.recentLabResults && medicalSummary.recentLabResults.length > 0 ? (
+                      {medicalSummary?.recentLabResults && medicalSummary.recentLabResults.length > 0 ? (
                         <div className="space-y-3">
                           {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg">
                               <div>
                                 <span className="font-semibold text-sm text-gray-800">Order #{lab.orderId}</span>
-                                <span className="text-xs text-gray-500 block">{new Date(lab.date).toLocaleDateString()}</span>
+                                <span className="text-xs text-gray-500 block">
+                                  {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}
+                                </span>
                               </div>
                               <div className="flex gap-2">
-                                {lab.reports && lab.reports.length > 0 ? (
+                                {lab?.reports && lab.reports.length > 0 ? (
                                   <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
                                     {lab.reports.length} Reports Ready
                                   </span>
