@@ -539,12 +539,12 @@ const MedicalRecords: React.FC = () => {
                       )}
                     </div>
                   </div>
-
                 </div>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
+      )}
 
         {/* Tab Content - Appointments */}
         {activeTab === 'appointments' && (

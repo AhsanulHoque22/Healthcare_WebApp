@@ -647,7 +647,7 @@ const getPatientMedicalSummary = async (req, res, next) => {
     let aiClinicalNarrative = "Aggregating clinical data for AI analysis...";
     try {
       if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         
         const summaryPrompt = `
           You are a professional medical assistant. Analyze the following patient data and write a 2-3 sentence concise clinical status summary.
