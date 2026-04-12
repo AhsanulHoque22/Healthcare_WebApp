@@ -1059,24 +1059,52 @@ const getPatientMedicalSummary = async (req, res, next) => {
           !hasMeaningfulExtractedData(docCache?.extractedData);
 
         if (!docCache || !docCache.extractedData || shouldAutoRefreshLegacyCache || (shouldReanalyzeLegacyDocs && needsUpgrade)) {
-          const extracted = await extractionService.extractDataFromDocument(doc.url);
-          if (extracted && !extracted.error && !docCache) {
-            docCache = await DocumentCache.create({
-              url: doc.url,
-              urlHash,
-              extractedData: extracted,
-              modelVersion: extracted.modelVersion || RECONCILIATION_MODEL_VERSION
-            });
-          } else if (extracted && !extracted.error && docCache) {
-            await docCache.update({
-              extractedData: extracted,
-              modelVersion: extracted.modelVersion || RECONCILIATION_MODEL_VERSION
-            });
-            await docCache.reload();
-          }
+          let extractedData = null;
+          try {
+            extractedData = await extractionService.extractDataFromDocument(doc.url);
+            
+            if (!extractedData) {
+              console.warn(`[Medical Summary] Extraction returned null for ${doc.url}`);
+              throw new Error('Extraction service returned null');
+            }
 
-          if (needsUpgrade || shouldAutoRefreshLegacyCache) {
-            upgradedDocumentCount++;
+            if (extractedData.error) {
+              console.warn(`[Medical Summary] Extraction error for ${doc.url}:`, extractedData.error);
+              throw new Error(`Extraction error: ${extractedData.error}`);
+            }
+
+            // Ensure extractedData is not null before saving
+            if (!docCache) {
+              console.log(`[DocumentCache] Creating new cache for ${doc.url.substring(0, 80)}...`);
+              docCache = await DocumentCache.create({
+                url: doc.url,
+                urlHash,
+                extractedData: extractedData || {},
+                modelVersion: extractedData.modelVersion || RECONCILIATION_MODEL_VERSION
+              });
+              console.log(`[DocumentCache] ✅ Cache created successfully`);
+            } else {
+              console.log(`[DocumentCache] Updating existing cache for ${doc.url.substring(0, 80)}...`);
+              await docCache.update({
+                extractedData: extractedData || {},
+                modelVersion: extractedData.modelVersion || RECONCILIATION_MODEL_VERSION
+              });
+              await docCache.reload();
+              console.log(`[DocumentCache] ✅ Cache updated successfully`);
+            }
+
+            if (needsUpgrade || shouldAutoRefreshLegacyCache) {
+              upgradedDocumentCount++;
+            }
+          } catch (cacheError) {
+            console.error(`[DocumentCache] Failed to save cache for ${doc.url}:`, cacheError.message);
+            console.error(`[DocumentCache] Error details:`, cacheError.errors || cacheError.stack?.split('\n').slice(0, 3).join('\n'));
+            // Use extracted data for summary even if cache save failed
+            if (extractedData && !extractedData.error) {
+              console.log(`[Medical Summary] Still using extracted data even though cache save failed`);
+              docCache = { extractedData: extractedData, modelVersion: extractedData.modelVersion };
+            }
+            // Continue processing other documents even if one fails
           }
         } else {
           reusableCacheCount++;
