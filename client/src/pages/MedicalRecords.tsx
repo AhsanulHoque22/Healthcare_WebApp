@@ -488,25 +488,6 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   ) : null}
 
-                  {/* AI Clinical Narrative Box */}
-                  <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 border border-indigo-200 p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <SparklesIcon className="h-16 w-16 text-indigo-600 animate-pulse" />
-                    </div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="bg-indigo-600 text-white p-1 rounded-md">
-                          <SparklesIcon className="h-4 w-4" />
-                        </div>
-                        <h4 className="text-md font-bold text-indigo-900 uppercase tracking-wider">AI Patient Insights</h4>
-                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold animate-pulse">LLAMA 3.1 8B</span>
-                      </div>
-                      <p className="text-indigo-950 font-medium leading-relaxed italic border-l-4 border-indigo-400 pl-4 py-1">
-                        "{String(medicalSummary?.aiClinicalNarrative || "Analyzing patient health trends...")}"
-                      </p>
-                    </div>
-                  </div>
-
                   {medicalSummary?.llamaClinicalInsight ? (
                     <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 shadow-sm">
                       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -515,10 +496,7 @@ const MedicalRecords: React.FC = () => {
                             <div className="rounded-md bg-violet-600 p-1 text-white">
                               <FireIcon className="h-4 w-4" />
                             </div>
-                            <h4 className="text-md font-bold uppercase tracking-wider text-violet-900">Llama Clinical Insight</h4>
-                            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
-                              LLAMA 3.1 70B
-                            </span>
+                            <h4 className="text-md font-bold uppercase tracking-wider text-violet-900">Clinical Insight</h4>
                           </div>
                           <p className="text-sm text-violet-700">
                             Deep reconciliation across prescriptions, lab reports, and uploaded records.
