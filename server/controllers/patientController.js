@@ -145,6 +145,49 @@ const parseReportFiles = (reportValue) => {
   return [];
 };
 
+const extractPrescriptionTestArtifacts = (testsValue) => {
+  const parsedTests = parseFlexibleArray(testsValue, (test) => test).filter(Boolean);
+  const artifacts = [];
+
+  parsedTests.forEach((test) => {
+    if (typeof test !== 'object' || !test) {
+      return;
+    }
+
+    const reports = parseReportFiles(test.testReports);
+    reports.forEach((report) => {
+      const reportUrl = report.url || report.path;
+      if (!reportUrl) {
+        return;
+      }
+
+      artifacts.push({
+        url: reportUrl,
+        source: 'Prescription Report',
+        name: report.originalName || report.filename || `${test.name || 'Prescription'} Report`,
+        date: report.uploadedAt || test.approvedAt || test.createdAt || null,
+        orderId: test.sampleId || test.id || null,
+        testNames: test.name || 'Prescription Lab Report'
+      });
+    });
+  });
+
+  return artifacts;
+};
+
+const hasMeaningfulExtractedData = (data) => {
+  if (!data || data.error) {
+    return false;
+  }
+
+  return Boolean(
+    (Array.isArray(data.labResults) && data.labResults.length > 0) ||
+    (Array.isArray(data.diagnoses) && data.diagnoses.length > 0) ||
+    (Array.isArray(data.medications) && data.medications.length > 0) ||
+    (typeof data.doctorNotes === 'string' && data.doctorNotes.trim())
+  );
+};
+
 const buildFallbackClinicalInsight = ({ diagnoses, medications, labResults }) => {
   const flattenedLabs = labResults.flatMap((lab) => lab.findings || []);
   const keyFindings = flattenedLabs.slice(0, 5).map((finding) => ({
@@ -963,6 +1006,15 @@ const getPatientMedicalSummary = async (req, res, next) => {
           });
         }
       });
+
+      const nestedArtifacts = extractPrescriptionTestArtifacts(prescription.tests);
+      nestedArtifacts.forEach((artifact) => {
+        allMedicalDocuments.push({
+          ...artifact,
+          date: artifact.date || prescription.createdAt,
+          orderId: artifact.orderId || (prescription.appointmentId ? `Appointment #${prescription.appointmentId}` : `Prescription #${prescription.id}`)
+        });
+      });
     });
 
     // B. Documents from MedVault (Patient Profile)
@@ -1002,7 +1054,11 @@ const getPatientMedicalSummary = async (req, res, next) => {
           legacyCacheCount++;
         }
 
-        if (!docCache || !docCache.extractedData || (shouldReanalyzeLegacyDocs && needsUpgrade)) {
+        const shouldAutoRefreshLegacyCache =
+          needsUpgrade &&
+          !hasMeaningfulExtractedData(docCache?.extractedData);
+
+        if (!docCache || !docCache.extractedData || shouldAutoRefreshLegacyCache || (shouldReanalyzeLegacyDocs && needsUpgrade)) {
           const extracted = await extractionService.extractDataFromDocument(doc.url);
           if (extracted && !extracted.error && !docCache) {
             docCache = await DocumentCache.create({
@@ -1019,7 +1075,7 @@ const getPatientMedicalSummary = async (req, res, next) => {
             await docCache.reload();
           }
 
-          if (needsUpgrade) {
+          if (needsUpgrade || shouldAutoRefreshLegacyCache) {
             upgradedDocumentCount++;
           }
         } else {
