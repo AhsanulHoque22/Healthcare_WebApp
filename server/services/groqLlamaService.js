@@ -3,8 +3,8 @@ const axios = require('axios');
 const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const LLAMA_MODELS = Object.freeze({
-  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'mixtral-8x7b-32768',
-  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'mixtral-8x7b-32768',
+  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'llama-3.3-70b-versatile',
+  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'llama-3.3-70b-versatile',
   documentVision: process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview'
 });
 
@@ -33,24 +33,39 @@ async function createChatCompletion({
 }) {
   assertGroqApiKey();
 
-  const response = await axios.post(
-    GROQ_CHAT_COMPLETIONS_URL,
-    {
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
+  try {
+    const response = await axios.post(
+      GROQ_CHAT_COMPLETIONS_URL,
+      {
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens
       },
-      timeout: timeoutMs
-    }
-  );
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: timeoutMs
+      }
+    );
 
-  return response.data?.choices?.[0]?.message?.content?.trim() || '';
+    return response.data?.choices?.[0]?.message?.content?.trim() || '';
+  } catch (error) {
+    // Log detailed error information for debugging
+    if (error.response?.data?.error) {
+      console.error('[Groq API Error]', JSON.stringify(error.response.data.error, null, 2));
+    }
+    if (error.response?.status === 400) {
+      const messages_info = messages.map(m => ({
+        role: m.role,
+        contentLength: typeof m.content === 'string' ? m.content.length : 'array'
+      }));
+      console.error('[Groq 400 Error] Messages:', JSON.stringify(messages_info, null, 2));
+    }
+    throw error;
+  }
 }
 
 function extractJsonFromText(text) {
