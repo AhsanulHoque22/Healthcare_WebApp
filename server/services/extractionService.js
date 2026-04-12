@@ -129,14 +129,15 @@ function sanitizeTextForJson(text) {
   }
   
   // Escape special characters for JSON
+  // IMPORTANT: Replace backslash FIRST to avoid double-escaping
   return text
-    .replace(/\\/g, '\\\\')   // Backslash first
-    .replace(/"/g, '\\"')     // Double quotes
-    .replace(/\n/g, '\\n')    // Newlines
-    .replace(/\r/g, '\\r')    // Carriage returns
-    .replace(/\t/g, '\\t')    // Tabs
-    .replace(/\b/g, '\\b')    // Backspace
-    .replace(/\f/g, '\\f');   // Form feed
+    .replace(/\\/g, '\\\\')        // Backslash first
+    .replace(/"/g, '\\"')          // Double quotes
+    .replace(/\n/g, '\\n')         // Newlines
+    .replace(/\r/g, '\\r')         // Carriage returns
+    .replace(/\t/g, '\\t')         // Tabs
+    .replace(/\x08/g, '\\b')       // Backspace (actual ASCII 8, not word boundary)
+    .replace(/\f/g, '\\f');        // Form feed
 }
 
 async function extractStructuredDataFromText(rawText) {
