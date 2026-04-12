@@ -3,15 +3,20 @@ const axios = require('axios');
 const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const LLAMA_MODELS = Object.freeze({
-  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'llama-3.3-70b-versatile',
-  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'llama-3.3-70b-versatile',
-  documentVision: process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview'
+  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'mixtral-8x7b-32768',
+  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'mixtral-8x7b-32768',
+  documentVision: process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview',
+  // Fallback models for when rate limits are hit
+  documentExtractionSmall: 'llama-3.2-11b-text-preview',
+  patientInsightSmall: 'llama-3.2-11b-text-preview'
 });
 
 const MODEL_VERSIONS = Object.freeze({
   documentExtraction: `groq/${LLAMA_MODELS.documentExtraction}:livora-medical-v1`,
   patientInsight: `groq/${LLAMA_MODELS.patientInsight}:livora-summary-v1`,
-  documentVision: `groq/${LLAMA_MODELS.documentVision}:livora-vision-v1`
+  documentVision: `groq/${LLAMA_MODELS.documentVision}:livora-vision-v1`,
+  documentExtractionSmall: `groq/${LLAMA_MODELS.documentExtractionSmall}:livora-medical-small`,
+  patientInsightSmall: `groq/${LLAMA_MODELS.patientInsightSmall}:livora-summary-small`
 });
 
 function hasGroqApiKey() {
@@ -29,7 +34,8 @@ async function createChatCompletion({
   messages,
   temperature = 0.1,
   maxTokens = 1200,
-  timeoutMs = 15000
+  timeoutMs = 15000,
+  fallbackModel = null
 }) {
   assertGroqApiKey();
 
@@ -53,6 +59,40 @@ async function createChatCompletion({
 
     return response.data?.choices?.[0]?.message?.content?.trim() || '';
   } catch (error) {
+    // Check for rate limit errors
+    const isRateLimited = error.response?.data?.error?.code === 'rate_limit_exceeded';
+    
+    if (isRateLimited) {
+      console.warn(`[Groq Rate Limit] Model ${model}: ${error.response.data.error.message}`);
+      
+      // If fallback model provided and rate limited, try with smaller model
+      if (fallbackModel && fallbackModel !== model) {
+        console.log(`[Groq Fallback] Retrying with smaller model: ${fallbackModel}`);
+        try {
+          const fallbackResponse = await axios.post(
+            GROQ_CHAT_COMPLETIONS_URL,
+            {
+              model: fallbackModel,
+              messages,
+              temperature,
+              max_tokens: maxTokens
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              timeout: timeoutMs
+            }
+          );
+          console.log(`[Groq Fallback] ✅ Succeeded with ${fallbackModel}`);
+          return fallbackResponse.data?.choices?.[0]?.message?.content?.trim() || '';
+        } catch (fallbackError) {
+          console.error(`[Groq Fallback] Failed with ${fallbackModel}:`, fallbackError.response?.data?.error?.message);
+        }
+      }
+    }
+    
     // Log detailed error information for debugging
     if (error.response?.data?.error) {
       console.error('[Groq API Error]', JSON.stringify(error.response.data.error, null, 2));
@@ -102,7 +142,8 @@ async function requestStructuredJson({
   userContent,
   temperature = 0.1,
   maxTokens = 1600,
-  timeoutMs = 20000
+  timeoutMs = 20000,
+  fallbackModel = null
 }) {
   const messages = [
     { role: 'system', content: systemPrompt }
@@ -119,7 +160,8 @@ async function requestStructuredJson({
     messages,
     temperature,
     maxTokens,
-    timeoutMs
+    timeoutMs,
+    fallbackModel
   });
 
   return extractJsonFromText(content);

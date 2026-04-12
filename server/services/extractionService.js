@@ -172,7 +172,8 @@ Source text:
     userPrompt: prompt,
     temperature: 0.1,
     maxTokens: 2000,
-    timeoutMs: 25000
+    timeoutMs: 25000,
+    fallbackModel: LLAMA_MODELS.documentExtractionSmall
   });
 
   return normalizeExtractedDocument(extracted, {
@@ -237,7 +238,8 @@ Rules:
     userPrompt: prompt,
     temperature: 0.1,
     maxTokens: 1800,
-    timeoutMs: 20000
+    timeoutMs: 20000,
+    fallbackModel: LLAMA_MODELS.documentExtractionSmall
   });
 };
 

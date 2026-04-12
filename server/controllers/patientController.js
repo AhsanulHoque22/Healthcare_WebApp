@@ -251,7 +251,8 @@ Recent completed lab reports: ${labCount}
     ],
     temperature: 0.1,
     maxTokens: 180,
-    timeoutMs: 12000
+    timeoutMs: 12000,
+    fallbackModel: LLAMA_MODELS.patientInsightSmall
   });
 };
 
@@ -303,7 +304,8 @@ Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}
     userPrompt: prompt,
     temperature: 0.1,
     maxTokens: 2200,
-    timeoutMs: 25000
+    timeoutMs: 25000,
+    fallbackModel: LLAMA_MODELS.documentExtractionSmall
   });
 
   const normalizedKeyFindings = Array.isArray(insight?.keyFindings)
