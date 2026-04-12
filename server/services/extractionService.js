@@ -182,22 +182,9 @@ Source text:
 }
 
 async function extractStructuredDataFromVision(url) {
-  const extracted = await requestStructuredJson({
-    model: LLAMA_MODELS.documentVision,
-    systemPrompt: DOCUMENT_EXTRACTION_SYSTEM_PROMPT,
-    userContent: [
-      { type: 'text', text: `${DOCUMENT_EXTRACTION_SCHEMA_PROMPT}\n\nExtract directly from this image medical document.` },
-      { type: 'image_url', image_url: { url } }
-    ],
-    temperature: 0.1,
-    maxTokens: 1800,
-    timeoutMs: 25000
-  });
-
-  return normalizeExtractedDocument(extracted, {
-    extractionMethod: 'llama_vision',
-    modelVersion: MODEL_VERSIONS.documentVision
-  });
+  // Vision extraction via Groq is unreliable; skip directly to OCR
+  // The multimodal format may not be fully supported or the model may be unavailable
+  throw new Error('Vision extraction disabled - falling back to OCR');
 }
 
 function isLikelyImageUrl(url) {
