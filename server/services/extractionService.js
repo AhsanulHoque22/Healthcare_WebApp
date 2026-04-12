@@ -285,15 +285,32 @@ const extractDataFromDocument = async (url) => {
       }
     }
 
-    const rawText = cleanOCRText(await extractTextFromURL(url));
-    if (!rawText) {
+    console.log(`[Extraction] Extracting text from: ${url}`);
+    let rawText;
+    try {
+      rawText = cleanOCRText(await extractTextFromURL(url));
+    } catch (urlError) {
+      console.error(`[Extraction] Failed to extract text from URL: ${urlError.message}`);
+      throw new Error(`Text extraction failed: ${urlError.message}`);
+    }
+
+    if (!rawText || rawText.trim().length === 0) {
+      console.warn(`[Extraction] No readable text extracted from document at ${url}`);
       throw new Error('No readable text extracted from document.');
     }
 
-    return await extractStructuredDataFromText(rawText);
+    console.log(`[Extraction] Extracted ${rawText.length} characters, analyzing with Groq...`);
+    try {
+      const result = await extractStructuredDataFromText(rawText);
+      console.log(`[Extraction] Successfully extracted data from ${url}`);
+      return result;
+    } catch (groqError) {
+      console.error(`[Extraction] Groq analysis failed: ${groqError.message}`);
+      throw groqError;
+    }
   } catch (error) {
-    console.error('Document Data Extraction Error:', error);
-    throw new Error('Unable to extract data from document.');
+    console.error(`[Document Data Extraction Error] ${url}: ${error.message}`);
+    throw new Error(`Unable to extract data from document: ${error.message}`);
   }
 };
 

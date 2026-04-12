@@ -1127,7 +1127,11 @@ const getPatientMedicalSummary = async (req, res, next) => {
           });
         }
       } catch (err) {
-        console.error("[Medical Summary] Document Analysis Failed:", doc.url, err.message);
+        console.error("[Medical Summary] Document Analysis Failed:", doc.url);
+        console.error("[Medical Summary] Error details:", err.message);
+        if (err.stack) {
+          console.error("[Medical Summary] Stack trace:", err.stack.split('\n').slice(0, 3).join('\n'));
+        }
       }
     }
 
