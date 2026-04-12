@@ -120,6 +120,31 @@ const buildLabResultsSummary = (labReports = []) => {
   };
 };
 
+const parseReportFiles = (reportValue) => {
+  if (!reportValue) {
+    return [];
+  }
+
+  if (Array.isArray(reportValue)) {
+    return reportValue.filter(Boolean);
+  }
+
+  if (typeof reportValue === 'string') {
+    try {
+      const parsed = JSON.parse(reportValue);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(Boolean);
+      }
+    } catch (error) {
+      if (/^https?:\/\//i.test(reportValue)) {
+        return [{ path: reportValue, url: reportValue, originalName: 'Lab Report' }];
+      }
+    }
+  }
+
+  return [];
+};
+
 const buildFallbackClinicalInsight = ({ diagnoses, medications, labResults }) => {
   const flattenedLabs = labResults.flatMap((lab) => lab.findings || []);
   const keyFindings = flattenedLabs.slice(0, 5).map((finding) => ({
@@ -838,6 +863,12 @@ const getPatientMedicalSummary = async (req, res, next) => {
       ]
     });
 
+    const prescriptionsWithReports = await Prescription.findAll({
+      where: { patientId },
+      attributes: ['id', 'appointmentId', 'createdAt', 'testReports', 'tests'],
+      order: [['createdAt', 'DESC']]
+    });
+
     // Extract aggregated data from prescriptions
     let summarizedDiagnoses = [];
     let recentSymptoms = [];
@@ -879,12 +910,22 @@ const getPatientMedicalSummary = async (req, res, next) => {
 
     // A. Documents from Lab Orders
     const allLabOrders = await LabTestOrder.findAll({
-      where: { patientId, status: { [Op.in]: ['completed', 'results_ready'] } },
+      where: {
+        patientId,
+        [Op.or]: [
+          { status: { [Op.in]: ['completed', 'results_ready'] } },
+          { testReports: { [Op.ne]: null } },
+          { resultUrl: { [Op.ne]: null } }
+        ]
+      },
       order: [['createdAt', 'DESC']]
     });
 
     for (const order of allLabOrders) {
-      const reports = order.testReports || [];
+      const reports = [
+        ...parseReportFiles(order.testReports),
+        ...parseReportFiles(order.resultUrl)
+      ];
       const testIds = order.testIds || [];
       const tests = await LabTest.findAll({ where: { id: testIds }, attributes: ['name'] });
       const testNames = tests.map(t => t.name).join(', ') || 'Lab Investigation';
@@ -901,6 +942,28 @@ const getPatientMedicalSummary = async (req, res, next) => {
         }
       });
     }
+
+    // C. Test reports attached to prescriptions / appointments
+    prescriptionsWithReports.forEach((prescription) => {
+      const reports = parseReportFiles(prescription.testReports);
+      const prescribedTests = parseFlexibleArray(prescription.tests, (test) =>
+        typeof test === 'string' ? test : (test?.name || test?.description || '')
+      ).filter(Boolean);
+
+      reports.forEach((report) => {
+        const reportUrl = report.url || report.path;
+        if (reportUrl) {
+          allMedicalDocuments.push({
+            url: reportUrl,
+            source: 'Prescription Report',
+            name: report.originalName || report.filename || 'Prescription Test Report',
+            date: report.uploadedAt || prescription.createdAt,
+            orderId: prescription.appointmentId ? `Appointment #${prescription.appointmentId}` : `Prescription #${prescription.id}`,
+            testNames: prescribedTests.join(', ') || 'Prescription Lab Report'
+          });
+        }
+      });
+    });
 
     // B. Documents from MedVault (Patient Profile)
     if (patient.medicalDocuments && Array.isArray(patient.medicalDocuments)) {
