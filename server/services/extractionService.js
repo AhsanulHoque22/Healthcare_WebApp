@@ -123,6 +123,22 @@ function normalizeExtractedDocument(data, metadata = {}) {
   return normalized;
 }
 
+function sanitizeTextForJson(text) {
+  if (typeof text !== 'string') {
+    return '';
+  }
+  
+  // Escape special characters for JSON
+  return text
+    .replace(/\\/g, '\\\\')   // Backslash first
+    .replace(/"/g, '\\"')     // Double quotes
+    .replace(/\n/g, '\\n')    // Newlines
+    .replace(/\r/g, '\\r')    // Carriage returns
+    .replace(/\t/g, '\\t')    // Tabs
+    .replace(/\b/g, '\\b')    // Backspace
+    .replace(/\f/g, '\\f');   // Form feed
+}
+
 async function extractStructuredDataFromText(rawText) {
   if (!hasGroqApiKey()) {
     const fallback = await parseMedicalText(rawText);
@@ -140,10 +156,14 @@ async function extractStructuredDataFromText(rawText) {
     });
   }
 
+  // Truncate and sanitize text for JSON embedding
+  const truncatedText = rawText.slice(0, 14000);
+  const sanitizedText = sanitizeTextForJson(truncatedText);
+
   const prompt = `${DOCUMENT_EXTRACTION_SCHEMA_PROMPT}
 
 Source text:
-"""${rawText.slice(0, 14000)}"""`;
+"""${sanitizedText}"""`;
 
   const extracted = await requestStructuredJson({
     model: LLAMA_MODELS.documentExtraction,
@@ -184,6 +204,9 @@ function isLikelyImageUrl(url) {
 }
 
 const extractMedicalData = async (transcript, language = 'en') => {
+  // Sanitize transcript to prevent JSON injection
+  const sanitizedTranscript = sanitizeTextForJson(transcript || '');
+  
   const prompt = `
 MATCH THESE UI FIELDS EXACTLY:
 {
@@ -213,7 +236,7 @@ MATCH THESE UI FIELDS EXACTLY:
 
 Language context: ${language}
 Transcript:
-"""${transcript}"""
+"""${sanitizedTranscript}"""
 
 Rules:
 - Interpret "three times a day" as morning: 1, lunch: 1, dinner: 1.
@@ -239,6 +262,9 @@ const analyzeDocument = async (url, query) => {
       return `Structured findings: ${JSON.stringify(extracted)}`;
     }
 
+    // Sanitize question to prevent JSON injection
+    const sanitizedQuestion = sanitizeTextForJson(question);
+
     return createChatCompletion({
       model: LLAMA_MODELS.documentExtraction,
       messages: [
@@ -248,7 +274,7 @@ const analyzeDocument = async (url, query) => {
         },
         {
           role: 'user',
-          content: `Question: ${question}\n\nExtracted findings:\n${JSON.stringify(extracted)}`
+          content: `Question: ${sanitizedQuestion}\n\nExtracted findings:\n${JSON.stringify(extracted)}`
         }
       ],
       temperature: 0.1,
