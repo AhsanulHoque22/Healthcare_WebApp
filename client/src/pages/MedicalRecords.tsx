@@ -206,8 +206,7 @@ const MedicalRecords: React.FC = () => {
       const response = await API.get(`/patients/${patientProfile.id}/medical-summary`);
       return response.data.data.summary;
     },
-    enabled: !!patientProfile?.id,
-    refetchInterval: 10000, 
+    enabled: !!patientProfile?.id
   });
 
   const { mutate: reanalyzeWithLlama, isPending: isReanalyzing } = useMutation({
@@ -536,46 +535,7 @@ const MedicalRecords: React.FC = () => {
                             <p className="text-sm italic text-gray-500">No worsening trend flagged from the recent records.</p>
                           )}
                         </div>
-                        <div className="rounded-xl bg-white/80 p-4">
-                          <h5 className="mb-2 text-sm font-semibold text-blue-700">Active Medications</h5>
-                          {medicalSummary.llamaClinicalInsight.activeMedications?.length ? (
-                            <ul className="space-y-2 text-sm text-gray-700">
-                              {medicalSummary.llamaClinicalInsight.activeMedications.slice(0, 5).map((medication, idx) => (
-                                <li key={idx} className="rounded-lg bg-blue-50 px-3 py-2">
-                                  <span className="font-semibold text-gray-900">{medication.name}</span>
-                                  <div className="text-xs text-gray-600">
-                                    {[medication.dosage, medication.instructions || medication.frequency].filter(Boolean).join(' • ')}
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm italic text-gray-500">No current medications were confidently reconciled.</p>
-                          )}
-                        </div>
                       </div>
-
-                      {medicalSummary.llamaClinicalInsight.keyFindings?.length ? (
-                        <div className="mt-4 rounded-xl bg-white/80 p-4">
-                          <h5 className="mb-3 text-sm font-semibold text-gray-900">Key Findings</h5>
-                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            {medicalSummary.llamaClinicalInsight.keyFindings.map((finding, idx) => (
-                              <div key={idx} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                  <span className="text-sm font-semibold text-gray-900">{finding.title}</span>
-                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(finding.status)}`}>
-                                    {finding.status}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-700">{finding.reason}</p>
-                                <p className="mt-1 text-[11px] text-gray-500">
-                                  {finding.source}{finding.date ? ` • ${new Date(finding.date).toLocaleDateString()}` : ''}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
                     </div>
                   ) : null}
 
