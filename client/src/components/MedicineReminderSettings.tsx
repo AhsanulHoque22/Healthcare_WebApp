@@ -50,23 +50,12 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   const { data: existingSettings, isLoading, error } = useQuery<ReminderSettings>({
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
-      console.log('🔍 DEBUG: Fetching reminder settings for patient:', patientId);
-      console.log('🔍 DEBUG: API base URL:', API.defaults.baseURL);
-      console.log('🔍 DEBUG: Auth token present:', !!localStorage.getItem('token'));
-      console.log('🔍 DEBUG: User role:', user?.role);
-      console.log('🔍 DEBUG: User ID:', user?.id);
-      
       try {
         const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
           params: { _t: Date.now() } // Cache-busting parameter
         });
-        console.log('🔍 DEBUG: Reminder settings response:', response.data);
-        console.log('🔍 DEBUG: Response data.data:', response.data.data);
         return response.data.data;
       } catch (error: any) {
-        console.error('🔍 DEBUG: Error fetching reminder settings:', error);
-        console.error('🔍 DEBUG: Error response:', error.response?.data);
-        console.error('🔍 DEBUG: Error status:', error.response?.status);
         throw error;
       }
     },
@@ -81,7 +70,6 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   // Update settings when data is fetched
   useEffect(() => {
     if (existingSettings && typeof existingSettings === 'object') {
-      console.log('🔍 DEBUG: Updating settings from API response:', existingSettings);
       // Ensure all required properties exist
       const updatedSettings: ReminderSettings = {
         patientId: existingSettings.patientId || patientId,
@@ -98,13 +86,13 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
 
   // Debug: Log current settings state
   useEffect(() => {
-    console.log('🔍 DEBUG: Current settings state:', settings);
+    // Settings state updated
   }, [settings]);
 
   // Debug: Log query error
   useEffect(() => {
     if (error) {
-      console.error('🔍 DEBUG: Query error:', error);
+      // Query error occurred
     }
   }, [error]);
 
@@ -135,33 +123,19 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   // Save reminder settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (reminderSettings: ReminderSettings) => {
-      console.log('🔍 DEBUG: ===== SAVING REMINDER SETTINGS =====');
-      console.log('🔍 DEBUG: Patient ID:', patientId, typeof patientId);
-      console.log('🔍 DEBUG: Reminder settings:', reminderSettings);
-      console.log('🔍 DEBUG: Auth token present:', !!localStorage.getItem('token'));
-      console.log('🔍 DEBUG: Auth token value:', localStorage.getItem('token')?.substring(0, 20) + '...');
-      console.log('🔍 DEBUG: Axios default headers:', API.defaults.headers.common);
-      console.log('🔍 DEBUG: API URL:', `/medicines/patients/${patientId}/reminder-settings`);
-      
       // Validate patient ID
       if (!patientId || patientId <= 0) {
         throw new Error(`Invalid patient ID: ${patientId}`);
       }
       
       try {
-        console.log('🔍 DEBUG: Making API request...');
         const response = await API.post(`/medicines/patients/${patientId}/reminder-settings`, reminderSettings);
-        console.log('🔍 DEBUG: Save reminder settings response:', response.data);
         return response.data;
       } catch (error: any) {
-        console.error('🔍 DEBUG: Save reminder settings error:', error);
-        console.error('🔍 DEBUG: Error response:', error.response?.data);
-        console.error('🔍 DEBUG: Error status:', error.response?.status);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log('🔍 DEBUG: Save successful, response data:', data);
       toast.success('Reminder settings saved successfully! 🔔');
       
       // Close modal first
@@ -169,8 +143,6 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
       
       // Invalidate and refetch with a small delay to ensure settings are saved
       setTimeout(() => {
-        console.log('🔍 DEBUG: Refreshing all medicine-related queries after settings save');
-        
         // Invalidate and refetch reminder settings
         queryClient.invalidateQueries({ queryKey: ['medicine-reminder-settings', patientId] });
         
@@ -187,17 +159,11 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         
         // Also update the local state with the saved data
         if (data && data.data) {
-          console.log('🔍 DEBUG: Updating local state with saved data:', data.data);
           setSettings(data.data);
         }
       }, 100);
     },
     onError: (error: any) => {
-      console.error('🔍 DEBUG: Save reminder settings error:', error);
-      console.error('🔍 DEBUG: Error response:', error.response?.data);
-      console.error('🔍 DEBUG: Error status:', error.response?.status);
-      console.error('🔍 DEBUG: Error code:', error.code);
-      
       let errorMessage = 'Failed to save reminder settings';
       
       if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
@@ -260,14 +226,6 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
       toast.error('Reminder minutes must be between 1 and 120');
       return;
     }
-    
-    console.log('🔍 DEBUG: User authenticated:', !!user);
-    console.log('🔍 DEBUG: User details:', user);
-    console.log('🔍 DEBUG: Auth token present:', !!localStorage.getItem('token'));
-    console.log('🔍 DEBUG: Auth token value:', localStorage.getItem('token')?.substring(0, 20) + '...');
-    console.log('🔍 DEBUG: Patient ID:', patientId);
-    console.log('🔍 DEBUG: Settings to save:', settings);
-    console.log('🔍 DEBUG: Axios default headers:', API.defaults.headers.common);
     
     saveSettingsMutation.mutate(settings);
   };
@@ -335,9 +293,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   };
 
   const handleTimeChange = (timeType: 'morningTime' | 'lunchTime' | 'dinnerTime', value: string) => {
-    console.log('🔍 DEBUG: Time changed:', timeType, value);
     const formattedTime = formatTo24Hour(value);
-    console.log('🔍 DEBUG: Formatted time:', formattedTime);
     setSettings(prev => ({
       ...prev,
       [timeType]: formattedTime
@@ -345,7 +301,6 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
   };
 
   const handleToggle = (field: 'enabled' | 'notificationEnabled') => {
-    console.log('🔍 DEBUG: Toggle changed:', field, 'from', settings[field], 'to', !settings[field]);
     setSettings(prev => ({
       ...prev,
       [field]: !prev[field]
@@ -571,7 +526,6 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
               <select
                 value={settings.reminderMinutesBefore}
                 onChange={(e) => {
-                  console.log('🔍 DEBUG: Reminder minutes changed to:', e.target.value);
                   setSettings(prev => ({
                     ...prev,
                     reminderMinutesBefore: parseInt(e.target.value)

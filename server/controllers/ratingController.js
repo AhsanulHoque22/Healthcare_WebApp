@@ -1,10 +1,17 @@
 const { DoctorRating, Appointment, Patient, Doctor, User } = require('../models');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, query } = require('express-validator');
 const { Op } = require('sequelize');
 const {
   triggerDoctorRatingReceived,
   triggerDoctorRatingReceivedAdmin,
 } = require('../services/notificationTriggers');
+
+// Input sanitization helper
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  // Remove potential SQL injection characters while preserving legitimate query strings
+  return input.replace(/[;'"\\]/g, '').trim();
+};
 
 // Create a new doctor rating
 const createRating = async (req, res, next) => {
@@ -172,10 +179,26 @@ const getAllRatings = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, doctorId, rating } = req.query;
 
+    // Validate and sanitize numeric parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20)); // Cap limit at 100
+
     const whereClause = {};
-    if (status) whereClause.status = status;
-    if (doctorId) whereClause.doctorId = doctorId;
-    if (rating) whereClause.rating = rating;
+    
+    // Validate status parameter
+    if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+      whereClause.status = status;
+    }
+    
+    // Validate doctorId parameter
+    if (doctorId && /^\d+$/.test(doctorId)) {
+      whereClause.doctorId = parseInt(doctorId);
+    }
+    
+    // Validate rating parameter (1-5)
+    if (rating && /^[1-5]$/.test(rating)) {
+      whereClause.rating = parseInt(rating);
+    }
 
     const ratings = await DoctorRating.findAndCountAll({
       where: whereClause,
@@ -194,8 +217,8 @@ const getAllRatings = async (req, res, next) => {
         }
       ],
       order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit)
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum
     });
 
     res.json({
@@ -203,11 +226,11 @@ const getAllRatings = async (req, res, next) => {
       data: {
         ratings: ratings.rows,
         pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(ratings.count / parseInt(limit)),
+          currentPage: pageNum,
+          totalPages: Math.ceil(ratings.count / limitNum),
           totalRatings: ratings.count,
-          hasNext: parseInt(page) * parseInt(limit) < ratings.count,
-          hasPrev: parseInt(page) > 1
+          hasNext: pageNum * limitNum < ratings.count,
+          hasPrev: pageNum > 1
         }
       }
     });

@@ -51,9 +51,7 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
   const { data: scheduleData, isLoading, error } = useQuery<ScheduleData>({
     queryKey: ['dashboard-medicine-schedule', patientId],
     queryFn: async () => {
-      console.log('🔍 DEBUG: Fetching medicine schedule for patient:', patientId);
       const response = await API.get(`/medicines/patients/${patientId}/schedule/today`);
-      console.log('🔍 DEBUG: Medicine schedule response:', response.data.data);
       return response.data.data;
     },
     refetchInterval: 60000, // Refetch every minute
@@ -88,17 +86,12 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    console.log('🔍 DEBUG: handleTakeDose called', {
-      medicineId,
-      timeSlot,
-      currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
-      currentTimeMinutes: currentHour * 60 + currentMinute
-    });
+
     
     // Parse time from timeSlot (format: "Morning 08:00")
     const timeMatch = timeSlot.match(/(\d{1,2}):(\d{2})/);
     if (!timeMatch) {
-      console.error('❌ Invalid time format:', timeSlot);
+
       toast.error('Invalid time format');
       return;
     }
@@ -110,22 +103,16 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
     const currentTimeMinutes = currentHour * 60 + currentMinute;
     const expectedTimeMinutes = expectedHour * 60 + expectedMinute;
     
-    console.log('🔍 DEBUG: Time comparison', {
-      expectedTime: `${expectedHour}:${expectedMinute.toString().padStart(2, '0')}`,
-      expectedTimeMinutes,
-      currentTimeMinutes,
-      difference: expectedTimeMinutes - currentTimeMinutes,
-      canTake: currentTimeMinutes >= expectedTimeMinutes - 30
-    });
+
     
     // Only allow taking medicine if it's the current time or past the expected time (with 30 min grace period)
     if (currentTimeMinutes < expectedTimeMinutes - 30) {
-      console.log('❌ BLOCKED: Future medicine cannot be taken');
+
       toast.error('Cannot mark future medicine as taken');
       return;
     }
     
-    console.log('✅ ALLOWED: Medicine can be taken');
+
     recordDosageMutation.mutate({ medicineId, timeSlot });
   };
 
@@ -233,12 +220,8 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
 
       {/* Medicine List */}
       <div className="space-y-3">
-        {(() => {
-          console.log('🔍 DEBUG: Rendering medicines:', scheduleData.schedule.length, 'medicines');
-          return null;
-        })()}
         {scheduleData.schedule.map((medicine) => {
-          console.log('🔍 DEBUG: Rendering medicine:', medicine.name, 'with', medicine.expectedTimes?.length, 'time slots');
+
           return (
             <div key={medicine.id} className="border border-gray-200 rounded-lg p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
             <div className="flex items-center justify-between mb-2">
@@ -254,11 +237,11 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
             {/* Time Slots */}
             <div className="flex gap-2">
               {(() => {
-                console.log('🔍 DEBUG: Rendering time slots for', medicine.name, ':', medicine.expectedTimes);
+
                 return null;
               })()}
               {medicine.expectedTimes.map((timeSlot, index) => {
-                console.log('🔍 DEBUG: Rendering time slot:', timeSlot.label, 'at', timeSlot.time, 'taken:', timeSlot.taken);
+
                 const status = getTimeStatus(timeSlot);
                 const isDisabled = timeSlot.taken || status === 'missed';
                 
@@ -277,30 +260,14 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
                 
                 const finalDisabled = isDisabled || isFuture;
                 
-                console.log('🔍 DEBUG: Button rendering', {
-                  medicineName: medicine.name,
-                  timeSlot: timeSlot.label,
-                  status,
-                  isDisabled,
-                  isFuture,
-                  finalDisabled,
-                  currentTime: `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
-                });
-                
                 return (
                   <button
                     key={index}
                     onClick={() => {
-                      console.log('🔍 DEBUG: Button clicked!', {
-                        medicineName: medicine.name,
-                        timeSlot: timeSlot.label,
-                        finalDisabled,
-                        medicineId: medicine.id
-                      });
                       if (!finalDisabled) {
                         handleTakeDose(medicine.id, timeSlot.label);
                       } else {
-                        console.log('🔍 DEBUG: Button is disabled, not calling handleTakeDose');
+
                       }
                     }}
                     disabled={finalDisabled}

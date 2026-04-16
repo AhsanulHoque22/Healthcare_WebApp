@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import API from '../api/api';
-import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import {
   MagnifyingGlassIcon,

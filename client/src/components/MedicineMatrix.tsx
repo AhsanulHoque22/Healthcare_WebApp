@@ -116,7 +116,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
       });
     }
     
-    console.log('🔍 DEBUG: Generated custom time slots for medicine:', medicine.name, customTimes);
     return customTimes;
   };
 
@@ -124,11 +123,9 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
   const { data: reminderSettings } = useQuery<ReminderSettings>({
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
-      console.log('🔍 DEBUG: MedicineMatrix fetching reminder settings for patient:', patientId);
       const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
         params: { _t: Date.now() } // Cache-busting parameter
       });
-      console.log('🔍 DEBUG: MedicineMatrix reminder settings response:', response.data.data);
       return response.data.data;
     },
     enabled: !!patientId,
@@ -140,7 +137,7 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
 
   // Debug reminder settings changes
   useEffect(() => {
-    console.log('🔍 DEBUG: MedicineMatrix reminder settings updated:', reminderSettings);
+    // Reminder settings updated
   }, [reminderSettings]);
 
   // Fetch medicines for the date range
@@ -150,11 +147,9 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
       const startDate = dates[0].toISOString().split('T')[0];
       const endDate = dates[6].toISOString().split('T')[0];
       
-      console.log('🔍 DEBUG: MedicineMatrix fetching medicines for patient:', patientId, 'from', startDate, 'to', endDate);
       const response = await API.get(`/medicines/patients/${patientId}/schedule/range`, {
         params: { startDate, endDate, _t: Date.now() } // Cache-busting parameter
       });
-      console.log('🔍 DEBUG: MedicineMatrix medicines response:', response.data.data);
       return response.data.data;
     },
   });
@@ -221,12 +216,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
   });
 
   const handleTakeDose = (medicineId: number, date: string, timeSlot: string) => {
-    console.log('🔍 DEBUG: MedicineMatrix handleTakeDose called', {
-      medicineId,
-      date,
-      timeSlot
-    });
-    
     // Prevent marking future medicines as taken
     const now = new Date();
     const currentDate = now.toISOString().split('T')[0];
@@ -235,7 +224,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
     
     // Check if date is in the future
     if (date > currentDate) {
-      console.log('❌ BLOCKED: Future date medicine cannot be taken', { date, currentDate });
       toast.error('Cannot mark future medicine as taken');
       return;
     }
@@ -250,24 +238,14 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
         const currentTimeMinutes = currentHour * 60 + currentMinute;
         const expectedTimeMinutes = expectedHour * 60 + expectedMinute;
         
-        console.log('🔍 DEBUG: Time validation', {
-          currentTime: `${currentHour}:${currentMinute.toString().padStart(2, '0')}`,
-          expectedTime: `${expectedHour}:${expectedMinute.toString().padStart(2, '0')}`,
-          currentTimeMinutes,
-          expectedTimeMinutes,
-          canTake: currentTimeMinutes >= expectedTimeMinutes - 30
-        });
-        
         // Only allow taking medicine if it's the current time or past the expected time (with 30 min grace period)
         if (currentTimeMinutes < expectedTimeMinutes - 30) {
-          console.log('❌ BLOCKED: Future time medicine cannot be taken');
           toast.error('Cannot mark future medicine as taken');
           return;
         }
       }
     }
     
-    console.log('✅ ALLOWED: Medicine can be taken');
     recordDosageMutation.mutate({ medicineId, date, timeSlot });
   };
 
@@ -395,7 +373,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
           {/* Reminder Settings Button */}
           <button
             onClick={() => {
-              console.log('🔍 DEBUG: Set Reminders button clicked');
               setShowReminderSettings(true);
             }}
             className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
@@ -542,22 +519,8 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
                               <button
                                 key={timeIndex}
                                 onClick={() => {
-                                  console.log('🔍 DEBUG: MedicineMatrix button clicked!', {
-                                    medicineName: medicine.name,
-                                    medicineId: medicine.id,
-                                    date: date.toISOString().split('T')[0],
-                                    timeSlot: timeSlot.time,
-                                    isTaken,
-                                    isPast,
-                                    isFuture,
-                                    isFutureTime,
-                                    isRecording,
-                                    canTake: !isTaken && !isPast && !isFuture && !isFutureTime && !isRecording
-                                  });
                                   if (!isTaken && !isPast && !isFuture && !isFutureTime && !isRecording) {
                                     handleTakeDose(medicine.id, date.toISOString().split('T')[0], timeSlot.time);
-                                  } else {
-                                    console.log('🔍 DEBUG: MedicineMatrix button blocked - isTaken:', isTaken, 'isPast:', isPast, 'isFuture:', isFuture, 'isFutureTime:', isFutureTime, 'isRecording:', isRecording);
                                   }
                                 }}
                                 disabled={isTaken || isPast || isFuture || isFutureTime}
@@ -612,7 +575,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity duration-300"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              console.log('🔍 DEBUG: Reminder settings modal closed by clicking outside');
               setShowReminderSettings(false);
             }
           }}
@@ -620,7 +582,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
           <MedicineReminderSettings
             patientId={patientId}
             onClose={() => {
-              console.log('🔍 DEBUG: Reminder settings modal closed');
               setShowReminderSettings(false);
             }}
           />

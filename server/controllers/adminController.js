@@ -10,6 +10,15 @@ const {
   buildEmailHtml,
 } = require('../services/notificationTriggers');
 
+// Input validation helper - prevents SQL injection in LIKE queries
+const validateSearchInput = (search) => {
+  if (!search || typeof search !== 'string') return null;
+  // Allow alphanumeric, spaces, hyphens, and dots only
+  const sanitized = search.replace(/[^a-zA-Z0-9\s\.\-@]/g, '').trim();
+  if (sanitized.length === 0 || sanitized.length > 100) return null;
+  return sanitized;
+};
+
 // Get all users with pagination and filters
 const getUsers = async (req, res, next) => {
   try {
@@ -23,18 +32,31 @@ const getUsers = async (req, res, next) => {
       sortOrder = 'DESC'
     } = req.query;
 
+    // Validate and sanitize numeric parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+
     const whereClause = {};
     
-    if (role) whereClause.role = role;
+    if (role && ['admin', 'doctor', 'patient'].includes(role)) {
+      whereClause.role = role;
+    }
     if (isActive !== undefined) whereClause.isActive = isActive === 'true';
     
-    if (search) {
+    // Validate search input
+    const validatedSearch = validateSearchInput(search);
+    if (validatedSearch) {
       whereClause[Op.or] = [
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } }
+        { firstName: { [Op.like]: `%${validatedSearch}%` } },
+        { lastName: { [Op.like]: `%${validatedSearch}%` } },
+        { email: { [Op.like]: `%${validatedSearch}%` } }
       ];
     }
+
+    // Validate sortBy parameter
+    const allowedSortFields = ['createdAt', 'firstName', 'lastName', 'email', 'updatedAt'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortOrderUpper = ['ASC', 'DESC'].includes(sortOrder?.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
 
     const users = await User.findAndCountAll({
       where: whereClause,
@@ -49,9 +71,9 @@ const getUsers = async (req, res, next) => {
           required: false
         }
       ],
-      order: [[sortBy, sortOrder.toUpperCase()]],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit)
+      order: [[sortField, sortOrderUpper]],
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum
     });
 
     res.json({
@@ -59,11 +81,11 @@ const getUsers = async (req, res, next) => {
       data: {
         users: users.rows,
         pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(users.count / parseInt(limit)),
+          currentPage: pageNum,
+          totalPages: Math.ceil(users.count / limitNum),
           totalRecords: users.count,
-          hasNext: parseInt(page) * parseInt(limit) < users.count,
-          hasPrev: parseInt(page) > 1
+          hasNext: pageNum * limitNum < users.count,
+          hasPrev: pageNum > 1
         }
       }
     });
@@ -411,17 +433,28 @@ const getPatients = async (req, res, next) => {
       sortOrder = 'DESC'
     } = req.query;
 
+    // Validate and sanitize numeric parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+
     const whereClause = { role: 'patient' };
     
     if (isActive !== undefined) whereClause.isActive = isActive === 'true';
     
-    if (search) {
+    // Validate search input
+    const validatedSearch = validateSearchInput(search);
+    if (validatedSearch) {
       whereClause[Op.or] = [
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } }
+        { firstName: { [Op.like]: `%${validatedSearch}%` } },
+        { lastName: { [Op.like]: `%${validatedSearch}%` } },
+        { email: { [Op.like]: `%${validatedSearch}%` } }
       ];
     }
+
+    // Validate sortBy parameter
+    const allowedSortFields = ['createdAt', 'firstName', 'lastName', 'email', 'updatedAt'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortOrderUpper = ['ASC', 'DESC'].includes(sortOrder?.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
 
     const patients = await User.findAndCountAll({
       where: whereClause,
@@ -432,9 +465,9 @@ const getPatients = async (req, res, next) => {
           required: true
         }
       ],
-      order: [[sortBy, sortOrder.toUpperCase()]],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit)
+      order: [[sortField, sortOrderUpper]],
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum
     });
 
     // Transform the data to match expected format
@@ -461,11 +494,11 @@ const getPatients = async (req, res, next) => {
       data: {
         patients: transformedPatients,
         pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(patients.count / parseInt(limit)),
+          currentPage: pageNum,
+          totalPages: Math.ceil(patients.count / limitNum),
           totalRecords: patients.count,
-          hasNext: parseInt(page) * parseInt(limit) < patients.count,
-          hasPrev: parseInt(page) > 1
+          hasNext: pageNum * limitNum < patients.count,
+          hasPrev: pageNum > 1
         }
       }
     });
@@ -490,7 +523,7 @@ const getPatientById = async (req, res, next) => {
 
     if (!patient) {
       return res.status(404).json({
-        success: false,
+        success: false,                                                                                                            
         message: 'Patient not found'
       });
     }
@@ -517,19 +550,37 @@ const getAllDoctors = async (req, res, next) => {
       sortOrder = 'DESC'
     } = req.query;
 
+    // Validate and sanitize numeric parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+
     const whereClause = { role: 'doctor' };
     const doctorWhereClause = {};
     
     if (isVerified !== undefined) doctorWhereClause.isVerified = isVerified === 'true';
-    if (department) doctorWhereClause.department = department;
     
-    if (search) {
+    // Validate department parameter
+    if (department && typeof department === 'string') {
+      const validatedDept = validateSearchInput(department);
+      if (validatedDept) {
+        doctorWhereClause.department = validatedDept;
+      }
+    }
+    
+    // Validate search input
+    const validatedSearch = validateSearchInput(search);
+    if (validatedSearch) {
       whereClause[Op.or] = [
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } }
+        { firstName: { [Op.like]: `%${validatedSearch}%` } },
+        { lastName: { [Op.like]: `%${validatedSearch}%` } },
+        { email: { [Op.like]: `%${validatedSearch}%` } }
       ];
     }
+
+    // Validate sortBy parameter
+    const allowedSortFields = ['createdAt', 'firstName', 'lastName', 'email', 'updatedAt'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortOrderUpper = ['ASC', 'DESC'].includes(sortOrder?.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
 
     const doctors = await Doctor.findAndCountAll({
       where: doctorWhereClause,
@@ -540,9 +591,9 @@ const getAllDoctors = async (req, res, next) => {
           where: whereClause
         }
       ],
-      order: [[sortBy, sortOrder.toUpperCase()]],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      order: [[sortField, sortOrderUpper]],
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum,
       distinct: true
     });
 
@@ -571,11 +622,11 @@ const getAllDoctors = async (req, res, next) => {
       data: {
         doctors: doctorsWithRatings,
         pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(doctors.count / parseInt(limit)),
+          currentPage: pageNum,
+          totalPages: Math.ceil(doctors.count / limitNum),
           totalRecords: doctors.count,
-          hasNext: parseInt(page) * parseInt(limit) < doctors.count,
-          hasPrev: parseInt(page) > 1
+          hasNext: pageNum * limitNum < doctors.count,
+          hasPrev: pageNum > 1
         }
       }
     });
