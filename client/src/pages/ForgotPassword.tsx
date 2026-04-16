@@ -92,7 +92,7 @@ const ForgotPassword: React.FC = () => {
               </Link>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
               >
                 <span>Back to Home</span>
                 <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -114,7 +114,7 @@ const ForgotPassword: React.FC = () => {
                   <div className="text-center">
                     <div className="relative group mb-6">
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/40 to-green-200/40 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                      <div className="relative w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300 animate-bounce-in">
+                      <div className="relative w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <CheckCircleIcon className="h-8 w-8 text-white" />
                         <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
                       </div>
@@ -183,7 +183,7 @@ const ForgotPassword: React.FC = () => {
             </Link>
             <Link
               to="/"
-              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
             >
               <span>Back to Home</span>
               <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />

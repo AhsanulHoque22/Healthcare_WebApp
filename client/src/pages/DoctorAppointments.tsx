@@ -770,7 +770,7 @@ Do you want to proceed?`;
                             <button
                               onClick={() => openRescheduleModal(appointment)}
                               disabled={isLoading}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md disabled:opacity-50 animate-bounce"
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md disabled:opacity-50"
                               title="Reschedule"
                             >
                               <ClockIcon className="h-5 w-5" />

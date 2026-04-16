@@ -145,7 +145,7 @@ const ResetPassword: React.FC = () => {
               </Link>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
               >
                 <span>Back to Home</span>
                 <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -227,7 +227,7 @@ const ResetPassword: React.FC = () => {
             </Link>
             <Link
               to="/"
-              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
             >
               <span>Back to Home</span>
               <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -285,7 +285,7 @@ const ResetPassword: React.FC = () => {
                         />
                         <button
                           type="button"
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110 animate-bounce"
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
@@ -322,7 +322,7 @@ const ResetPassword: React.FC = () => {
                         />
                         <button
                           type="button"
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110 animate-bounce"
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
                           {showConfirmPassword ? (

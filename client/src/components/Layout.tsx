@@ -371,7 +371,7 @@ const Layout: React.FC = () => {
           {/* Desktop sidebar toggle button */}
           <button
             type="button"
-            className="hidden lg:block -m-2.5 p-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110 animate-bounce"
+            className="hidden lg:block -m-2.5 p-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110"
             onClick={() => setDesktopSidebarCollapsed(!desktopSidebarCollapsed)}
             title={desktopSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -416,7 +416,7 @@ const Layout: React.FC = () => {
                 
                 <button
                   onClick={handleLogout}
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-105 animate-bounce"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-105"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
                   Sign out

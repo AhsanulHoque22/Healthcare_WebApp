@@ -183,7 +183,7 @@ const Users: React.FC = () => {
                 <div className="hidden md:block">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm animate-bounce-in group-hover:scale-110 transition-transform duration-300">
+                    <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
                       <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
                         <SparklesIcon className="h-8 w-8 text-white animate-pulse" />
                       </div>
@@ -310,7 +310,7 @@ const Users: React.FC = () => {
                           queryClient.invalidateQueries({ queryKey: ['admin-users'] });
                           toast.success('Data refreshed!');
                         }}
-                        className="relative group bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 border border-white/20 animate-bounce"
+                        className="relative group bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 border border-white/20"
                       >
                         <ArrowPathIcon className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" />
                         Refresh
@@ -347,7 +347,7 @@ const Users: React.FC = () => {
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-red-200 to-pink-200 rounded-2xl blur-xl opacity-20"></div>
                     <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-12 text-center">
-                      <div className="text-red-400 mb-6 animate-bounce">
+                      <div className="text-red-400 mb-6">
                         <ExclamationTriangleIcon className="h-16 w-16 mx-auto" />
                       </div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">Failed to Load Users</h3>
@@ -358,7 +358,7 @@ const Users: React.FC = () => {
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20"></div>
                     <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-12 text-center">
-                      <div className="text-purple-400 mb-6 animate-bounce">
+                      <div className="text-purple-400 mb-6">
                         <UserGroupIcon className="h-16 w-16 mx-auto" />
                       </div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3>

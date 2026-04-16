@@ -1915,7 +1915,7 @@ const AdminLabReports: React.FC = () => {
                 <div className="relative group animate-fade-in-up">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20"></div>
                   <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-12 text-center">
-                    <div className="text-purple-400 mb-6 animate-bounce">
+                    <div className="text-purple-400 mb-6">
                       <BeakerIcon className="h-16 w-16 mx-auto" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">

@@ -163,7 +163,7 @@ const Register: React.FC = () => {
               </Link>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
               >
                 <span>Back to Home</span>
                 <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -237,7 +237,7 @@ const Register: React.FC = () => {
                         }}
                         className={`relative group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 ${
                           selectedRole === 'doctor'
-                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg animate-bounce'
+                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
                             : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-lg'
                         }`}
                       >
@@ -637,7 +637,7 @@ const Register: React.FC = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-bounce">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                     <BriefcaseIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -667,7 +667,7 @@ const Register: React.FC = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/20 to-orange-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-bounce">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                     <CheckCircleIcon className="h-6 w-6" />
                   </div>
                   <div>

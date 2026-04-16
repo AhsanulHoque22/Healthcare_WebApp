@@ -374,7 +374,7 @@ const Assistant: React.FC = () => {
                 <div className="h-full flex flex-col items-center justify-center text-center px-6 py-10">
                   <div className="relative mb-5">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl" />
-                    <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 p-5 rounded-3xl border border-indigo-200/50 shadow-lg animate-bounce-in">
+                    <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 p-5 rounded-3xl border border-indigo-200/50 shadow-lg">
                       <SparklesIcon className="h-10 w-10 text-indigo-600" />
                     </div>
                   </div>
@@ -515,7 +515,7 @@ const Assistant: React.FC = () => {
                     {[0, 1, 2].map(i => (
                       <span
                         key={i}
-                        className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce inline-block"
+                        className="w-2 h-2 bg-indigo-400 rounded-full inline-block"
                         style={{ animationDelay: `${i * 150}ms` }}
                       />
                     ))}

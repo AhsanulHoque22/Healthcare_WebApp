@@ -384,7 +384,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
           onClick={() => setMedicineFilter('active')}
           className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-md ${
             medicineFilter === 'active'
-              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md animate-bounce'
+              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
               : 'bg-white/50 backdrop-blur-sm text-gray-700 hover:bg-white/80 border border-gray-200/50'
           }`}
         >

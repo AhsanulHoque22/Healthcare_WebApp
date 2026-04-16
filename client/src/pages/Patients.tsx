@@ -599,7 +599,7 @@ const Patients: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleViewMedicalRecords(patient)}
-                      className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex items-center gap-2 animate-bounce"
+                      className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex items-center gap-2"
                     >
                       <DocumentTextIcon className="h-4 w-4" />
                       Records
@@ -965,7 +965,7 @@ const Patients: React.FC = () => {
                             <button
                               onClick={() => handleDownloadRecord(appointment)}
                               disabled={isDownloading === appointment.id}
-                              className={`flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md ${isDownloading === appointment.id ? 'opacity-50 cursor-not-allowed' : 'animate-bounce'}`}
+                              className={`flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md ${isDownloading === appointment.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                               {isDownloading === appointment.id ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full" />
@@ -1231,7 +1231,7 @@ const Patients: React.FC = () => {
                   <button
                     onClick={() => handleDownloadRecord(selectedRecord)}
                     disabled={isDownloading === selectedRecord.id}
-                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 ${isDownloading === selectedRecord.id ? 'opacity-70 cursor-not-allowed' : 'animate-bounce'}`}
+                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 ${isDownloading === selectedRecord.id ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {isDownloading === selectedRecord.id ? (
                       <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />

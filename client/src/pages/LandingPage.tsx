@@ -241,7 +241,7 @@ const LandingPage: React.FC = () => {
               </button>
               <Link
                 to="/find-doctors"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-bounce flex items-center"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 flex items-center"
               >
                 Find Doctors
                 <SparklesIcon className="h-4 w-4 ml-1.5 text-indigo-500" />
@@ -251,7 +251,7 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('stats');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-bounce"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
               >
                 Stats
               </button>
@@ -269,7 +269,7 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('contact');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-bounce"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
               >
                 Contact
               </button>
@@ -390,7 +390,7 @@ const LandingPage: React.FC = () => {
             </div>
             <div className={`relative transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
               {/* Floating Cards */}
-              <div className="absolute -top-8 -left-8 w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg animate-bounce">
+              <div className="absolute -top-8 -left-8 w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <RocketLaunchIcon className="h-10 w-10 text-white" />
               </div>
               

@@ -380,7 +380,7 @@ const DoctorDashboard: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <button
                   onClick={() => navigate('/app/patients')}
-                  className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg animate-bounce"
+                  className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
                 >
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
@@ -438,7 +438,7 @@ const DoctorDashboard: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/app/doctor-appointments')}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg font-medium animate-bounce"
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg font-medium"
               >
                 <EyeIcon className="h-5 w-5" />
                 Review Requests

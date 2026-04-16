@@ -32,7 +32,7 @@ const RegistrationSuccess: React.FC = () => {
             <div className="relative mb-8 flex justify-center">
               <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
               <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <EnvelopeOpenIcon className="h-16 w-16 text-white animate-bounce" />
+                <EnvelopeOpenIcon className="h-16 w-16 text-white" />
               </div>
             </div>
 

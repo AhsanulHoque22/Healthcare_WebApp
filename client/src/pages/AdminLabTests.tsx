@@ -450,7 +450,7 @@ const AdminLabTests: React.FC = () => {
               <div className="p-12 text-center">
                 <div className="relative mb-6">
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full blur-xl opacity-30"></div>
-                  <BeakerIcon className="relative h-16 w-16 text-indigo-500 mx-auto animate-bounce" />
+                  <BeakerIcon className="relative h-16 w-16 text-indigo-500 mx-auto" />
                 </div>
                 <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">No Lab Tests Found</h3>
                 <p className="text-gray-600 mb-6 font-medium">

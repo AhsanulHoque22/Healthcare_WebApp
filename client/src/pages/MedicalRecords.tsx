@@ -368,7 +368,7 @@ const MedicalRecords: React.FC = () => {
               <div className="hidden md:block">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300 animate-bounce-in">
+                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <DocumentTextIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -431,7 +431,7 @@ const MedicalRecords: React.FC = () => {
                   onClick={() => setActiveTab('medicines')}
                   className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-md ${
                     activeTab === 'medicines'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg animate-bounce'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
@@ -807,7 +807,7 @@ const MedicalRecords: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDownload(appointment)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-lg hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-bounce"
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-lg hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg"
                         >
                           <ArrowDownTrayIcon className="h-4 w-4" />
                           Download
@@ -1218,7 +1218,7 @@ const MedicalRecords: React.FC = () => {
                 <div className="mt-6 flex justify-end gap-4">
                   <button
                     onClick={() => handleDownload(selectedRecord)}
-                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl flex items-center gap-2 animate-bounce"
+                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <ArrowDownTrayIcon className="h-5 w-5" />
                     Download Record

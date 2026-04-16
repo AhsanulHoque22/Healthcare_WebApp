@@ -332,7 +332,7 @@ const AdminPatients: React.FC = () => {
                 <div className="relative group max-w-md mx-auto">
                   <div className="absolute inset-0 bg-gradient-to-r from-red-200 to-pink-200 rounded-2xl blur-xl opacity-30"></div>
                   <div className="relative bg-white/60 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-lg">
-                    <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4 animate-bounce" />
+                    <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-red-800 mb-2">Failed to Load Patients</h3>
                     <p className="text-red-600">Please try again later or contact support if the problem persists.</p>
                   </div>
@@ -343,7 +343,7 @@ const AdminPatients: React.FC = () => {
                 <div className="relative group max-w-md mx-auto">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20"></div>
                   <div className="relative bg-white/60 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-lg">
-                    <UserGroupIcon className="h-16 w-16 text-purple-400 mx-auto mb-4 animate-bounce" />
+                    <UserGroupIcon className="h-16 w-16 text-purple-400 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-gray-800 mb-2">No Patients Found</h3>
                     <p className="text-gray-600">Try adjusting your search criteria or check back later.</p>
                   </div>

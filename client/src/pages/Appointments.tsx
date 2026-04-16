@@ -465,7 +465,7 @@ const Appointments: React.FC = () => {
               <div className="hidden md:block">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300 animate-bounce-in">
+                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <ClockIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -620,7 +620,7 @@ const Appointments: React.FC = () => {
                     setShowBookingModal(true);
                     fetchDoctors();
                   }}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto animate-bounce"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
                 >
                   <PlusIcon className="h-5 w-5" />
                   Book Appointment
@@ -706,7 +706,7 @@ const Appointments: React.FC = () => {
                         {appointment.status === 'completed' && (
                           <button 
                             onClick={() => handleRateAppointment(appointment)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-bounce ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg ${
                               appointmentRatings[appointment.id]
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
                                 : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600'
@@ -742,7 +742,7 @@ const Appointments: React.FC = () => {
                             </button>
                             <button 
                               onClick={() => handleCancelAppointment(appointment.id, appointment.appointmentDate)}
-                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-bounce"
+                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg hover:from-red-600 hover:to-rose-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg"
                             >
                               <XCircleIcon className="h-4 w-4" />
                               Cancel

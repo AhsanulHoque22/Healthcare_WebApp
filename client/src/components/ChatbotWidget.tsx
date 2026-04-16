@@ -224,7 +224,7 @@ const ChatbotWidget: React.FC = () => {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all group relative animate-bounce"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all group relative"
         >
           <SparklesIcon className="h-4 w-4 absolute -top-1 -right-1 text-yellow-300 animate-pulse" />
           <ChatBubbleLeftRightIcon className="h-8 w-8" />
@@ -337,9 +337,9 @@ const ChatbotWidget: React.FC = () => {
             {isLoading && (
               <div className="flex justify-start animate-pulse">
                 <div className="bg-white border border-gray-100 px-4 py-2 rounded-2xl rounded-tl-none flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-150"></div>
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-300"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full delay-150"></div>
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full delay-300"></div>
                 </div>
               </div>
             )}

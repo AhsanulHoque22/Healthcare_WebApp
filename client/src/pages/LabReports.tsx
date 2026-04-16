@@ -850,7 +850,7 @@ const LabReports: React.FC = () => {
           <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
             <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-12 text-center hover:shadow-xl transition-all duration-300">
-              <div className="text-purple-400 mb-6 animate-bounce">
+              <div className="text-purple-400 mb-6">
                 <svg className="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>

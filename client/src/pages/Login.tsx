@@ -105,7 +105,7 @@ const Login: React.FC = () => {
             </Link>
             <Link
               to="/"
-              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105 animate-bounce"
+              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
             >
               <span>Back to Home</span>
               <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 group-hover:scale-110 transition-all duration-300" />
@@ -196,7 +196,7 @@ const Login: React.FC = () => {
                         />
                         <button
                           type="button"
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110 animate-bounce"
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
@@ -231,7 +231,7 @@ const Login: React.FC = () => {
                     <div className="text-sm">
                       <Link
                         to="/forgot-password"
-                        className="font-semibold text-indigo-600 hover:text-indigo-500 transition-all duration-300 hover:underline hover:scale-105 animate-bounce"
+                        className="font-semibold text-indigo-600 hover:text-indigo-500 transition-all duration-300 hover:underline hover:scale-105"
                       >
                         Forgot password?
                       </Link>
@@ -266,7 +266,7 @@ const Login: React.FC = () => {
                       Don't have an account?{' '}
                       <Link
                         to="/register"
-                        className="font-semibold text-indigo-600 hover:text-indigo-500 transition-all duration-500 hover:underline hover:scale-105 animate-bounce"
+                        className="font-semibold text-indigo-600 hover:text-indigo-500 transition-all duration-500 hover:underline hover:scale-105"
                       >
                         Create one here
                       </Link>
@@ -324,7 +324,7 @@ const Login: React.FC = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-bounce">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                     <ClockIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -354,7 +354,7 @@ const Login: React.FC = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 to-yellow-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-bounce">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                     <ShieldCheckIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -371,7 +371,7 @@ const Login: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/20 to-amber-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
               <div className="relative p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animate-bounce">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <StarIcon className="h-5 w-5 text-yellow-300 animate-pulse" />
                   </div>
                 <p className="font-bold text-lg">
