@@ -449,6 +449,10 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={() => navigate('/app/medical-records')}
                     className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                  >
+                  <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <DocumentTextIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">View Medical Records</span>
                       <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
@@ -479,6 +483,10 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={() => navigate('/app/admin-patients')}
                     className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                  >
+                  <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <UserGroupIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">Patient History</span>
                       <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
@@ -509,6 +517,10 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={() => navigate('/app/appointments')}
                     className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                  >
+                  <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <CalendarIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">All Appointments</span>
                       <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
