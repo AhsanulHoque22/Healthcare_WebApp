@@ -449,7 +449,7 @@ Do you want to proceed?`;
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="space-y-8 p-6">
           {/* Modern Header */}
-          <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+          <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl `}>
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between">
@@ -471,12 +471,12 @@ Do you want to proceed?`;
               </div>
               
               {/* Stats Cards */}
-              <div className={`mt-6 grid grid-cols-2 md:grid-cols-5 gap-4 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+              <div className={`mt-6 grid grid-cols-2 md:grid-cols-5 gap-4 `}>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:scale-105 hover:bg-white/30">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-8 h-8 bg-white/30 rounded-lg flex items-center justify-center transition-colors duration-300">
                         <UserGroupIcon className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -488,9 +488,9 @@ Do you want to proceed?`;
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 to-yellow-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:scale-105 hover:bg-white/30">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-8 h-8 bg-amber-500/30 rounded-lg flex items-center justify-center transition-colors duration-300">
                         <ClockIcon className="h-5 w-5 text-amber-200" />
                       </div>
                       <div>
@@ -502,9 +502,9 @@ Do you want to proceed?`;
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-violet-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:scale-105 hover:bg-white/30">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-8 h-8 bg-purple-500/30 rounded-lg flex items-center justify-center transition-colors duration-300">
                         <PlayIcon className="h-5 w-5 text-purple-200" />
                       </div>
                       <div>
@@ -516,9 +516,9 @@ Do you want to proceed?`;
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:scale-105 hover:bg-white/30">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-emerald-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-8 h-8 bg-emerald-500/30 rounded-lg flex items-center justify-center transition-colors duration-300">
                         <CheckCircleIcon className="h-5 w-5 text-emerald-200" />
                       </div>
                       <div>
@@ -530,9 +530,9 @@ Do you want to proceed?`;
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:scale-105 hover:bg-white/30">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-8 h-8 bg-blue-500/30 rounded-lg flex items-center justify-center transition-colors duration-300">
                         <CalendarIcon className="h-5 w-5 text-blue-200" />
                       </div>
                       <div>
@@ -549,7 +549,7 @@ Do you want to proceed?`;
           </div>
 
           {/* Search Bar */}
-          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 `}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Patient Search */}
               <div className="relative">
@@ -624,7 +624,7 @@ Do you want to proceed?`;
           </div>
 
           {/* Filters */}
-          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 `}>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
@@ -644,7 +644,7 @@ Do you want to proceed?`;
                   <button
                     key={filter.value}
                     onClick={() => setSelectedFilter(filter.value)}
-                    className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105 shadow-sm ${
+                    className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 shadow-sm ${
                       selectedFilter === filter.value
                         ? `bg-gradient-to-r ${filter.color} text-white shadow-md`
                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
@@ -663,7 +663,7 @@ Do you want to proceed?`;
           </div>
 
           {/* Appointments Grid */}
-          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden ${pageLoaded ? 'animate-fade-in' : ''}`}>
+          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden `}>
             {isLoading ? (
               <div className="p-12 text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -693,14 +693,14 @@ Do you want to proceed?`;
                 {filteredAppointments.map((appointment, index) => (
                   <div
                     key={appointment.id}
-                    className="relative group p-6 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                    className="relative group p-6 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-blue-50/30 transition-all duration-300 hover:shadow-lg"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="flex items-center justify-between">
                       {/* Left Side - Patient Info */}
                       <div className="flex items-center space-x-4 flex-1">
                         <div className="flex-shrink-0">
-                          <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg transition-colors duration-300">
                             <UserIcon className="h-8 w-8 text-white" />
                           </div>
                         </div>
@@ -751,7 +751,7 @@ Do you want to proceed?`;
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleViewDetails(appointment)}
-                          className="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md"
+                          className="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-xl transition-all duration-300 hover:shadow-md"
                           title="View Details"
                         >
                           <EyeIcon className="h-5 w-5" />
@@ -762,7 +762,7 @@ Do you want to proceed?`;
                             <button
                               onClick={() => handleApprove(appointment.id)}
                               disabled={isLoading}
-                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md disabled:opacity-50 animate-pulse"
+                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-xl transition-all duration-300 hover:shadow-md disabled:opacity-50 animate-pulse"
                               title="Approve"
                             >
                               <CheckIcon className="h-5 w-5" />
@@ -770,7 +770,7 @@ Do you want to proceed?`;
                             <button
                               onClick={() => openRescheduleModal(appointment)}
                               disabled={isLoading}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md disabled:opacity-50"
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:shadow-md disabled:opacity-50"
                               title="Reschedule"
                             >
                               <ClockIcon className="h-5 w-5" />
@@ -778,7 +778,7 @@ Do you want to proceed?`;
                             <button
                               onClick={() => handleDecline(appointment.id)}
                               disabled={isLoading}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md disabled:opacity-50"
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-300 hover:shadow-md disabled:opacity-50"
                               title="Decline"
                             >
                               <XMarkIcon className="h-5 w-5" />
@@ -1008,7 +1008,7 @@ Do you want to proceed?`;
                       <div className="bg-white/70 rounded-xl p-4">
                         <button
                           onClick={() => window.open(`/app/patients?patientId=${selectedAppointment.patient.id}&view=records`, '_blank')}
-                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 text-sm"
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 text-sm"
                         >
                           <DocumentTextIcon className="h-4 w-4" />
                           View Patient Reports
@@ -1135,7 +1135,7 @@ Do you want to proceed?`;
                       <button
                         onClick={() => handleApprove(selectedAppointment.id)}
                         disabled={isLoading}
-                        className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                       >
                         <CheckIcon className="h-5 w-5" />
                         Approve
@@ -1146,7 +1146,7 @@ Do you want to proceed?`;
                           openRescheduleModal(selectedAppointment);
                         }}
                         disabled={isLoading}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                       >
                         <ClockIcon className="h-5 w-5" />
                         Reschedule
@@ -1155,7 +1155,7 @@ Do you want to proceed?`;
                   )}
                   <button
                     onClick={() => setShowDetailsModal(false)}
-                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium"
+                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
                   >
                     Close
                   </button>
@@ -1224,13 +1224,13 @@ Do you want to proceed?`;
                   <button
                     onClick={handleReschedule}
                     disabled={isLoading || !rescheduleForm.appointmentDate}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50"
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium disabled:opacity-50"
                   >
                     Reschedule & Approve
                   </button>
                   <button
                     onClick={() => setShowRescheduleModal(false)}
-                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium"
+                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
                   >
                     Cancel
                   </button>
@@ -1295,7 +1295,7 @@ Do you want to proceed?`;
                             </p>
                             <button
                               onClick={handleVideoCallInPrescription}
-                              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center justify-center gap-2"
+                              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center justify-center gap-2"
                             >
                               <VideoCameraIcon className="h-5 w-5" />
                               Start Video Call
@@ -1394,7 +1394,7 @@ Do you want to proceed?`;
                   <button
                     onClick={() => handleCompleteFromPrescription(selectedAppointmentForPrescription.id)}
                     disabled={isLoading}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 disabled:opacity-50"
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 disabled:opacity-50"
                   >
                     <CheckCircleIcon className="h-5 w-5" />
                     {isLoading ? 'Completing...' : 'Complete Appointment'}

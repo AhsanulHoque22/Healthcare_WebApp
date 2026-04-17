@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
 
       <div className="relative z-10 space-y-8 p-6">
         {/* Modern Header */}
-        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-[1.02] ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+        <div className="relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-shadow duration-500 hover:shadow-3xl">
           <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5"></div>
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
               <div className="hidden md:block">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <UserGroupIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -282,7 +282,7 @@ const Dashboard: React.FC = () => {
 
         {/* Stats Cards */}
         {loading ? (
-          <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${user?.role === 'patient' ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} ${pageLoaded ? 'animate-fade-in' : ''}`}>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(user?.role === 'patient' ? 4 : 5)].map((_, i) => (
               <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
                 <div className="h-4 bg-gray-200 rounded-lg w-3/4 mb-4"></div>
@@ -291,7 +291,7 @@ const Dashboard: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${statsCards.length === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+          <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${statsCards.length === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'}`}>
             {statsCards.map((stat, index) => (
               <div
                 key={stat.name}
@@ -299,9 +299,9 @@ const Dashboard: React.FC = () => {
                 style={{ animationDelay: `${index * 120}ms` }}
               >
                 <div className={`absolute inset-0 bg-gradient-to-r ${stat.color.replace('from-', 'from-').replace('to-', 'to-')}/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500`}></div>
-                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.05] hover:-translate-y-2 border border-white/50 flex flex-col">
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-shadow duration-500 border border-white/50 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300 animate-pulse`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg transition-colors duration-300`}>
                     <stat.icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-right">
@@ -325,11 +325,11 @@ const Dashboard: React.FC = () => {
 
 
         {/* Content Grid */}
-        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Appointments */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-shadow duration-500 border border-white/50">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Recent Appointments</h3>
                 <CalendarIcon className="h-6 w-6 text-indigo-600 animate-pulse" />
@@ -349,7 +349,7 @@ const Dashboard: React.FC = () => {
                     style={{ animationDelay: `${index * 150}ms` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
-                    <div className="relative bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-gray-200/50">
+                    <div className="relative bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300 border border-gray-200/50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -398,7 +398,7 @@ const Dashboard: React.FC = () => {
         {/* Quick Actions */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-shadow duration-500 border border-white/50">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -412,7 +412,7 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-200/30 to-orange-200/30 rounded-xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/find-doctors')}
-                    className="relative group w-full text-left p-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl hover:scale-[1.05] active:scale-[0.98] transition-all duration-500 shadow-xl shadow-amber-200/50 border border-amber-400 group-hover:rotate-1"
+                    className="relative group w-full text-left p-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl transition-shadow duration-500 shadow-xl shadow-amber-200/50 border border-amber-400 hover:shadow-2xl hover:shadow-amber-200/60 group-hover:rotate-1"
                   >
                     <div className="flex items-center">
                         <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-5 group-hover:rotate-12 transition-transform duration-500">
@@ -433,14 +433,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/appointments')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-blue-200/50 hover:shadow-lg animate-pulse"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-colors duration-300 border border-blue-200/50 hover:shadow-lg"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 transition-transform duration-300">
                         <CalendarIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-blue-800 font-semibold">Book Appointment</span>
-                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-colors duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -448,14 +448,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/medical-records')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 border border-emerald-200/50 hover:shadow-lg"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <DocumentTextIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">View Medical Records</span>
-                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -467,14 +467,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/appointments')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-blue-200/50 hover:shadow-lg animate-pulse"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 border border-blue-200/50 hover:shadow-lg animate-pulse"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <CalendarIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-blue-800 font-semibold">Manage Appointments</span>
-                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -482,14 +482,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/admin-patients')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 border border-emerald-200/50 hover:shadow-lg"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <UserGroupIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">Patient History</span>
-                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -501,14 +501,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/admin-users')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-blue-200/50 hover:shadow-lg animate-pulse"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 border border-blue-200/50 hover:shadow-lg animate-pulse"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <UserGroupIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-blue-800 font-semibold">Manage Users</span>
-                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -516,14 +516,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/appointments')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 border border-emerald-200/50 hover:shadow-lg"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <CalendarIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-emerald-800 font-semibold">All Appointments</span>
-                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 ml-auto" />
                   </div>
                   </button>
                 </div>
@@ -531,14 +531,14 @@ const Dashboard: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-violet-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                   <button
                     onClick={() => navigate('/app/admin-lab-tests')}
-                    className="relative group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-purple-200/50 hover:shadow-lg animate-pulse"
+                    className="relative group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-500 border border-purple-200/50 hover:shadow-lg animate-pulse"
                   >
                   <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                         <ChartBarIcon className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-purple-800 font-semibold">Lab Reports & Analytics</span>
-                      <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-all duration-500 group-hover:scale-110 ml-auto" />
+                      <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-all duration-500 ml-auto" />
                   </div>
                   </button>
                 </div>

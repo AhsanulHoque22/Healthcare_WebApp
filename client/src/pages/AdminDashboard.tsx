@@ -209,7 +209,7 @@ const AdminDashboard: React.FC = () => {
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ${pageLoaded ? 'animate-fade-in' : ''}`}>
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Total Users</p>
@@ -220,7 +220,7 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-sm text-gray-500 ml-1">vs last month</span>
                   </div>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-lg transition-transform duration-300">
                   <UsersIcon className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -229,7 +229,7 @@ const AdminDashboard: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-green-200/30 to-emerald-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Verified Doctors</p>
@@ -239,7 +239,7 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-sm text-emerald-600 font-medium">{stats?.totalDoctors || 0} Total Profiles</span>
                   </div>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg transition-transform duration-300">
                   <UserGroupIcon className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -248,7 +248,7 @@ const AdminDashboard: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 to-violet-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Total Appointments</p>
@@ -259,7 +259,7 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-sm text-gray-500 ml-1">vs last month</span>
                   </div>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl shadow-lg transition-transform duration-300">
                   <CalendarIcon className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -268,7 +268,7 @@ const AdminDashboard: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/30 to-blue-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Medical Records</p>
@@ -279,7 +279,7 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-sm text-gray-500 ml-1">vs last month</span>
                   </div>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl shadow-lg transition-transform duration-300">
                   <DocumentTextIcon className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -292,7 +292,7 @@ const AdminDashboard: React.FC = () => {
           {/* Appointment Status Chart */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <CalendarIcon className="h-6 w-6 mr-2 text-indigo-600" />
                 Appointment Status Distribution
@@ -332,7 +332,7 @@ const AdminDashboard: React.FC = () => {
           {/* Appointment Type Pie Chart */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-pink-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <DocumentTextIcon className="h-6 w-6 mr-2 text-purple-600" />
                 Appointment Types
@@ -376,7 +376,7 @@ const AdminDashboard: React.FC = () => {
           {/* Daily Appointment Trends */}
           <div className="relative group lg:col-span-2">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <ChartBarIcon className="h-6 w-6 mr-2 text-emerald-600" />
                 Weekly Appointment Trends
@@ -425,7 +425,7 @@ const AdminDashboard: React.FC = () => {
           {/* Quick Actions */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-orange-200/20 to-yellow-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <SparklesIcon className="h-6 w-6 mr-2 text-orange-600" />
                 Quick Actions
@@ -433,50 +433,50 @@ const AdminDashboard: React.FC = () => {
             <div className="space-y-3">
               <button
                 onClick={() => window.location.href = '/app/users'}
-                className="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-300 border border-blue-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
+                className="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-300 border border-blue-200 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <UsersIcon className="h-5 w-5 text-blue-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <UsersIcon className="h-5 w-5 text-blue-600 mr-3 transition-transform duration-300" />
                     <span className="text-blue-800 font-medium">Manage Users</span>
                   </div>
-                  <ArrowRightIcon className="h-4 w-4 text-blue-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1" />
+                  <ArrowRightIcon className="h-4 w-4 text-blue-400 group-hover:text-blue-600 transition-all duration-300" />
                 </div>
               </button>
               <button
                 onClick={() => window.location.href = '/app/admin-doctors'}
-                className="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl hover:from-green-100 hover:to-green-200 transition-all duration-300 border border-green-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
+                className="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl hover:from-green-100 hover:to-green-200 transition-all duration-300 border border-green-200 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <UserGroupIcon className="h-5 w-5 text-green-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <UserGroupIcon className="h-5 w-5 text-green-600 mr-3 transition-transform duration-300" />
                     <span className="text-green-800 font-medium">Manage Doctors</span>
                   </div>
-                  <ArrowRightIcon className="h-4 w-4 text-green-400 group-hover:text-green-600 transition-all duration-300 group-hover:translate-x-1" />
+                  <ArrowRightIcon className="h-4 w-4 text-green-400 group-hover:text-green-600 transition-all duration-300" />
                 </div>
               </button>
               <button
                 onClick={() => window.location.href = '/app/admin-patients'}
-                className="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-300 border border-purple-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
+                className="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-300 border border-purple-200 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <CalendarIcon className="h-5 w-5 text-purple-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <CalendarIcon className="h-5 w-5 text-purple-600 mr-3 transition-transform duration-300" />
                     <span className="text-purple-800 font-medium">Manage Patients</span>
                   </div>
-                  <ArrowRightIcon className="h-4 w-4 text-purple-400 group-hover:text-purple-600 transition-all duration-300 group-hover:translate-x-1" />
+                  <ArrowRightIcon className="h-4 w-4 text-purple-400 group-hover:text-purple-600 transition-all duration-300" />
                 </div>
               </button>
               <button
                 onClick={() => window.location.href = '/app/admin-lab-reports'}
-                className="w-full text-left p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl hover:from-indigo-100 hover:to-indigo-200 transition-all duration-300 border border-indigo-200 hover:scale-105 hover:-translate-y-1 hover:shadow-lg group"
+                className="w-full text-left p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl hover:from-indigo-100 hover:to-indigo-200 transition-all duration-300 border border-indigo-200 hover:shadow-lg group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <DocumentTextIcon className="h-5 w-5 text-indigo-600 mr-3 group-hover:scale-110 transition-transform duration-300" />
+                    <DocumentTextIcon className="h-5 w-5 text-indigo-600 mr-3 transition-transform duration-300" />
                     <span className="text-indigo-800 font-medium">Lab Reports</span>
                   </div>
-                  <ArrowRightIcon className="h-4 w-4 text-indigo-400 group-hover:text-indigo-600 transition-all duration-300 group-hover:translate-x-1" />
+                  <ArrowRightIcon className="h-4 w-4 text-indigo-400 group-hover:text-indigo-600 transition-all duration-300" />
                 </div>
               </button>
             </div>
@@ -489,7 +489,7 @@ const AdminDashboard: React.FC = () => {
           {/* System Overview */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/20 to-blue-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <CheckCircleIcon className="h-6 w-6 mr-2 text-cyan-600" />
                 System Overview
@@ -530,14 +530,14 @@ const AdminDashboard: React.FC = () => {
           {/* Alerts and Notifications */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/20 to-orange-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 border border-white/50">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-500 border border-white/50">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <ExclamationTriangleIcon className="h-6 w-6 mr-2 text-yellow-600" />
                 Alerts & Notifications
               </h3>
             {verificationRequests && verificationRequests.length > 0 ? (
               <div className="space-y-3">
-                <div className="flex items-center p-3 bg-yellow-50/80 backdrop-blur-sm border border-yellow-200 rounded-xl hover:bg-yellow-100/80 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+                <div className="flex items-center p-3 bg-yellow-50/80 backdrop-blur-sm border border-yellow-200 rounded-xl hover:bg-yellow-100/80 transition-all duration-300">
                   <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-3 animate-pulse" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-yellow-800">Pending Doctor Verifications</p>
@@ -545,7 +545,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <button
                     onClick={() => window.location.href = '/app/admin-doctors'}
-                    className="text-xs text-yellow-700 hover:text-yellow-900 font-medium hover:scale-110 transition-transform duration-300 flex items-center gap-1"
+                    className="text-xs text-yellow-700 hover:text-yellow-900 font-medium transition-transform duration-300 flex items-center gap-1"
                   >
                     Review <ArrowRightIcon className="h-3 w-3" />
                   </button>

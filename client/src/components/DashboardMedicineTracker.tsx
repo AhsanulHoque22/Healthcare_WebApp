@@ -223,7 +223,7 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
         {scheduleData.schedule.map((medicine) => {
 
           return (
-            <div key={medicine.id} className="border border-gray-200 rounded-lg p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
+            <div key={medicine.id} className="border border-gray-200 rounded-lg p-3 transition-all duration-300.5 hover:shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <div className="flex-1">
                 <h4 className="text-sm font-medium text-gray-900">{medicine.name}</h4>
@@ -274,7 +274,7 @@ const DashboardMedicineTracker: React.FC<DashboardMedicineTrackerProps> = ({ pat
                     className={`flex-1 p-2 rounded-md border text-xs font-medium transition-all duration-300 ${
                       getTimeStatusColor(status)
                     } ${
-                      !finalDisabled ? 'hover:shadow-sm hover:-translate-y-0.5 cursor-pointer' : 'cursor-not-allowed opacity-60'
+                      !finalDisabled ? 'hover:shadow-sm.5 cursor-pointer' : 'cursor-not-allowed opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-center">

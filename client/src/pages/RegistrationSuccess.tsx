@@ -63,10 +63,10 @@ const RegistrationSuccess: React.FC = () => {
             <div className="space-y-4">
               <Link
                 to="/login"
-                className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+                className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl"
               >
                 <span>Go to Login Page</span>
-                <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRightIcon className="h-5 w-5 transition-transform" />
               </Link>
               
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500 pt-4">

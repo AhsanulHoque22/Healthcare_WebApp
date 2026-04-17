@@ -257,7 +257,7 @@ const Assistant: React.FC = () => {
               <button
                 id="new-chat-btn"
                 onClick={startNewChat}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 px-4 rounded-xl font-semibold text-sm shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 px-4 rounded-xl font-semibold text-sm shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 transition-all duration-200"
               >
                 <PlusCircleIcon className="h-4 w-4" />
                 New Conversation
@@ -392,7 +392,7 @@ const Assistant: React.FC = () => {
                       >
                         <span className="text-base">{item.emoji}</span>
                         <span className="flex-1">{item.label}</span>
-                        <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
+                        <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 group-hover:text-indigo-400.5 transition-all" />
                       </button>
                     ))}
                   </div>
@@ -455,7 +455,7 @@ const Assistant: React.FC = () => {
                               key={doc.id}
                               className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3 hover:shadow-md transition-all group"
                             >
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform">
                                 <UserIcon className="h-4.5 w-4.5 text-white h-5 w-5" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -468,7 +468,7 @@ const Assistant: React.FC = () => {
                               </div>
                               <button
                                 onClick={() => navigate(`/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(doc.doctorName || doc.name)}`)}
-                                className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:shadow-md hover:scale-105 active:scale-95 transition-all"
+                                className="flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:shadow-md active:scale-95 transition-all"
                               >
                                 Book
                                 <ChevronRightIcon className="h-3 w-3" />
@@ -547,7 +547,7 @@ const Assistant: React.FC = () => {
                   id="assistant-send-btn"
                   onClick={() => handleSend()}
                   disabled={isLoading || !input.trim()}
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:shadow-none disabled:scale-100 transition-all duration-200"
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-200 hover:shadow-lg hover:shadow-indigo-300 active:scale-95 disabled:opacity-40 disabled:shadow-none disabled:scale-100 transition-all duration-200"
                   aria-label="Send"
                 >
                   <PaperAirplaneIcon className="h-5 w-5" />

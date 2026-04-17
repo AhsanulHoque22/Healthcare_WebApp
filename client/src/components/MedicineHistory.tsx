@@ -305,7 +305,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
           <select 
             value={medicineFilter}
             onChange={(e) => setMedicineFilter(e.target.value as 'all' | 'active' | 'completed')}
-            className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:shadow-md hover:scale-105"
+            className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:shadow-md"
           >
             <option value="all">All Medicines</option>
             <option value="active">Active Medicines</option>
@@ -372,7 +372,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setMedicineFilter('all')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-md ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md ${
             medicineFilter === 'all'
               ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md animate-pulse'
               : 'bg-white/50 backdrop-blur-sm text-gray-700 hover:bg-white/80 border border-gray-200/50'
@@ -382,7 +382,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
         </button>
         <button
           onClick={() => setMedicineFilter('active')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-md ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md ${
             medicineFilter === 'active'
               ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
               : 'bg-white/50 backdrop-blur-sm text-gray-700 hover:bg-white/80 border border-gray-200/50'
@@ -392,7 +392,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
         </button>
         <button
           onClick={() => setMedicineFilter('completed')}
-          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-500 hover:scale-105 shadow-sm hover:shadow-md ${
+          className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-500 shadow-sm hover:shadow-md ${
             medicineFilter === 'completed'
               ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-md animate-pulse'
               : 'bg-white/50 backdrop-blur-sm text-gray-700 hover:bg-white/80 border border-gray-200/50'
@@ -412,7 +412,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
             </span>
             <button
               onClick={() => setMedicineFilter('all')}
-              className="text-indigo-600 hover:text-indigo-800 text-sm underline ml-2 font-medium hover:no-underline transition-all duration-300 hover:scale-105"
+              className="text-indigo-600 hover:text-indigo-800 text-sm underline ml-2 font-medium hover:no-underline transition-all duration-300"
             >
               Show All
             </button>
@@ -424,9 +424,9 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
       <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+          <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200/50 shadow-sm hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg p-3 text-white shadow-lg transition-transform duration-300">
                 <BeakerIcon className="h-6 w-6" />
               </div>
               <div className="ml-4">
@@ -439,9 +439,9 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+          <div className="relative bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border border-emerald-200/50 shadow-sm hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg p-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg p-3 text-white shadow-lg transition-transform duration-300">
                 <CheckCircleIcon className="h-6 w-6" />
               </div>
               <div className="ml-4">
@@ -454,9 +454,9 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-violet-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+          <div className="relative bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200/50 shadow-sm hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg p-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg p-3 text-white shadow-lg transition-transform duration-300">
                 <XCircleIcon className="h-6 w-6" />
               </div>
               <div className="ml-4">
@@ -469,9 +469,9 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 to-orange-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-gradient-to-r from-amber-50 to-yellow-50 p-6 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+          <div className="relative bg-gradient-to-r from-amber-50 to-yellow-50 p-6 rounded-xl border border-amber-200/50 shadow-sm hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg p-3 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg p-3 text-white shadow-lg transition-transform duration-300">
                 <ClockIcon className="h-6 w-6" />
               </div>
               <div className="ml-4">
@@ -495,7 +495,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
           return (
             <div
               key={medicine.id}
-              className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1"
+              className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
@@ -602,7 +602,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
                 <div className="flex flex-col gap-2 ml-4">
                   <button
                     onClick={() => handleViewDetails(medicine)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-pulse"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-sm hover:shadow-lg animate-pulse"
                   >
                     <EyeIcon className="h-4 w-4" />
                     View Details
@@ -627,7 +627,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
                 </h2>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:scale-110 hover:shadow-md"
+                  className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:shadow-md"
                 >
                   <XCircleIcon className="h-6 w-6" />
                 </button>
@@ -732,7 +732,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg font-medium animate-pulse"
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-sm hover:shadow-lg font-medium animate-pulse"
                 >
                   Close
                 </button>

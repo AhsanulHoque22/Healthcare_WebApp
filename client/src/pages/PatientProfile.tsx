@@ -868,7 +868,7 @@ const PatientProfile: React.FC = () => {
                   {medicalDocuments.length > 0 ? medicalDocuments.map(doc => (
                     <div key={doc.id} className="group p-4 bg-gray-50 hover:bg-blue-50 rounded-2xl border border-gray-100 hover:border-blue-200 transition-all flex justify-between items-center">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
+                        <div className="p-2 bg-white rounded-lg shadow-sm transition-transform">
                           <DocumentTextIcon className="h-5 w-5 text-blue-600" />
                         </div>
                         <div className="min-w-0">

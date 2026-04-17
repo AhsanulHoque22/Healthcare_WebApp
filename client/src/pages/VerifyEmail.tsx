@@ -89,10 +89,10 @@ export default function VerifyEmail() {
                 <p className="text-gray-600 mb-10 leading-relaxed font-medium">{message}</p>
                 <Link
                   to="/login"
-                  className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+                  className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl"
                 >
                   <span>Proceed to Login</span>
-                  <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="h-5 w-5 transition-transform" />
                 </Link>
               </div>
             )}
@@ -110,7 +110,7 @@ export default function VerifyEmail() {
                 <div className="flex flex-col gap-3 w-full">
                   <Link
                     to="/login"
-                    className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02]"
+                    className="group flex items-center justify-center gap-2 w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl"
                   >
                     <span>Back to Login</span>
                   </Link>

@@ -347,7 +347,7 @@ const MedicalRecords: React.FC = () => {
 
       <div className="relative z-10 space-y-8 p-6">
         {/* Modern Header */}
-        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-[1.02] ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl `}>
           <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5"></div>
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -368,7 +368,7 @@ const MedicalRecords: React.FC = () => {
               <div className="hidden md:block">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <DocumentTextIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -383,7 +383,7 @@ const MedicalRecords: React.FC = () => {
         {/* Modern Tab Navigation */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-          <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+          <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
             <nav className="flex space-x-4">
               <div className="relative group">
                 <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
@@ -393,7 +393,7 @@ const MedicalRecords: React.FC = () => {
                 }`}></div>
                 <button
                   onClick={() => setActiveTab('summary')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-md ${
+                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
                     activeTab === 'summary'
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg animate-pulse'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -411,7 +411,7 @@ const MedicalRecords: React.FC = () => {
                 }`}></div>
                 <button
                   onClick={() => setActiveTab('appointments')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-md ${
+                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
                     activeTab === 'appointments'
                       ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg animate-pulse'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -429,7 +429,7 @@ const MedicalRecords: React.FC = () => {
                 }`}></div>
                 <button
                   onClick={() => setActiveTab('medicines')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-md ${
+                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
                     activeTab === 'medicines'
                       ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -448,7 +448,7 @@ const MedicalRecords: React.FC = () => {
         {activeTab === 'summary' && (
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
               <div className="flex items-center mb-6">
                 <div className="relative group mr-2">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
@@ -684,7 +684,7 @@ const MedicalRecords: React.FC = () => {
         {activeTab === 'appointments' && (
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center">
                   <div className="relative group mr-2">
@@ -699,7 +699,7 @@ const MedicalRecords: React.FC = () => {
                   <select 
                     value={recordTypeFilter}
                     onChange={(e) => setRecordTypeFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:shadow-md hover:scale-105"
+                    className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:shadow-md"
                   >
                     <option value="all">All Appointments</option>
                     <option value="consultation">Consultations</option>
@@ -721,7 +721,7 @@ const MedicalRecords: React.FC = () => {
                 {filteredAppointments.map((appointment, index) => (
                   <div
                     key={appointment.id}
-                    className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1"
+                    className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
@@ -800,14 +800,14 @@ const MedicalRecords: React.FC = () => {
                       <div className="flex flex-col gap-2 ml-4">
                         <button
                           onClick={() => handleViewDetails(appointment)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg animate-pulse"
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-sm hover:shadow-lg animate-pulse"
                         >
                           <EyeIcon className="h-4 w-4" />
                           View Details
                         </button>
                         <button
                           onClick={() => handleDownload(appointment)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-lg hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg"
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-lg hover:from-gray-600 hover:to-slate-600 transition-all duration-300 shadow-sm hover:shadow-lg"
                         >
                           <ArrowDownTrayIcon className="h-4 w-4" />
                           Download
@@ -839,7 +839,7 @@ const MedicalRecords: React.FC = () => {
         {activeTab === 'medicines' && patientProfile?.id && (
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/30 to-green-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
               <div className="flex items-center mb-6">
                 <div className="relative group mr-2">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/40 to-green-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
@@ -868,7 +868,7 @@ const MedicalRecords: React.FC = () => {
                   </h2>
                   <button
                     onClick={() => setShowDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:scale-110 hover:shadow-md"
+                    className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:shadow-md"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -1218,14 +1218,14 @@ const MedicalRecords: React.FC = () => {
                 <div className="mt-6 flex justify-end gap-4">
                   <button
                     onClick={() => handleDownload(selectedRecord)}
-                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-slate-600 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-slate-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <ArrowDownTrayIcon className="h-5 w-5" />
                     Download Record
                   </button>
                   <button
                     onClick={() => setShowDetailModal(false)}
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl animate-pulse"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl animate-pulse"
                   >
                     Close
                   </button>

@@ -273,7 +273,7 @@ const AdminLabTests: React.FC = () => {
                     setEditingTest({});
                     setShowCreateModal(true);
                   }}
-                  className="flex items-center px-6 py-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex items-center px-6 py-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all duration-300 shadow-lg hover:shadow-xl transform"
                 >
                   <PlusIcon className="h-4 w-4 mr-2" />
                   <span className="text-sm font-medium">Add New Test</span>
@@ -287,7 +287,7 @@ const AdminLabTests: React.FC = () => {
         <div className={`grid grid-cols-1 md:grid-cols-4 gap-6 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-cyan-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 mr-4 shadow-lg">
                   <BeakerIcon className="h-6 w-6 text-white" />
@@ -304,7 +304,7 @@ const AdminLabTests: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-green-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 mr-4 shadow-lg">
                   <CheckCircleIcon className="h-6 w-6 text-white" />
@@ -321,7 +321,7 @@ const AdminLabTests: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-rose-200 to-red-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 mr-4 shadow-lg">
                   <XCircleIcon className="h-6 w-6 text-white" />
@@ -338,7 +338,7 @@ const AdminLabTests: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-violet-200 to-purple-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 mr-4 shadow-lg">
                   <ChartBarIcon className="h-6 w-6 text-white" />
@@ -432,7 +432,7 @@ const AdminLabTests: React.FC = () => {
                       setStatusFilter('');
                       setPage(1);
                     }}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform"
                   >
                     Clear Filters
                   </button>
@@ -462,7 +462,7 @@ const AdminLabTests: React.FC = () => {
                       setEditingTest({});
                       setShowCreateModal(true);
                     }}
-                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                   >
                     <PlusIcon className="h-5 w-5 mr-2" />
                     Add Your First Test
@@ -493,7 +493,7 @@ const AdminLabTests: React.FC = () => {
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {(tests as LabTest[]).map((test: LabTest, testIndex) => {
                           return (
-                            <div key={test.id} className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] shadow-lg">
+                            <div key={test.id} className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 hover:shadow-xl transition-all duration-300 shadow-lg">
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-3 mb-2">

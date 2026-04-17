@@ -1012,7 +1012,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                 <button
                   type="button"
                   onClick={addMedicine}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                 >
                   <PlusIcon className="h-5 w-5" />
                   Add Medicine
@@ -1334,7 +1334,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                     onClick={addMedicine}
                     className="w-full py-4 border-2 border-dashed border-emerald-300 rounded-2xl text-emerald-600 font-semibold hover:bg-emerald-50 hover:border-emerald-400 transition-all duration-200 flex items-center justify-center gap-2 group"
                   >
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center transition-transform duration-200">
                       <PlusIcon className="h-5 w-5" />
                     </div>
                     Add Another Medicine
@@ -1353,7 +1353,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                 <button
                   type="button"
                   onClick={addMedicine}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
                 >
                   <PlusIcon className="h-5 w-5" />
                   Add First Medicine
@@ -1380,7 +1380,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                 <button
                   type="button"
                   onClick={addSymptom}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                 >
                   <PlusIcon className="h-4 w-4" />
                   Add Symptom
@@ -1429,7 +1429,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <button
                     type="button"
                     onClick={addSymptom}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
+                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
                   >
                     <PlusIcon className="h-5 w-5" />
                     Add First Symptom
@@ -1457,7 +1457,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                 <button
                   type="button"
                   onClick={addDiagnosis}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                 >
                   <PlusIcon className="h-4 w-4" />
                   Add Diagnosis
@@ -1518,7 +1518,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <button
                     type="button"
                     onClick={addDiagnosis}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
+                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
                   >
                     <PlusIcon className="h-5 w-5" />
                     Add First Diagnosis
@@ -1687,7 +1687,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                           {availableLabTests.map((labTest: any) => (
                             <div
                               key={labTest.id}
-                              className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-teal-50 border border-cyan-200/50 rounded-xl hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                              className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-teal-50 border border-cyan-200/50 rounded-xl hover:shadow-md cursor-pointer transition-all duration-200"
                               onClick={() => addTestFromSearch(labTest)}
                             >
                               <div className="flex-1">
@@ -2153,7 +2153,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

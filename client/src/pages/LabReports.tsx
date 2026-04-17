@@ -761,7 +761,7 @@ const LabReports: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative p-3 rounded-2xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="relative p-3 rounded-2xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg transition-transform duration-300">
                   <ArrowDownTrayIcon className="h-7 w-7 text-purple-600" />
                   <SparklesIcon className="h-4 w-4 text-purple-400 absolute -top-1 -right-1 animate-pulse" />
                 </div>
@@ -778,7 +778,7 @@ const LabReports: React.FC = () => {
               queryClient.invalidateQueries({ queryKey: ['prescription-lab-tests'] });
               toast.success('Data refreshed!');
             }}
-            className="group relative bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 border border-white/20 animate-pulse"
+            className="group relative bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg border border-white/20 animate-pulse"
           >
             <svg className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -790,7 +790,7 @@ const LabReports: React.FC = () => {
         {/* Filters */}
         <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
           <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 mb-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 mb-2 transition-all duration-300 hover:shadow-xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -800,7 +800,7 @@ const LabReports: React.FC = () => {
                 <select
                   value={testTypeFilter}
                   onChange={(e) => setTestTypeFilter(e.target.value as 'all' | 'prescribed' | 'ordered')}
-                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 hover:scale-105 cursor-pointer"
+                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 cursor-pointer"
                 >
                   <option value="all">All Tests</option>
                   <option value="prescribed">Prescribed by Doctor</option>
@@ -816,7 +816,7 @@ const LabReports: React.FC = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 hover:scale-105 cursor-pointer"
+                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 cursor-pointer"
                 >
                   <option value="">All Statuses</option>
                   <option value="ordered">Ordered</option>
@@ -878,7 +878,7 @@ const LabReports: React.FC = () => {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-2xl blur-xl opacity-20 group-hover:opacity-50 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01]">
+                  <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden transition-all duration-500 hover:shadow-2xl">
                     {/* Header */}
                     <div className="px-6 py-5 border-b border-white/20 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
                       <div className="flex items-center justify-between">
@@ -1004,7 +1004,7 @@ const LabReports: React.FC = () => {
                           {canPay && remainingAmount > 0 && (
                             <button
                               onClick={() => test.type === 'prescription' ? handlePrescriptionPayment(test) : handlePayment(test)}
-                              className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-pulse"
+                              className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg animate-pulse"
                             >
                               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                               <BanknotesIcon className="h-5 w-5 relative z-10" />
@@ -1043,7 +1043,7 @@ const LabReports: React.FC = () => {
                                   href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
                                 >
                                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                   <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
@@ -1055,7 +1055,7 @@ const LabReports: React.FC = () => {
 
                           <button
                             onClick={() => handleDownloadInvoice(test)}
-                            className="group relative w-full overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+                            className="group relative w-full overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
                           >
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                             <DocumentDuplicateIcon className="h-5 w-5 relative z-10" />
@@ -1081,7 +1081,7 @@ const LabReports: React.FC = () => {
                                     href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+                                    className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
                                   >
                                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                     <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
@@ -1093,7 +1093,7 @@ const LabReports: React.FC = () => {
                                   href={test.resultUrl && (test.resultUrl.startsWith('http') || test.resultUrl.startsWith('https')) ? test.resultUrl : (test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg"
                                 >
                                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                   <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
@@ -1218,7 +1218,7 @@ const LabReports: React.FC = () => {
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md"
                 >
                   Cancel
                 </button>
@@ -1227,7 +1227,7 @@ const LabReports: React.FC = () => {
                   disabled={paymentMutation.isPending ||
                            !paymentForm.amount ||
                            ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
-                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:scale-105 animate-pulse"
+                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg animate-pulse"
                 >
                   {paymentMutation.isPending ? 'Processing...' : 'Make Payment'}
                 </button>
@@ -1342,7 +1342,7 @@ const LabReports: React.FC = () => {
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setShowPrescriptionPaymentModal(false)}
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md"
                 >
                   Cancel
                 </button>
@@ -1351,7 +1351,7 @@ const LabReports: React.FC = () => {
                   disabled={prescriptionPaymentMutation.isPending ||
                            !paymentForm.amount ||
                            ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
-                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:scale-105 animate-pulse"
+                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg animate-pulse"
                 >
                   {prescriptionPaymentMutation.isPending ? 'Processing...' : 'Make Payment'}
                 </button>

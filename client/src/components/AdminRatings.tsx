@@ -188,7 +188,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
       <div className={`grid grid-cols-1 md:grid-cols-4 gap-6 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-cyan-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
             <div className="flex items-center">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 mr-4 shadow-lg">
                 <StarIcon className="h-6 w-6 text-white" />
@@ -203,7 +203,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-green-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
             <div className="flex items-center">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 mr-4 shadow-lg">
                 <CheckCircleIcon className="h-6 w-6 text-white" />
@@ -218,7 +218,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-200 to-orange-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
             <div className="flex items-center">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 mr-4 shadow-lg">
                 <ClockIcon className="h-6 w-6 text-white" />
@@ -233,7 +233,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
 
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-rose-200 to-red-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
             <div className="flex items-center">
               <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 mr-4 shadow-lg">
                 <XCircleIcon className="h-6 w-6 text-white" />
@@ -316,7 +316,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
                 ratings.map((rating: Rating) => (
                   <div key={rating.id} className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
-                    <div className="relative bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="relative bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/40 hover:shadow-xl transition-all duration-300">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-4 mb-4">
@@ -371,7 +371,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
                               setSelectedRating(rating);
                               setShowDetailModal(true);
                             }}
-                            className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                            className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                           >
                             <EyeIcon className="h-4 w-4" />
                             View Details
@@ -381,14 +381,14 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
                             <div className="flex flex-col space-y-2">
                               <button
                                 onClick={() => handleStatusUpdate(rating.id, 'approved')}
-                                className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                                className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                               >
                                 <CheckCircleIcon className="h-4 w-4" />
                                 Approve
                               </button>
                               <button
                                 onClick={() => handleStatusUpdate(rating.id, 'rejected')}
-                                className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                                className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                               >
                                 <XCircleIcon className="h-4 w-4" />
                                 Reject
@@ -416,7 +416,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
                 <button
                   onClick={() => setCurrentPage(currentPage - 1)}
                   disabled={!pagination.hasPrev}
-                  className="px-6 py-3 text-sm text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                  className="px-6 py-3 text-sm text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                 >
                   Previous
                 </button>
@@ -428,7 +428,7 @@ const AdminRatings: React.FC<AdminRatingsProps> = ({ pageLoaded = true }) => {
                 <button
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={!pagination.hasNext}
-                  className="px-6 py-3 text-sm text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                  className="px-6 py-3 text-sm text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform font-medium"
                 >
                   Next
                 </button>

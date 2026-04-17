@@ -224,7 +224,7 @@ const ChatbotWidget: React.FC = () => {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all group relative"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl transition-all group relative"
         >
           <SparklesIcon className="h-4 w-4 absolute -top-1 -right-1 text-yellow-300 animate-pulse" />
           <ChatBubbleLeftRightIcon className="h-8 w-8" />
@@ -365,7 +365,7 @@ const ChatbotWidget: React.FC = () => {
             <button 
               onClick={() => handleSend()}
               disabled={!input.trim()}
-              className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-200 hover:scale-110 active:scale-95 disabled:opacity-50 transition-all"
+              className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50 transition-all"
             >
               <PaperAirplaneIcon className="h-6 w-6" />
             </button>

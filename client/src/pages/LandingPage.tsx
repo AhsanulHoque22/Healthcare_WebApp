@@ -227,7 +227,7 @@ const LandingPage: React.FC = () => {
               <div className="relative group">
                   <img src="/logo.png" className="h-20 w-20" alt="Livora Logo" />
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300">Livora</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <button
@@ -235,13 +235,13 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('features');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-pulse"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium animate-pulse"
               >
                 Features
               </button>
               <Link
                 to="/find-doctors"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 flex items-center"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center"
               >
                 Find Doctors
                 <SparklesIcon className="h-4 w-4 ml-1.5 text-indigo-500" />
@@ -251,7 +251,7 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('stats');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium"
               >
                 Stats
               </button>
@@ -260,7 +260,7 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('testimonials');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105 animate-pulse"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium animate-pulse"
               >
                 Reviews
               </button>
@@ -269,7 +269,7 @@ const LandingPage: React.FC = () => {
                   const element = document.getElementById('contact');
                   element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium"
               >
                 Contact
               </button>
@@ -323,7 +323,7 @@ const LandingPage: React.FC = () => {
                 <>
                   <Link
                     to="/login"
-                    className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium hover:scale-105"
+                    className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium"
                   >
                     Sign In
                   </Link>
@@ -331,7 +331,7 @@ const LandingPage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/40 to-blue-200/40 rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
                     <Link
                       to="/register"
-                      className="relative bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-500 shadow-lg hover:shadow-xl hover:scale-110 hover:-translate-y-1 transform font-semibold"
+                      className="relative bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-500 shadow-lg hover:shadow-xl transform font-semibold"
                     >
                       Get Started
                     </Link>
@@ -363,25 +363,25 @@ const LandingPage: React.FC = () => {
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <Link 
                   to="/register" 
-                  className="group bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transform"
+                  className="group bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform"
                 >
                   Start Your Journey
-                  <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRightIcon className="ml-2 h-5 w-5 transition-transform duration-200" />
                 </Link>
-                <button className="group border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center hover:scale-105 transform">
-                  <PlayIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                <button className="group border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center transform">
+                  <PlayIcon className="mr-2 h-5 w-5 transition-transform duration-200" />
                   Watch Demo
                 </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-6">
                 <div className="flex items-center group">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center transition-transform duration-200">
                     <CheckCircleIcon className="h-5 w-5 text-green-500" />
                   </div>
                   <span className="text-gray-600 ml-2 font-medium">Trusted by 10,000+ patients</span>
                 </div>
                 <div className="flex items-center group">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center transition-transform duration-200">
                     <ShieldCheckIcon className="h-5 w-5 text-green-500" />
                   </div>
                   <span className="text-gray-600 ml-2 font-medium">HIPAA Compliant</span>
@@ -399,7 +399,7 @@ const LandingPage: React.FC = () => {
               </div>
 
               {/* Main Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-all duration-500 hover:scale-105 border border-white/50">
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-all duration-500 border border-white/50">
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
                   <h3 className="text-xl font-semibold mb-4 flex items-center">
@@ -432,7 +432,7 @@ const LandingPage: React.FC = () => {
               </div>
               
               {/* Floating Heart */}
-              <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse hover:scale-110 transition-transform duration-200">
+              <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse transition-transform duration-200">
                 <HeartIcon className="h-6 w-6" />
               </div>
             </div>
@@ -456,9 +456,9 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat: any, index: number) => (
               <div key={index} className="text-center group">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 border border-white/20">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 border border-white/20">
                   <div className="flex justify-center mb-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center transition-transform duration-200">
                       <stat.icon className={`h-6 w-6 text-white`} />
                     </div>
                   </div>
@@ -496,8 +496,8 @@ const LandingPage: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <CalendarIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">Easy Appointment Booking</h3>
@@ -508,8 +508,8 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Feature 2 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <DocumentTextIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-green-600 transition-colors">Digital Health Records</h3>
@@ -520,8 +520,8 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Feature 3 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <BeakerIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">Lab Test Management</h3>
@@ -532,8 +532,8 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Feature 4 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <UserGroupIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">Expert Doctor Network</h3>
@@ -544,8 +544,8 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Feature 5 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <ShieldCheckIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">Secure & Private</h3>
@@ -556,8 +556,8 @@ const LandingPage: React.FC = () => {
             </div>
 
             {/* Feature 6 */}
-            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/50">
-              <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-4 w-fit mb-6 group-hover:scale-110 transition-transform duration-200">
+            <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-white/50">
+              <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-4 w-fit mb-6 transition-transform duration-200">
                 <ClockIcon className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">24/7 Support</h3>
@@ -633,7 +633,7 @@ const LandingPage: React.FC = () => {
                           <div className="mt-auto w-full md:w-auto">
                             <button 
                               onClick={() => navigate(user ? `/app/appointments?doctor=${doctor.id}` : '/login')}
-                              className="w-full md:w-64 py-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-200"
+                              className="w-full md:w-64 py-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-indigo-200"
                             >
                               Book Consultation
                             </button>
@@ -692,7 +692,7 @@ const LandingPage: React.FC = () => {
             {user && (
               <button 
                 onClick={() => setShowReviewModal(true)}
-                className="mt-8 inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-300 group"
+                className="mt-8 inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300 group"
               >
                 <SparklesIcon className="h-5 w-5 mr-2 animate-pulse" />
                 Write a Website Review
@@ -743,10 +743,10 @@ const LandingPage: React.FC = () => {
                               <img 
                                 src={testimonial.image} 
                                 alt={testimonial.name}
-                                className="w-20 h-20 rounded-3xl object-cover border-2 border-white/50 shadow-lg group-hover:scale-110 transition-transform duration-500"
+                                className="w-20 h-20 rounded-3xl object-cover border-2 border-white/50 shadow-lg transition-transform duration-500"
                               />
                             ) : (
-                              <div className={`w-20 h-20 bg-gradient-to-r ${testimonial.color} rounded-3xl flex items-center justify-center border border-white/30 backdrop-blur-sm group-hover:scale-110 transition-transform duration-500`}>
+                              <div className={`w-20 h-20 bg-gradient-to-r ${testimonial.color} rounded-3xl flex items-center justify-center border border-white/30 backdrop-blur-sm transition-transform duration-500`}>
                                 <span className="text-white font-bold text-xl uppercase">
                                   {testimonial.avatar}
                                 </span>
@@ -821,7 +821,7 @@ const LandingPage: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center group">
-                  <div className="bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl p-4 w-fit mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
+                  <div className="bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl p-4 w-fit mx-auto mb-3 transition-transform duration-200">
                     <HeartIcon className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Our Mission</h3>
@@ -830,7 +830,7 @@ const LandingPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="text-center group">
-                  <div className="bg-gradient-to-r from-green-100 to-green-200 rounded-2xl p-4 w-fit mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
+                  <div className="bg-gradient-to-r from-green-100 to-green-200 rounded-2xl p-4 w-fit mx-auto mb-3 transition-transform duration-200">
                     <ShieldCheckIcon className="h-8 w-8 text-green-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">Our Vision</h3>
@@ -851,7 +851,7 @@ const LandingPage: React.FC = () => {
                   </h3>
                 <div className="space-y-4">
                     <div className="flex items-start group">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
                       </div>
                     <div>
@@ -860,7 +860,7 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-start group">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
                   </div>
                     <div>
@@ -869,7 +869,7 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-start group">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
                   </div>
                     <div>
@@ -878,7 +878,7 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-start group">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0 transition-transform duration-200">
                         <CheckCircleIcon className="h-5 w-5 text-green-500" />
                   </div>
                     <div>
@@ -891,10 +891,10 @@ const LandingPage: React.FC = () => {
               </div>
               
               {/* Floating elements */}
-              <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse hover:scale-110 transition-transform duration-200">
+              <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse transition-transform duration-200">
                 <StarIcon className="h-6 w-6" />
               </div>
-              <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse hover:scale-110 transition-transform duration-200">
+              <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg animate-pulse transition-transform duration-200">
                 <HeartIcon className="h-6 w-6" />
               </div>
             </div>
@@ -924,7 +924,7 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="flex items-center group">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 transition-transform duration-200">
                   <PhoneIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -934,7 +934,7 @@ const LandingPage: React.FC = () => {
               </div>
               
               <div className="flex items-center group">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 transition-transform duration-200">
                   <EnvelopeIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -944,7 +944,7 @@ const LandingPage: React.FC = () => {
               </div>
               
               <div className="flex items-center group">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 transition-transform duration-200">
                   <MapPinIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -959,13 +959,13 @@ const LandingPage: React.FC = () => {
               <div className="space-y-4">
                 <Link 
                   to="/register" 
-                  className="block w-full bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 transform"
+                  className="block w-full bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 text-center shadow-lg hover:shadow-xl transform"
                 >
                   Create Account
                 </Link>
                 <Link 
                   to="/login" 
-                  className="block w-full border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 text-center hover:scale-105 transform"
+                  className="block w-full border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 text-center transform"
                 >
                   Sign In
                 </Link>
@@ -992,14 +992,14 @@ const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               to="/register" 
-              className="group bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform"
+              className="group bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform"
             >
               Get Started Today
-              <ArrowRightIcon className="inline-block ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+              <ArrowRightIcon className="inline-block ml-2 h-5 w-5 transition-transform duration-200" />
             </Link>
             <Link 
               to="/login" 
-              className="group border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 hover:scale-105 transform"
+              className="group border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 transform"
             >
               Sign In
             </Link>
@@ -1014,7 +1014,7 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center group mb-6">
-                <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <div className="flex items-center justify-center transition-transform duration-200">
                   <img src="/logo.png" className="h-16 w-16" alt="Livora Logo" />
                 </div>
                 <span className="ml-3 text-2xl font-bold group-hover:text-indigo-400 transition-colors">Livora</span>
@@ -1024,13 +1024,13 @@ const LandingPage: React.FC = () => {
                 healthcare accessible, efficient, and secure for everyone.
               </p>
               <div className="flex space-x-4">
-                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer hover:scale-110 transform">
+                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer transform">
                   <span className="text-sm font-medium">Facebook</span>
                 </div>
-                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer hover:scale-110 transform">
+                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer transform">
                   <span className="text-sm font-medium">Twitter</span>
                 </div>
-                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer hover:scale-110 transform">
+                <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 hover:bg-indigo-600 transition-all duration-300 cursor-pointer transform">
                   <span className="text-sm font-medium">LinkedIn</span>
                 </div>
               </div>
@@ -1151,14 +1151,14 @@ const LandingPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
                 >
                   {isSubmitting ? (
                     <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
                       Submit Review
-                      <RocketLaunchIcon className="h-5 w-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      <RocketLaunchIcon className="h-5 w-5 ml-2 transition-transform" />
                     </>
                   )}
                 </button>

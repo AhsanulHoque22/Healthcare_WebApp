@@ -170,7 +170,7 @@ const AdminPatients: React.FC = () => {
 
       <div className="relative z-10 p-6 space-y-8">
         {/* Modern Welcome Header */}
-        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl `}>
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
@@ -193,7 +193,7 @@ const AdminPatients: React.FC = () => {
                     queryClient.invalidateQueries({ queryKey: ['admin-patients'] });
                     toast.success('Data refreshed successfully');
                   }}
-                  className="group relative bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 border border-white/20 hover:bg-white/20 hover:shadow-lg hover:-translate-y-0.5"
+                  className="group relative bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 border border-white/20 hover:bg-white/20 hover:shadow-lg.5"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <ArrowPathIcon className="h-4 w-4 relative z-10" />
@@ -205,10 +205,10 @@ const AdminPatients: React.FC = () => {
         </div>
 
         {/* Enhanced Stats Cards */}
-        <div className={`grid grid-cols-1 md:grid-cols-4 gap-6 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+        <div className={`grid grid-cols-1 md:grid-cols-4 gap-6 `}>
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 mr-4 shadow-lg">
                   <UserGroupIcon className="h-6 w-6 text-white" />
@@ -223,7 +223,7 @@ const AdminPatients: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-green-200 to-emerald-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 mr-4 shadow-lg">
                   <CheckCircleIcon className="h-6 w-6 text-white" />
@@ -240,7 +240,7 @@ const AdminPatients: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-200 to-orange-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-500 mr-4 shadow-lg">
                   <ExclamationTriangleIcon className="h-6 w-6 text-white" />
@@ -257,7 +257,7 @@ const AdminPatients: React.FC = () => {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center">
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 mr-4 shadow-lg">
                   <ChartBarIcon className="h-6 w-6 text-white" />
@@ -274,7 +274,7 @@ const AdminPatients: React.FC = () => {
         </div>
 
         {/* Enhanced Filters and Search */}
-        <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+        <div className={`relative group `}>
           <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
           <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden">
             <div className="bg-gradient-to-r from-white/40 to-white/20 backdrop-blur-sm px-6 py-4 border-b border-white/30">
@@ -448,7 +448,7 @@ const AdminPatients: React.FC = () => {
                                 <div className="flex items-center space-x-3">
                                   <button
                                     onClick={() => handleViewPatient(patient)}
-                                    className="group relative inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+                                    className="group relative inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg.5 overflow-hidden"
                                   >
                                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                     <EyeIcon className="h-4 w-4 mr-1 relative z-10" />
@@ -456,7 +456,7 @@ const AdminPatients: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() => handleStatusToggle(patient)}
-                                    className={`group relative inline-flex items-center px-4 py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden ${
+                                    className={`group relative inline-flex items-center px-4 py-2 rounded-xl transition-all duration-300 hover:shadow-lg.5 overflow-hidden ${
                                       patient.user.isActive
                                         ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white'
                                         : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
@@ -495,7 +495,7 @@ const AdminPatients: React.FC = () => {
                   {patientsData.patients.map((patient: Patient) => (
                     <div key={patient.id} className="relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                      <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1">
+                      <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center space-x-4">
                             <div className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center ring-2 ring-white/50 shadow-lg">
@@ -555,7 +555,7 @@ const AdminPatients: React.FC = () => {
                         <div className="flex items-center justify-between gap-3">
                           <button
                             onClick={() => handleViewPatient(patient)}
-                            className="group relative flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+                            className="group relative flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg.5 overflow-hidden"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <EyeIcon className="h-4 w-4 mr-2 relative z-10" />
@@ -563,7 +563,7 @@ const AdminPatients: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleStatusToggle(patient)}
-                            className={`group relative flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden ${
+                            className={`group relative flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl transition-all duration-300 hover:shadow-lg.5 overflow-hidden ${
                               patient.user.isActive
                                 ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white'
                                 : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
@@ -595,7 +595,7 @@ const AdminPatients: React.FC = () => {
 
                 {/* Enhanced Pagination */}
                 {patientsData.pagination && patientsData.pagination.totalPages > 1 && (
-                  <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+                  <div className={`relative group `}>
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20"></div>
                     <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6">
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -609,7 +609,7 @@ const AdminPatients: React.FC = () => {
                           <button
                             onClick={() => setPage(page - 1)}
                             disabled={!patientsData.pagination.hasPrev}
-                            className="group relative inline-flex items-center px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
+                            className="group relative inline-flex items-center px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <span className="relative z-10">Previous</span>
@@ -625,7 +625,7 @@ const AdminPatients: React.FC = () => {
                                 <button
                                   key={pageNum}
                                   onClick={() => setPage(pageNum)}
-                                  className={`group relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden ${
+                                  className={`group relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:shadow-lg.5 overflow-hidden ${
                                     pageNum === patientsData.pagination.currentPage
                                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white'
                                       : 'bg-white/60 backdrop-blur-sm text-gray-700 border border-white/40 hover:bg-white/80'
@@ -643,7 +643,7 @@ const AdminPatients: React.FC = () => {
                           <button
                             onClick={() => setPage(page + 1)}
                             disabled={!patientsData.pagination.hasNext}
-                            className="group relative inline-flex items-center px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
+                            className="group relative inline-flex items-center px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:shadow-lg.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <span className="relative z-10">Next</span>
@@ -694,7 +694,7 @@ const AdminPatients: React.FC = () => {
                     </div>
                     <button
                       onClick={() => setShowPatientModal(false)}
-                      className="group p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-110"
+                      className="group p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-300"
                     >
                       <XMarkIcon className="h-6 w-6" />
                     </button>

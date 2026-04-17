@@ -181,7 +181,7 @@ const DoctorDashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="space-y-8 p-6">
         {/* Modern Header */}
-        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl `}>
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
@@ -207,7 +207,7 @@ const DoctorDashboard: React.FC = () => {
                 )}
               </div>
               <div className="hidden md:block">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
                   <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                     <UserIcon className="h-8 w-8 text-white" />
                     <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -222,7 +222,7 @@ const DoctorDashboard: React.FC = () => {
 
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 `}>
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
                 <div className="h-4 bg-gray-200 rounded-lg w-3/4 mb-4"></div>
@@ -231,7 +231,7 @@ const DoctorDashboard: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 `}>
             {statsCards.map((stat, index) => (
               <div
                 key={stat.name}
@@ -239,9 +239,9 @@ const DoctorDashboard: React.FC = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className={`absolute inset-0 bg-gradient-to-r ${stat.color.replace('from-', 'from-').replace('to-', 'to-')}/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`}></div>
-                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 border border-white/50 flex flex-col">
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/50 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg transition-colors duration-300`}>
                     <stat.icon className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-right">
@@ -264,7 +264,7 @@ const DoctorDashboard: React.FC = () => {
         )}
 
         {/* Content Grid */}
-        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${pageLoaded ? 'animate-fade-in' : ''}`}>
+        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 `}>
           {/* Today's Schedule */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
             <div className="flex items-center justify-between mb-6">
@@ -279,7 +279,7 @@ const DoctorDashboard: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/app/doctor-appointments')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg text-sm font-medium animate-pulse"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-sm hover:shadow-lg text-sm font-medium animate-pulse"
               >
                 <EyeIcon className="h-4 w-4" />
                 View All
@@ -298,7 +298,7 @@ const DoctorDashboard: React.FC = () => {
                 appointments.slice(0, 5).map((appointment, index) => (
                   <div
                     key={appointment.id}
-                    className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-4 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer"
+                    className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-4 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
                     onClick={() => navigate('/app/doctor-appointments')}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -333,7 +333,7 @@ const DoctorDashboard: React.FC = () => {
                         }`}>
                           {appointment.status.replace('_', ' ').toUpperCase()}
                         </span>
-                        <ArrowRightIcon className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-110" />
+                        <ArrowRightIcon className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-all duration-300" />
                       </div>
                     </div>
                     </div>
@@ -359,10 +359,10 @@ const DoctorDashboard: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <button
                   onClick={() => navigate('/app/doctor-appointments')}
-                  className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-blue-200/50 hover:shadow-lg animate-pulse"
+                  className="relative group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 border border-blue-200/50 hover:shadow-lg animate-pulse"
                 >
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                     <CalendarIcon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
@@ -371,7 +371,7 @@ const DoctorDashboard: React.FC = () => {
                       {stats?.requestedAppointments || 0} pending requests
                     </span>
                   </div>
-                  <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300 group-hover:scale-110" />
+                  <ArrowRightIcon className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transition-all duration-300" />
                 </div>
                 </button>
               </div>
@@ -380,10 +380,10 @@ const DoctorDashboard: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <button
                   onClick={() => navigate('/app/patients')}
-                  className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-emerald-200/50 hover:shadow-lg"
+                  className="relative group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl hover:from-emerald-100 hover:to-green-100 transition-all duration-300 border border-emerald-200/50 hover:shadow-lg"
                 >
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                     <UserGroupIcon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
@@ -392,7 +392,7 @@ const DoctorDashboard: React.FC = () => {
                       {stats?.totalPatients || 0} total patients
                     </span>
                   </div>
-                  <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300 group-hover:scale-110" />
+                  <ArrowRightIcon className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600 transition-all duration-300" />
                 </div>
                 </button>
               </div>
@@ -401,17 +401,17 @@ const DoctorDashboard: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-200/20 to-violet-200/20 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <button
                   onClick={() => navigate('/app/doctor-profile')}
-                  className="relative group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-purple-200/50 hover:shadow-lg animate-pulse"
+                  className="relative group w-full text-left p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-500 border border-purple-200/50 hover:shadow-lg animate-pulse"
                 >
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-4 transition-colors duration-300">
                     <UserIcon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="text-purple-800 font-semibold block">Update Profile</span>
                     <span className="text-purple-600 text-sm">Manage your professional information</span>
                   </div>
-                  <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-all duration-500 group-hover:scale-110" />
+                  <ArrowRightIcon className="h-5 w-5 text-purple-400 group-hover:text-purple-600 transition-all duration-500" />
                 </div>
                 </button>
               </div>
@@ -421,7 +421,7 @@ const DoctorDashboard: React.FC = () => {
 
         {/* Appointment Requests Summary */}
         {stats && stats.requestedAppointments > 0 && (
-          <div className={`bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-6 shadow-lg border border-amber-200/50 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+          <div className={`bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-6 shadow-lg border border-amber-200/50 `}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg p-3 text-white shadow-lg">
@@ -438,7 +438,7 @@ const DoctorDashboard: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/app/doctor-appointments')}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-lg font-medium"
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 shadow-sm hover:shadow-lg font-medium"
               >
                 <EyeIcon className="h-5 w-5" />
                 Review Requests

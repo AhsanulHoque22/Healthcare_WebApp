@@ -562,7 +562,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         <button
           onClick={handleSave}
           disabled={saveSettingsMutation.isPending}
-          className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 font-medium tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg.5 transition-all duration-300 font-medium tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saveSettingsMutation.isPending ? (
             <>
@@ -579,7 +579,7 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="px-6 py-3 border border-gray-200 bg-white text-gray-700 rounded-xl shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-300 font-medium"
+            className="px-6 py-3 border border-gray-200 bg-white text-gray-700 rounded-xl shadow-sm hover:bg-gray-50.5 transition-all duration-300 font-medium"
           >
             Cancel
           </button>

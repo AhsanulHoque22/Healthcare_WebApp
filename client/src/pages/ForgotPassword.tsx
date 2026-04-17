@@ -86,16 +86,16 @@ const ForgotPassword: React.FC = () => {
             <div className="flex justify-between items-center h-16">
               <Link to="/" className="flex items-center group">
                 <div className="relative group">
-                  <img src="/logo.png" className="h-16 w-16 group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
+                  <img src="/logo.png" className="h-16 w-16 transition-transform duration-300" alt="Livora Logo" />
                 </div>
-                <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
+                <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300">Livora</span>
               </Link>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
+                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group"
               >
                 <span>Back to Home</span>
-                <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
               </Link>
             </div>
           </div>
@@ -106,7 +106,7 @@ const ForgotPassword: React.FC = () => {
             {/* Success Card */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/30 to-green-200/30 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2">
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500">
                 {/* Card Background Effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-green-50/30 to-blue-50/50 rounded-3xl"></div>
 
@@ -114,7 +114,7 @@ const ForgotPassword: React.FC = () => {
                   <div className="text-center">
                     <div className="relative group mb-6">
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/40 to-green-200/40 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                      <div className="relative w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <div className="relative w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg transition-transform duration-300">
                         <CheckCircleIcon className="h-8 w-8 text-white" />
                         <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
                       </div>
@@ -132,7 +132,7 @@ const ForgotPassword: React.FC = () => {
                       Didn't receive the email? Check your spam folder or{' '}
                       <button
                         onClick={() => setEmailSent(false)}
-                        className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-300 hover:scale-105 inline-block"
+                        className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-300 inline-block"
                       >
                         try again
                       </button>
@@ -142,7 +142,7 @@ const ForgotPassword: React.FC = () => {
                   <div className="space-y-4">
                     <Link
                       to="/login"
-                      className="group relative w-full flex justify-center items-center py-4 px-6 border-2 border-indigo-200 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1"
+                      className="group relative w-full flex justify-center items-center py-4 px-6 border-2 border-indigo-200 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 hover:shadow-lg"
                     >
                       <ArrowLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                       Back to sign in
@@ -177,16 +177,16 @@ const ForgotPassword: React.FC = () => {
             <Link to="/" className="flex items-center group">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <img src="/logo.png" className="h-16 w-16 group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
+                <img src="/logo.png" className="h-16 w-16 transition-transform duration-300" alt="Livora Logo" />
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300">Livora</span>
             </Link>
             <Link
               to="/"
-              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
+              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group"
             >
               <span>Back to Home</span>
-              <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
             </Link>
           </div>
         </div>
@@ -197,14 +197,14 @@ const ForgotPassword: React.FC = () => {
           {/* Forgot Password Card */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500">
               {/* Card Background Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 rounded-3xl"></div>
 
               <div className="relative z-10">
                 <div className="text-center mb-8">
                   <div className="relative group">
-                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 transform group-hover:rotate-12" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 transition-transform duration-300 transform group-hover:rotate-12" alt="Livora Logo" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">
                     Forgot your password?
@@ -230,7 +230,7 @@ const ForgotPassword: React.FC = () => {
                           })}
                           type="email"
                           autoComplete="email"
-                          className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/70 backdrop-blur-sm hover:shadow-lg focus:shadow-xl hover:scale-[1.01] focus:scale-[1.02] hover:-translate-y-1 ${
+                          className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/70 backdrop-blur-sm hover:shadow-lg focus:shadow-xl ${
                             errors.email ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
                           }`}
                           placeholder="Enter your email address"
@@ -275,7 +275,7 @@ const ForgotPassword: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="group relative w-full flex justify-center items-center py-4 px-6 border border-transparent text-white font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                      className="group relative w-full flex justify-center items-center py-4 px-6 border border-transparent text-white font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-xl  disabled:hover:translate-y-0"
                     >
                       {isLoading ? (
                         <div className="flex items-center">
@@ -285,7 +285,7 @@ const ForgotPassword: React.FC = () => {
                       ) : (
                         <>
                           <span>Send reset instructions</span>
-                          <ArrowRightIcon className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                          <ArrowRightIcon className="h-5 w-5 ml-2 transition-transform duration-300" />
                         </>
                       )}
                     </button>
@@ -293,7 +293,7 @@ const ForgotPassword: React.FC = () => {
                     <div className="text-center">
                       <Link
                         to="/login"
-                        className="font-medium text-indigo-600 hover:text-indigo-500 flex items-center justify-center transition-all duration-300 hover:scale-105 group"
+                        className="font-medium text-indigo-600 hover:text-indigo-500 flex items-center justify-center transition-all duration-300 group"
                       >
                         <ArrowLeftIcon className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                         Back to sign in

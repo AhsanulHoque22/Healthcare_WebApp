@@ -144,29 +144,29 @@ const Register: React.FC = () => {
         scrolled
           ? 'bg-white/60 backdrop-blur-xl shadow-xl border-b border-white/30'
           : 'bg-white/40 backdrop-blur-lg shadow-lg border-b border-white/20'
-      } ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+      }`>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center group">
               <div className="relative group">
-                <img src="/logo.png" className="h-16 w-16 group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
+                <img src="/logo.png" className="h-16 w-16 transition-colors duration-300" alt="Livora Logo" />
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300 group-hover:scale-105">Livora</span>
+              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">Livora</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link
                 to="/login"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium flex items-center gap-2 group"
               >
                 <span>Already have an account?</span>
-                <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
               </Link>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group hover:scale-105"
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-300 font-medium flex items-center gap-2 group"
               >
                 <span>Back to Home</span>
-                <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
               </Link>
             </div>
           </div>
@@ -175,12 +175,12 @@ const Register: React.FC = () => {
 
       <div className="flex min-h-screen pt-16 relative z-10">
         {/* Left Side - Registration Form */}
-        <div className={`flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto ${pageLoaded ? 'animate-fade-in' : ''}`}>
+        <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
           <div className="max-w-md w-full">
             {/* Registration Card */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className={`relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-shadow duration-500">
                 {/* Card Background Effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 rounded-3xl"></div>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 rounded-full blur-2xl"></div>
@@ -188,7 +188,7 @@ const Register: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-center mb-8">
                   <div className="relative group">
-                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 transform group-hover:rotate-12" alt="Livora Logo" />
+                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 transition-transform duration-300" alt="Livora Logo" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">
                     Join Livora
@@ -214,13 +214,13 @@ const Register: React.FC = () => {
                           setSelectedRole('patient');
                           setValue('role', 'patient');
                         }}
-                        className={`relative group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 ${
+                        className={`relative group p-4 rounded-xl border-2 transition-colors duration-300 ${
                           selectedRole === 'patient'
-                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg animate-pulse'
+                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
                             : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-lg'
                         }`}
                       >
-                        <UserIcon className={`h-7 w-7 mx-auto mb-2 transition-all duration-300 group-hover:scale-110 ${
+                        <UserIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-300 ${
                           selectedRole === 'patient' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
                         }`} />
                         <span className="text-sm font-semibold block">Patient</span>
@@ -235,13 +235,13 @@ const Register: React.FC = () => {
                           setSelectedRole('doctor');
                           setValue('role', 'doctor');
                         }}
-                        className={`relative group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:-translate-y-1 ${
+                        className={`relative group p-4 rounded-xl border-2 transition-colors duration-300 ${
                           selectedRole === 'doctor'
                             ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
                             : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-lg'
                         }`}
                       >
-                        <BriefcaseIcon className={`h-7 w-7 mx-auto mb-2 transition-all duration-300 group-hover:scale-110 ${
+                        <BriefcaseIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-300 ${
                           selectedRole === 'doctor' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
                         }`} />
                         <span className="text-sm font-semibold block">Doctor</span>
@@ -256,13 +256,13 @@ const Register: React.FC = () => {
                           setSelectedRole('admin');
                           setValue('role', 'admin');
                         }}
-                        className={`relative group p-4 rounded-xl border-2 transition-all duration-500 hover:scale-105 hover:-translate-y-1 ${
+                        className={`relative group p-4 rounded-xl border-2 transition-colors duration-500 ${
                           selectedRole === 'admin'
-                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg animate-pulse'
+                            ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-700 shadow-lg'
                             : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white/70 backdrop-blur-sm hover:shadow-lg'
                         }`}
                       >
-                        <AcademicCapIcon className={`h-7 w-7 mx-auto mb-2 transition-all duration-500 group-hover:scale-110 ${
+                        <AcademicCapIcon className={`h-7 w-7 mx-auto mb-2 transition-colors duration-500 ${
                           selectedRole === 'admin' ? 'text-indigo-600' : 'text-gray-500 group-hover:text-gray-700'
                         }`} />
                         <span className="text-sm font-semibold block">Admin</span>
@@ -365,7 +365,7 @@ const Register: React.FC = () => {
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -400,7 +400,7 @@ const Register: React.FC = () => {
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300 hover:scale-110"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-xl transition-all duration-300"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? (
@@ -557,7 +557,7 @@ const Register: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="relative group w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:via-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 transform animate-pulse"
+                    className="relative group w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:via-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform animate-pulse"
                   >
                   {isLoading ? (
                     <div className="flex items-center">
@@ -567,7 +567,7 @@ const Register: React.FC = () => {
                   ) : (
                     <div className="flex items-center">
                       <span className="text-lg">Create Account</span>
-                      <ArrowRightIcon className="ml-3 h-6 w-6 group-hover:translate-x-1 group-hover:scale-110 transition-all duration-300" />
+                      <ArrowRightIcon className="ml-3 h-6 w-6 transition-all duration-300" />
                     </div>
                   )}
                   </button>
@@ -607,7 +607,7 @@ const Register: React.FC = () => {
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative group">
-                  <img src="/logo.png" className="h-20 w-20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300" alt="Livora Logo" />
+                  <img src="/logo.png" className="h-20 w-20 backdrop-blur-sm transition-transform duration-300" alt="Livora Logo" />
                 </div>
                 <h3 className="text-3xl font-bold">
                   Join Our Healthcare Community
@@ -621,8 +621,8 @@ const Register: React.FC = () => {
             <div className="space-y-6">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/20 to-green-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-pulse">
+                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 transition-transform duration-300 animate-pulse">
                     <UserIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -636,8 +636,8 @@ const Register: React.FC = () => {
 
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-200/20 to-indigo-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 transition-transform duration-300">
                     <BriefcaseIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -651,8 +651,8 @@ const Register: React.FC = () => {
 
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300 animate-pulse">
+                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 transition-transform duration-300 animate-pulse">
                     <ShieldCheckIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -666,8 +666,8 @@ const Register: React.FC = () => {
 
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-200/20 to-orange-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
-                  <div className="bg-white/20 rounded-xl p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="relative group flex items-start bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-500">
+                  <div className="bg-white/20 rounded-xl p-3 mr-4 transition-transform duration-300">
                     <CheckCircleIcon className="h-6 w-6" />
                   </div>
                   <div>
@@ -682,9 +682,9 @@ const Register: React.FC = () => {
 
             <div className="relative group mt-10">
               <div className="absolute inset-0 bg-gradient-to-r from-pink-200/20 to-rose-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="relative p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1">
+              <div className="relative p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-500">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center transition-transform duration-300">
                     <StarIcon className="h-5 w-5 text-yellow-300 animate-pulse" />
                   </div>
                   <p className="font-bold text-lg">

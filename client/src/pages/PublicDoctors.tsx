@@ -111,7 +111,7 @@ const PublicDoctors: React.FC = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <Link to="/" className="flex items-center group transition-all duration-500 hover:scale-105">
+            <Link to="/" className="flex items-center group transition-all duration-500">
               <div className="relative group">
                 <div className="absolute inset-0 bg-blue-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
                 <img src="/logo.png" className="h-14 w-14 relative z-10" alt="Livora Logo" />
@@ -158,7 +158,7 @@ const PublicDoctors: React.FC = () => {
               ) : (
                 <>
                   <Link to="/login" className="text-gray-600 font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:scale-110 active:scale-95 transition-all duration-300">Join Now</Link>
+                  <Link to="/register" className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 active:scale-95 transition-all duration-300">Join Now</Link>
                 </>
               )}
             </div>
@@ -345,7 +345,7 @@ const PublicDoctors: React.FC = () => {
               doctors.map((doctor: any, index: number) => (
                 <div 
                   key={doctor.id} 
-                  className="group bg-white/80 backdrop-blur-sm rounded-3xl border border-white shadow-xl hover:shadow-2xl hover:shadow-indigo-200/50 transition-all duration-500 hover:-translate-y-3 overflow-hidden flex flex-col relative"
+                  className="group bg-white/80 backdrop-blur-sm rounded-3xl border border-white shadow-xl hover:shadow-2xl hover:shadow-indigo-200/50 transition-all duration-500 overflow-hidden flex flex-col relative"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Doctor Image Header */}
@@ -355,7 +355,7 @@ const PublicDoctors: React.FC = () => {
                       <img 
                         src={doctor.user.profileImage} 
                         alt={doctor.user.firstName}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-700"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
@@ -385,15 +385,15 @@ const PublicDoctors: React.FC = () => {
                     
                     <div className="space-y-3 mb-6">
                       <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <MapPinIcon className="h-5 w-5 mr-3 text-indigo-400 group-hover:scale-110 transition-transform" />
+                        <MapPinIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
                         <span className="font-medium">{doctor.hospital || 'Private Practice'}</span>
                       </div>
                       <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <CalendarIcon className="h-5 w-5 mr-3 text-indigo-400 group-hover:scale-110 transition-transform" />
+                        <CalendarIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
                         <span className="font-medium">{doctor.experience || 0} Years Experience</span>
                       </div>
                       <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-indigo-400 group-hover:scale-110 transition-transform" />
+                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
                         <span className="font-medium text-sm">Reg: {doctor.bmdcRegistrationNumber || 'N/A'}</span>
                       </div>
                     </div>
@@ -417,13 +417,13 @@ const PublicDoctors: React.FC = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => { setSelectedDoctor(doctor); setShowProfileModal(true); }}
-                          className="flex items-center justify-center gap-2 py-3 bg-white text-gray-900 border-2 border-gray-100 rounded-2xl font-bold hover:bg-gray-50 active:scale-[0.98] transition-all"
+                          className="flex items-center justify-center gap-2 py-3 bg-white text-gray-900 border-2 border-gray-100 rounded-2xl font-bold hover:bg-gray-50 transition-all"
                         >
                           About
                         </button>
                         <Link
                           to={user ? `/app/appointments?doctor=${doctor.id}` : `/login?redirect=/app/appointments&doctor=${doctor.id}`}
-                          className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 active:scale-[0.98] transition-all group/btn"
+                          className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 transition-all group/btn"
                         >
                           Book visit
                         </Link>
@@ -586,7 +586,7 @@ const PublicDoctors: React.FC = () => {
                   <div className="flex pt-10">
                      <Link
                        to={user ? `/app/appointments?doctor=${selectedDoctor.id}` : `/login?redirect=/app/appointments&doctor=${selectedDoctor.id}`}
-                       className="flex-1 py-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-[24px] font-black text-xl text-center shadow-2xl shadow-indigo-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                       className="flex-1 py-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-[24px] font-black text-xl text-center shadow-2xl shadow-indigo-200 transition-all"
                      >
                        Confirm Booking
                      </Link>

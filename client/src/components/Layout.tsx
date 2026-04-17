@@ -134,7 +134,7 @@ const Layout: React.FC = () => {
           {/* Mobile header */}
           <div className="flex h-20 items-center justify-between px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
             <Link to="/" className="flex items-center space-x-3 group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-95">
-              <div className="relative group-hover:scale-110 transition-transform duration-500">
+              <div className="relative transition-transform duration-500">
                 <div className="absolute inset-0 bg-blue-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <img src="/logo.png" className="h-14 w-14 relative z-10" alt="Livora Logo" />
               </div>
@@ -184,7 +184,7 @@ const Layout: React.FC = () => {
           {/* Mobile user section */}
           <div className="p-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center space-x-3 mb-4">
-                <Link to={getProfileUrl()} className="flex-shrink-0 group hover:scale-105 transition-all duration-300">
+                <Link to={getProfileUrl()} className="flex-shrink-0 group transition-all duration-300">
                   {user?.profileImage ? (
                     <img
                       src={user.profileImage}
@@ -226,10 +226,10 @@ const Layout: React.FC = () => {
         <div className="flex flex-col flex-grow bg-white shadow-xl border-r border-gray-200 transition-all duration-500 ease-in-out">
           {/* Desktop header */}
           <div className="flex h-20 items-center px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <Link to="/" className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10 active:scale-[0.98]">
+            <Link to="/" className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10">
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
-                  <div className="relative group-hover:scale-110 transition-transform duration-500 ease-out">
+                  <div className="relative transition-transform duration-500 ease-out">
                     <div className="absolute inset-0 bg-blue-400/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <img src="/logo.png" className="h-14 w-14 relative z-10 object-contain" alt="Livora Logo" />
                   </div>
@@ -242,7 +242,7 @@ const Layout: React.FC = () => {
               ) : (
                 <div className="flex justify-center w-full relative">
                   <div className="absolute inset-0 bg-blue-400/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-                  <img src="/logo.png" className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125" alt="Livora Logo" />
+                  <img src="/logo.png" className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-12 " alt="Livora Logo" />
                 </div>
               )}
             </Link>
@@ -257,14 +257,12 @@ const Layout: React.FC = () => {
                   <li key={item.name}>
                     <button
                       onClick={() => navigate(item.href)}
-                      className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-300 group ${getColorClasses(item.color, isActive)} ${
-                        isActive ? 'shadow-sm border transform scale-[1.02]' : 'hover:shadow-sm hover:scale-[1.01]'
+                      className={`w-full flex items-center rounded-xl text-sm font-medium transition-colors duration-300 group ${getColorClasses(item.color, isActive)} ${
+                        isActive ? 'shadow-sm border' : 'hover:shadow-sm'
                       } ${desktopSidebarCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'}`}
                       title={desktopSidebarCollapsed ? item.name : ''}
                     >
-                      <div className={`p-2 rounded-lg transition-all duration-300 ${getIconColor(item.color, isActive)} ${
-                        isActive ? 'scale-110' : 'group-hover:scale-105'
-                      } ${!desktopSidebarCollapsed ? 'mr-3' : ''}`}>
+                      <div className={`p-2 rounded-lg transition-colors duration-300 ${getIconColor(item.color, isActive)} ${!desktopSidebarCollapsed ? 'mr-3' : ''}`}>
                         <item.icon className="h-5 w-5" />
                       </div>
                       <span className={`flex-1 text-left transition-all duration-300 overflow-hidden ${
@@ -286,7 +284,7 @@ const Layout: React.FC = () => {
           <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 transition-all duration-500 ease-in-out">
             {!desktopSidebarCollapsed ? (
               <div className="transition-all duration-500 ease-in-out">
-                <Link to={getProfileUrl()} className="flex items-center space-x-3 mb-4 group hover:scale-105 transition-all duration-300">
+                <Link to={getProfileUrl()} className="flex items-center space-x-3 mb-4 group transition-all duration-300">
                   <div className="flex-shrink-0">
                     {user?.profileImage ? (
                       <img
@@ -319,7 +317,7 @@ const Layout: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-4 transition-all duration-500 ease-in-out">
-                <Link to={getProfileUrl()} className="flex-shrink-0 group hover:scale-110 transition-all duration-300">
+                <Link to={getProfileUrl()} className="flex-shrink-0 group transition-all duration-300">
                   {user?.profileImage ? (
                     <img
                       src={user.profileImage}
@@ -362,7 +360,7 @@ const Layout: React.FC = () => {
           {/* Mobile menu button */}
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110 animate-pulse"
+            className="-m-2.5 p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-lg transition-colors duration-300"
             onClick={() => setSidebarOpen(true)}
           >
             <Bars3Icon className="h-6 w-6" />
@@ -371,14 +369,14 @@ const Layout: React.FC = () => {
           {/* Desktop sidebar toggle button */}
           <button
             type="button"
-            className="hidden lg:block -m-2.5 p-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-110"
+            className="hidden lg:block -m-2.5 p-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-300"
             onClick={() => setDesktopSidebarCollapsed(!desktopSidebarCollapsed)}
             title={desktopSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {desktopSidebarCollapsed ? (
-              <ChevronRightIcon className="h-6 w-6 transition-transform duration-300 hover:scale-110" />
+              <ChevronRightIcon className="h-6 w-6 transition-transform duration-300" />
             ) : (
-              <ChevronLeftIcon className="h-6 w-6 transition-transform duration-300 hover:scale-110" />
+              <ChevronLeftIcon className="h-6 w-6 transition-transform duration-300" />
             )}
           </button>
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
@@ -390,7 +388,7 @@ const Layout: React.FC = () => {
                 <NotificationDropdown />
                 
                 {/* User profile */}
-                <Link to={getProfileUrl()} className="relative group flex items-center space-x-3 hover:opacity-80 transition-all duration-300 transform hover:scale-105">
+                <Link to={getProfileUrl()} className="relative group flex items-center space-x-3 hover:opacity-80 transition-opacity duration-300">
                   <div className="flex items-center space-x-3">
                     {user?.profileImage ? (
                       <img
@@ -416,7 +414,7 @@ const Layout: React.FC = () => {
                 
                 <button
                   onClick={handleLogout}
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-300 hover:scale-105"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-300"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
                   Sign out

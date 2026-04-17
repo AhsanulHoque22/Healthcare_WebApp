@@ -429,7 +429,7 @@ const Patients: React.FC = () => {
                   </p>
                 </div>
                 <div className="hidden md:block">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-transform duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <UserGroupIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -468,7 +468,7 @@ const Patients: React.FC = () => {
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-all duration-300 hover:scale-110"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-all duration-300"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -544,10 +544,10 @@ const Patients: React.FC = () => {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-2">
+                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center mb-6">
                     <div className="flex-shrink-0">
-                      <div className="h-14 w-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <div className="h-14 w-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300">
                         <UserIcon className="h-7 w-7 text-white" />
                       </div>
                     </div>
@@ -592,14 +592,14 @@ const Patients: React.FC = () => {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleViewPatient(patient)}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm py-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm py-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:shadow-lg font-medium flex items-center justify-center gap-2 animate-pulse"
                     >
                       <EyeIcon className="h-4 w-4" />
                       View Details
                     </button>
                     <button
                       onClick={() => handleViewMedicalRecords(patient)}
-                      className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex items-center gap-2"
+                      className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:shadow-lg font-medium flex items-center gap-2"
                     >
                       <DocumentTextIcon className="h-4 w-4" />
                       Records
@@ -631,7 +631,7 @@ const Patients: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowPatientModal(false)}
-                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md"
+                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:shadow-md"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -847,14 +847,14 @@ const Patients: React.FC = () => {
                       setShowPatientModal(false);
                       handleViewMedicalRecords(selectedPatient);
                     }}
-                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 animate-pulse"
+                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 animate-pulse"
                   >
                     <DocumentTextIcon className="h-5 w-5" />
                     View Medical Records
                   </button>
                   <button
                     onClick={() => setShowPatientModal(false)}
-                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium"
+                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-sm hover:shadow-lg font-medium"
                   >
                     Close
                   </button>
@@ -883,7 +883,7 @@ const Patients: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowMedicalRecords(false)}
-                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md"
+                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:shadow-md"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -899,7 +899,7 @@ const Patients: React.FC = () => {
                 ) : medicalRecords && medicalRecords.length > 0 ? (
                   <div className="space-y-6">
                     {medicalRecords.map((appointment) => (
-                      <div key={appointment.id} className="bg-gradient-to-r from-white to-emerald-50 rounded-2xl p-6 border border-emerald-200/50 hover:shadow-lg transition-all duration-300 hover:scale-[1.01]">
+                      <div key={appointment.id} className="bg-gradient-to-r from-white to-emerald-50 rounded-2xl p-6 border border-emerald-200/50 hover:shadow-lg transition-all duration-300">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-4">
@@ -957,7 +957,7 @@ const Patients: React.FC = () => {
                           <div className="flex gap-2 ml-6">
                             <button
                               onClick={() => handleViewRecordDetails(appointment)}
-                              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-800 text-sm px-4 py-2 rounded-xl hover:bg-emerald-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md animate-pulse"
+                              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-800 text-sm px-4 py-2 rounded-xl hover:bg-emerald-50 transition-all duration-300 font-medium hover:shadow-md animate-pulse"
                             >
                               <EyeIcon className="h-4 w-4" />
                               View Details
@@ -965,7 +965,7 @@ const Patients: React.FC = () => {
                             <button
                               onClick={() => handleDownloadRecord(appointment)}
                               disabled={isDownloading === appointment.id}
-                              className={`flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:scale-110 hover:shadow-md ${isDownloading === appointment.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm px-4 py-2 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium hover:shadow-md ${isDownloading === appointment.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                               {isDownloading === appointment.id ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full" />
@@ -994,7 +994,7 @@ const Patients: React.FC = () => {
                 <div className="mt-8 flex justify-end">
                   <button
                     onClick={() => setShowMedicalRecords(false)}
-                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium"
+                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-sm hover:shadow-lg font-medium"
                   >
                     Close
                   </button>
@@ -1023,7 +1023,7 @@ const Patients: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowRecordDetail(false)}
-                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-md"
+                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300 hover:shadow-md"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -1231,7 +1231,7 @@ const Patients: React.FC = () => {
                   <button
                     onClick={() => handleDownloadRecord(selectedRecord)}
                     disabled={isDownloading === selectedRecord.id}
-                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 ${isDownloading === selectedRecord.id ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-300 shadow-sm hover:shadow-lg font-medium flex items-center gap-2 ${isDownloading === selectedRecord.id ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {isDownloading === selectedRecord.id ? (
                       <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
@@ -1242,7 +1242,7 @@ const Patients: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setShowRecordDetail(false)}
-                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 hover:scale-105 shadow-sm hover:shadow-lg font-medium"
+                    className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-sm hover:shadow-lg font-medium"
                   >
                     Close
                   </button>

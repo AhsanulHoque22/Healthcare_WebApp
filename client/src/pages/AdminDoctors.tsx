@@ -145,7 +145,7 @@ const AdminDoctors: React.FC = () => {
 
       <div className="relative z-10 p-6 space-y-8">
         {/* Modern Welcome Header */}
-        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-[1.02] ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
           <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5"></div>
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -170,7 +170,7 @@ const AdminDoctors: React.FC = () => {
               <div className="hidden md:block">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-transform duration-300">
                     <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
                       <UserGroupIcon className="h-8 w-8 text-white" />
                       <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
@@ -187,7 +187,7 @@ const AdminDoctors: React.FC = () => {
           {/* Total Doctors Card */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-blue-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-600 mb-2">Total Doctors</p>
@@ -203,7 +203,7 @@ const AdminDoctors: React.FC = () => {
           {/* Verified Doctors Card */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-green-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-600 mb-2">Verified</p>
@@ -221,7 +221,7 @@ const AdminDoctors: React.FC = () => {
           {/* Pending Verification Card */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-200 to-yellow-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-600 mb-2">Pending</p>
@@ -239,7 +239,7 @@ const AdminDoctors: React.FC = () => {
           {/* Departments Card */}
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-600 mb-2">Departments</p>
@@ -302,7 +302,7 @@ const AdminDoctors: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <button className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                <button className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg.5">
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <div className="relative z-10 flex items-center gap-2">
                     <ArrowPathIcon className="h-4 w-4" />
@@ -497,7 +497,7 @@ const AdminDoctors: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => handleViewDoctor(doctor)}
-                              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg.5"
                             >
                               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                               <EyeIcon className="h-4 w-4 relative z-10" />
@@ -505,7 +505,7 @@ const AdminDoctors: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleVerificationToggle(doctor)}
-                              className={`group relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+                              className={`group relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg.5 ${
                                 doctor.isVerified
                                   ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white'
                                   : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
@@ -538,7 +538,7 @@ const AdminDoctors: React.FC = () => {
                 {doctorsData.doctors.map((doctor: Doctor) => (
                   <div key={doctor.id} className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-                    <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+                    <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-4">
                       {doctor.profileImage ? (
@@ -656,7 +656,7 @@ const AdminDoctors: React.FC = () => {
                       <button
                         onClick={() => setPage(page - 1)}
                         disabled={!doctorsData.pagination.hasPrev}
-                        className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                        className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <span className="relative z-10">Previous</span>
@@ -672,7 +672,7 @@ const AdminDoctors: React.FC = () => {
                             <button
                               key={pageNum}
                               onClick={() => setPage(pageNum)}
-                              className={`px-3 py-2 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+                              className={`px-3 py-2 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-lg.5 ${
                                 pageNum === doctorsData.pagination.currentPage
                                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                                   : 'bg-white/50 backdrop-blur-sm text-gray-700 border border-white/40 hover:bg-white/70'
@@ -687,7 +687,7 @@ const AdminDoctors: React.FC = () => {
                       <button
                         onClick={() => setPage(page + 1)}
                         disabled={!doctorsData.pagination.hasNext}
-                        className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                        className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <span className="relative z-10">Next</span>

@@ -512,7 +512,7 @@ const DoctorProfile: React.FC = () => {
             <div className="mt-6 flex items-center gap-4">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md ${
                   isEditing 
                     ? 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30' 
                     : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30'
@@ -570,7 +570,7 @@ const DoctorProfile: React.FC = () => {
                       type="button"
                       onClick={handleImageUpload}
                       disabled={isUploading}
-                      className="flex items-center gap-2 mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <CameraIcon className="h-5 w-5" />
                       {isUploading ? 'Uploading...' : 'Upload Image'}
@@ -624,7 +624,7 @@ const DoctorProfile: React.FC = () => {
                       type="button"
                       onClick={handleSignatureUpload}
                       disabled={isUploadingSignature}
-                      className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 hover:scale-105 shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      className="flex items-center gap-2 mx-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
                       <CameraIcon className="h-4 w-4" />
                       {isUploadingSignature ? 'Uploading...' : 'Upload Signature'}
@@ -895,7 +895,7 @@ const DoctorProfile: React.FC = () => {
                     <button
                       type="button"
                       onClick={addChamber}
-                      className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-teal-100 font-bold flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
+                      className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-teal-100 font-bold flex items-center gap-2 transform.5 active:translate-y-0"
                     >
                       <PlusIcon className="h-5 w-5 stroke-[2]" />
                       Add Chamber
@@ -910,7 +910,7 @@ const DoctorProfile: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => removeChamber(cIndex)}
-                            className="absolute top-4 right-4 p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm"
+                            className="absolute top-4 right-4 p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
                             title="Remove this chamber"
                           >
                             <XMarkIcon className="h-5 w-5 stroke-[2]" />
@@ -1096,7 +1096,7 @@ const DoctorProfile: React.FC = () => {
                         <button
                           type="button"
                           onClick={addDegree}
-                          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                         >
                           <PlusIcon className="h-4 w-4" />
                           Add
@@ -1165,7 +1165,7 @@ const DoctorProfile: React.FC = () => {
                       <button
                         type="button"
                         onClick={addAward}
-                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                       >
                         <PlusIcon className="h-4 w-4" />
                         Add
@@ -1219,7 +1219,7 @@ const DoctorProfile: React.FC = () => {
                         <button
                           type="button"
                           onClick={addLanguage}
-                          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                         >
                           <PlusIcon className="h-4 w-4" />
                           Add
@@ -1289,7 +1289,7 @@ const DoctorProfile: React.FC = () => {
                         <button
                           type="button"
                           onClick={addService}
-                          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl hover:from-rose-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl hover:from-rose-600 hover:to-pink-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
                         >
                           <PlusIcon className="h-4 w-4" />
                           Add
@@ -1321,14 +1321,14 @@ const DoctorProfile: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium"
+                      className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {isLoading ? (
                         <>

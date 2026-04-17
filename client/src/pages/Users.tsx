@@ -158,7 +158,7 @@ const Users: React.FC = () => {
       <div className={`relative z-10 p-6 transition-all duration-1000 ${pageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Modern Header with Welcome Bar */}
-          <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-[1.02] ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
+          <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl `}>
             <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5"></div>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -168,7 +168,7 @@ const Users: React.FC = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <div className="relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-blue-200/30 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                      <div className="relative p-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform duration-300">
+                      <div className="relative p-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 transition-colors duration-300">
                         <UserGroupIcon className="h-8 w-8 text-white animate-pulse" />
                       </div>
                     </div>
@@ -183,7 +183,7 @@ const Users: React.FC = () => {
                 <div className="hidden md:block">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
                       <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
                         <SparklesIcon className="h-8 w-8 text-white animate-pulse" />
                       </div>
@@ -200,7 +200,7 @@ const Users: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in-up">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-blue-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                 <div className="flex items-center justify-between">
                   <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl shadow-lg">
                     <UserGroupIcon className="h-6 w-6 text-white" />
@@ -215,7 +215,7 @@ const Users: React.FC = () => {
 
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-green-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                 <div className="flex items-center justify-between">
                   <div className="p-3 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl shadow-lg">
                     <CheckCircleIcon className="h-6 w-6 text-white" />
@@ -232,7 +232,7 @@ const Users: React.FC = () => {
 
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-violet-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                 <div className="flex items-center justify-between">
                   <div className="p-3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-xl shadow-lg">
                     <UserIcon className="h-6 w-6 text-white" />
@@ -249,7 +249,7 @@ const Users: React.FC = () => {
 
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-amber-200 to-orange-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+              <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                 <div className="flex items-center justify-between">
                   <div className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-lg">
                     <ShieldCheckIcon className="h-6 w-6 text-white" />
@@ -281,13 +281,13 @@ const Users: React.FC = () => {
                   <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
                     <div className="relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-                      <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+                      <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 transition-colors duration-300" />
                       <input
                         type="text"
                         placeholder="Search users by name, email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="relative w-full sm:w-80 pl-10 pr-4 py-2.5 border-2 border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-purple-400/20 focus:border-purple-400 transition-all duration-300 hover:bg-white/70 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1"
+                        className="relative w-full sm:w-80 pl-10 pr-4 py-2.5 border-2 border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-purple-400/20 focus:border-purple-400 transition-all duration-300 hover:bg-white/70 hover:shadow-lg"
                       />
                     </div>
                     <div className="relative group">
@@ -295,7 +295,7 @@ const Users: React.FC = () => {
                       <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
-                        className="relative px-4 py-2.5 border-2 border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-purple-400/20 focus:border-purple-400 transition-all duration-300 hover:bg-white/70 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1 cursor-pointer"
+                        className="relative px-4 py-2.5 border-2 border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-purple-400/20 focus:border-purple-400 transition-all duration-300 hover:bg-white/70 hover:shadow-lg cursor-pointer"
                       >
                         <option value="">All Roles</option>
                         <option value="patient">Patients</option>
@@ -310,7 +310,7 @@ const Users: React.FC = () => {
                           queryClient.invalidateQueries({ queryKey: ['admin-users'] });
                           toast.success('Data refreshed!');
                         }}
-                        className="relative group bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 border border-white/20"
+                        className="relative group bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg border border-white/20"
                       >
                         <ArrowPathIcon className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" />
                         Refresh
@@ -400,7 +400,7 @@ const Users: React.FC = () => {
                               >
                                 <td className="px-6 py-6">
                                   <div className="flex items-center space-x-4">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg transition-colors duration-300">
                                       <span className="text-sm font-bold text-white">
                                         {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                                       </span>
@@ -455,7 +455,7 @@ const Users: React.FC = () => {
                                   <div className="flex items-center space-x-2">
                                     <button
                                       onClick={() => handleViewUser(user)}
-                                      className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                                      className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg.5"
                                     >
                                       <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                       <EyeIcon className="h-4 w-4 relative z-10" />
@@ -463,7 +463,7 @@ const Users: React.FC = () => {
                                     </button>
                                     <button
                                       onClick={() => handleStatusToggle(user)}
-                                      className={`group relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+                                      className={`group relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:shadow-lg.5 ${
                                         user.isActive
                                           ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white'
                                           : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
@@ -501,7 +501,7 @@ const Users: React.FC = () => {
                           style={{ animationDelay: `${index * 100}ms` }}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-                          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+                          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-center space-x-4">
                                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
@@ -559,7 +559,7 @@ const Users: React.FC = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleViewUser(user)}
-                                className="group relative flex-1 overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                                className="group relative flex-1 overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg.5"
                               >
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                 <EyeIcon className="h-4 w-4 relative z-10" />
@@ -567,7 +567,7 @@ const Users: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => handleStatusToggle(user)}
-                                className={`group relative flex-1 overflow-hidden px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+                                className={`group relative flex-1 overflow-hidden px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg.5 ${
                                   user.isActive
                                     ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white'
                                     : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'
@@ -669,7 +669,7 @@ const Users: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowUserModal(false)}
-                    className="p-3 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-110"
+                    className="p-3 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-300"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -841,7 +841,7 @@ const Users: React.FC = () => {
                     </button>
                     <button
                       onClick={() => selectedUser && handleStatusToggle(selectedUser)}
-                      className={`group relative overflow-hidden px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+                      className={`group relative overflow-hidden px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:shadow-lg.5 ${
                         selectedUser?.isActive
                           ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white'
                           : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white'

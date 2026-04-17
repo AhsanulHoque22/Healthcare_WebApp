@@ -859,7 +859,7 @@ const AdminLabReports: React.FC = () => {
   const TestCard = ({ test }: { test: any }) => (
     <div className="relative group animate-fade-in-up">
       <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-      <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 w-full min-h-[400px] flex flex-col">
+      <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl w-full min-h-[400px] flex flex-col">
         <div className="flex items-start justify-between mb-4 flex-shrink-0">
           <div className="flex-1 pr-4">
             <h3 className="text-lg font-bold text-gray-900 mb-2 break-words">{test.name}</h3>
@@ -1654,7 +1654,7 @@ const AdminLabReports: React.FC = () => {
             className={`group relative bg-white/70 backdrop-blur-md text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 border border-white/20 ${
               isRefreshing 
                 ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5'
+                : 'hover:bg-white/90 hover:shadow-lg.5'
             }`}
           >
             {isRefreshing ? (

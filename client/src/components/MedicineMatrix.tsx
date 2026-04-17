@@ -534,8 +534,8 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
                                     : isFutureTime
                                     ? 'bg-yellow-50 text-yellow-600 border border-yellow-200 cursor-not-allowed opacity-60'
                                     : isToday
-                                    ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5'
-                                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:-translate-y-0.5'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100.5'
+                                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100.5'
                                 }`}
                                 style={{ animation: 'fadeIn 0.35s ease-out', animationDelay: `${timeIndex * 70}ms` }}
                               >
