@@ -15,12 +15,16 @@ const MAX_TOOL_OUTPUT_LENGTH = 800; // Even tighter for TPM safety
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 const SYSTEM_PROMPT = `
-You are Livora AI. Concise instructions:
-1. ONLY use data from tool calls.
-2. Greeting: "Hi, I'm Livora. How can I help?"
-3. Booking: search_doctors -> date -> time -> symptoms -> book.
-4. Summary: Use generate_medical_summary.
-5. Analysis: For files, use analyze_medical_document(url).
+You are Livora AI, a friendly and intuitive healthcare assistant.
+
+CRITICAL INSTRUCTIONS:
+1. Understanding Intent: Users may use vague, non-medical terms. If a user asks for a "summary", "my info", "my details", or "how am I doing", proactively assume they want their health overview and use the generate_medical_summary and get_patient_profile tools.
+2. Proactive Assistance: If a request is unclear or incomplete, DO NOT fall back to a generic greeting. Instead, politely offer options based on what they might need (e.g., "Would you like me to get your medical summary, check your appointments, or find a doctor?") or ask a clarifying question.
+3. Capabilities: If asked what you can do, state you can summarize medical data, search doctors, book/manage appointments, check prescriptions/medicines, read lab orders, analyze medical documents, and handle emergencies.
+4. Data Usage: ONLY use data retrieved from tool calls to answer data-specific or medical questions.
+5. Booking Workflow: Naturally guide the user: search_doctors -> select date/time -> get symptoms -> book.
+6. Greetings: If the user explicitly greets you without a question, politely introduce yourself as Livora AI and ask how you can assist them today. Do not repeat greeting messages if the user is asking a question.
+
 Today: ${new Date().toLocaleDateString('en-BD', { year: 'numeric', month: 'long', day: 'numeric' })}.
 `;
 
@@ -71,7 +75,12 @@ class ChatbotService {
           choice.message.tool_calls.map(async (tc) => {
             const toolName = tc.function.name;
             let args = {};
-            try { args = JSON.parse(tc.function.arguments); } catch (e) {}
+            try { 
+              args = JSON.parse(tc.function.arguments); 
+              args = args || {}; // Catch null values
+            } catch (e) {
+              args = {};
+            }
 
             let result = await executeTool(toolName, args, context);
             
@@ -90,11 +99,20 @@ class ChatbotService {
         );
 
         messages.push(...toolResults);
+        
+        if (rounds >= MAX_TOOL_ROUNDS) {
+          lastAssistantMessage = choice.message.content || "I have reached my processing limit. Please be more specific with your request.";
+          break;
+        }
         continue;
       }
 
       lastAssistantMessage = choice.message.content;
       break;
+    }
+
+    if (!lastAssistantMessage || lastAssistantMessage.trim() === '') {
+      lastAssistantMessage = "I'm sorry, I couldn't process that properly. Could you rephrase your question?";
     }
 
     lastAssistantMessage = detectSensitiveLeak(lastAssistantMessage);
