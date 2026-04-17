@@ -383,11 +383,9 @@ const Login: React.FC = () => {
                 Join over <strong>10,000+ patients</strong> and <strong>500+ healthcare providers</strong> who trust our platform
               </p>
               </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
