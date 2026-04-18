@@ -1114,7 +1114,17 @@ const Patients: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="mt-8 pt-8 border-t border-gray-200 text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                      <SparklesIcon className="h-6 w-6 text-purple-400" />
+                      Completed Lab Tests
+                    </h3>
+                    <div className="bg-purple-50/50 rounded-2xl p-8 border border-purple-100 border-dashed">
+                      <p className="text-gray-500 italic">No completed lab tests found for this patient.</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-8 flex justify-end">
                   <button
