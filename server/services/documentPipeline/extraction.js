@@ -49,23 +49,21 @@ async function extractTextFromURL(url) {
             console.log(`[Extraction] Derived Public ID: ${publicId}, Format: ${extension}, Type: ${resourceType}`);
             
             // Fetch the exact resource info from Cloudinary API to get the correct version and type
-            // This is more robust than parsing the URL
             const resource = await cloudinary.api.resource(publicId, { 
               resource_type: resourceType 
             });
 
             console.log(`[Extraction] API matched resource: Type=${resource.type}, Version=${resource.version}`);
 
-            const signedUrl = cloudinary.url(publicId, {
-              sign_url: true,
+            // Use the utility specifically designed for secure downloads
+            const signedUrl = cloudinary.utils.private_download_url(publicId, extension, {
               resource_type: resourceType,
               type: resource.type,
               version: resource.version,
-              format: resourceType === 'raw' ? null : extension,
-              secure: true
+              expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour
             });
             
-            console.log(`[Extraction] Retrying with API-verified signed URL...`);
+            console.log(`[Extraction] Retrying with private_download_url: ${signedUrl.substring(0, 100)}...`);
             const signedResponse = await axios.get(signedUrl, { responseType: 'arraybuffer' });
             buffer = Buffer.from(signedResponse.data);
             contentType = signedResponse.headers['content-type'] || '';
