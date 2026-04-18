@@ -211,13 +211,17 @@ const Patients: React.FC = () => {
         const allTests: any[] = [];
         const completedStatuses = ['completed', 'reported', 'confirmed', 'results_ready'];
         
-        if (prescriptionTestsRes.data?.data?.labTests) {
-          prescriptionTestsRes.data.data.labTests.forEach((test: any) => {
-            if (completedStatuses.includes(test.status)) {
-              allTests.push({
-                ...test,
-                recordType: 'prescription',
-                date: test.createdAt
+        if (prescriptionTestsRes.data?.data?.prescriptions) {
+          prescriptionTestsRes.data.data.prescriptions.forEach((prescription: any) => {
+            if (prescription.parsedTests) {
+              prescription.parsedTests.forEach((test: any) => {
+                if (completedStatuses.includes(test.status?.toLowerCase())) {
+                  allTests.push({
+                    ...test,
+                    recordType: 'prescription',
+                    date: test.takenDate || test.createdAt
+                  });
+                }
               });
             }
           });
@@ -225,7 +229,7 @@ const Patients: React.FC = () => {
         
         if (ordersRes.data?.data?.orders) {
           ordersRes.data.data.orders.forEach((order: any) => {
-            if (completedStatuses.includes(order.status)) {
+            if (completedStatuses.includes(order.status?.toLowerCase())) {
               allTests.push({
                 ...order,
                 recordType: 'ordered',
