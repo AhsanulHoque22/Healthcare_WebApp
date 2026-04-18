@@ -118,6 +118,7 @@ const Patients: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showMedicalRecords, setShowMedicalRecords] = useState(false);
+  const [activeRecordsTab, setActiveRecordsTab] = useState<'appointments' | 'labtests'>('appointments');
   const [selectedRecord, setSelectedRecord] = useState<AppointmentMedicalRecord | null>(null);
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
   const [showRecordDetail, setShowRecordDetail] = useState(false);
@@ -935,14 +936,43 @@ const Patients: React.FC = () => {
                   </button>
                 </div>
 
-                {recordsLoading ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <DocumentTextIcon className="h-8 w-8 text-white" />
-                    </div>
-                    <p className="text-gray-600 text-lg">Loading medical records...</p>
-                  </div>
-                ) : medicalRecords && medicalRecords.length > 0 ? (
+                {/* Tab Navigation */}
+                <div className="flex bg-gray-100 p-1.5 rounded-xl mb-6">
+                  <button
+                    onClick={() => setActiveRecordsTab('appointments')}
+                    className={`flex-1 flex justify-center items-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                      activeRecordsTab === 'appointments'
+                        ? 'bg-white text-emerald-600 shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-200/50 hover:text-gray-700'
+                    }`}
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                    Appointments
+                  </button>
+                  <button
+                    onClick={() => setActiveRecordsTab('labtests')}
+                    className={`flex-1 flex justify-center items-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                      activeRecordsTab === 'labtests'
+                        ? 'bg-white text-purple-600 shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-200/50 hover:text-gray-700'
+                    }`}
+                  >
+                    <SparklesIcon className="h-4 w-4" />
+                    Lab Tests
+                  </button>
+                </div>
+
+                {activeRecordsTab === 'appointments' && (
+                  <>
+                    {recordsLoading ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                          <DocumentTextIcon className="h-8 w-8 text-white" />
+                        </div>
+                        <p className="text-gray-600 text-lg">Loading medical records...</p>
+                      </div>
+                    ) : medicalRecords && medicalRecords.length > 0 ? (
+
                   <div className="space-y-6">
                     {medicalRecords.map((appointment) => (
                       <div key={appointment.id} className="bg-gradient-to-r from-white to-emerald-50 rounded-2xl p-6 border border-emerald-200/50 hover:shadow-lg transition-all duration-300">
@@ -1034,96 +1064,98 @@ const Patients: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2">
                       Medical records will appear here after completed appointments.
                     </p>
-                  </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Completed Lab Tests Section */}
-                {labRecordsLoading ? (
-                  <div className="text-center py-6 mt-6 border-t border-gray-100">
-                    <div className="animate-spin h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">Loading lab tests...</p>
-                  </div>
-                ) : labRecords && labRecords.length > 0 ? (
-                  <div className="mt-8 pt-8 border-t border-gray-200">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                      <SparklesIcon className="h-7 w-7 text-purple-500" />
-                      Completed Lab Tests
-                    </h3>
-                    <div className="space-y-4">
-                      {labRecords.map((test, index) => (
-                        <div key={`lab-${index}`} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <span className={`px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800`}>
-                                  {test.recordType === 'ordered' ? 'Self-Ordered' : 'Prescribed'}
-                                </span>
-                                <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
-                                  {new Date(test.date).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: 'numeric' 
-                                  })}
-                                </span>
-                                <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full uppercase tracking-wider">
-                                  {test.status.replace('_', ' ')}
-                                </span>
-                              </div>
-                              <h4 className="font-bold text-gray-900 text-lg mb-2">
-                                {test.recordType === 'ordered' ? 
-                                  (test.testDetails?.map((t: any) => t.name).join(', ') || 'Lab Test Order') : 
-                                  test.name}
-                              </h4>
-                              {test.doctorName && test.doctorName !== 'Unknown Doctor' && (
-                                <p className="text-sm text-gray-600 flex items-center gap-2">
-                                  <UserIcon className="h-4 w-4 text-purple-500" />
-                                  Ordered by: {test.doctorName}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 ml-6">
-                              {(() => {
-                                let reportUrl = test.testReports?.[0]?.path;
-                                if (!reportUrl && test.resultUrl) {
-                                  try {
-                                    reportUrl = test.resultUrl.startsWith('[') ? JSON.parse(test.resultUrl)[0]?.path : test.resultUrl;
-                                  } catch (e) {
-                                    reportUrl = test.resultUrl;
-                                  }
-                                }
-                                return reportUrl ? (
-                                  <a 
-                                    href={reportUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-purple-600 hover:text-purple-800 text-sm px-4 py-2 rounded-xl hover:bg-purple-100 transition-all duration-300 font-medium hover:shadow-md animate-pulse"
-                                  >
-                                    <ArrowDownTrayIcon className="h-4 w-4" />
-                                    View Report
-                                  </a>
-                                ) : (
-                                  <span className="text-sm text-gray-400 italic flex items-center gap-1">
-                                    <ClockIcon className="h-4 w-4" />
-                                    No file attached
+                {activeRecordsTab === 'labtests' && (
+                  <>
+                    {labRecordsLoading ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                          <SparklesIcon className="h-8 w-8 text-white" />
+                        </div>
+                        <p className="text-gray-600 text-lg">Loading lab tests...</p>
+                      </div>
+                    ) : labRecords && labRecords.length > 0 ? (
+                      <div className="space-y-4">
+                        {labRecords.map((test, index) => (
+                          <div key={`lab-${index}`} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-3">
+                                  <span className={`px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800`}>
+                                    {test.recordType === 'ordered' ? 'Self-Ordered' : 'Prescribed'}
                                   </span>
-                                );
-                              })()}
+                                  <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
+                                    {new Date(test.date).toLocaleDateString('en-US', { 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    })}
+                                  </span>
+                                  <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full uppercase tracking-wider">
+                                    {test.status.replace('_', ' ')}
+                                  </span>
+                                </div>
+                                <h4 className="font-bold text-gray-900 text-lg mb-2">
+                                  {test.recordType === 'ordered' ? 
+                                    (test.testDetails?.map((t: any) => t.name).join(', ') || 'Lab Test Order') : 
+                                    test.name}
+                                </h4>
+                                {test.doctorName && test.doctorName !== 'Unknown Doctor' && (
+                                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                                    <UserIcon className="h-4 w-4 text-purple-500" />
+                                    Ordered by: {test.doctorName}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 ml-6">
+                                {(() => {
+                                  let reportUrl = test.testReports?.[0]?.path;
+                                  if (!reportUrl && test.resultUrl) {
+                                    try {
+                                      reportUrl = test.resultUrl.startsWith('[') ? JSON.parse(test.resultUrl)[0]?.path : test.resultUrl;
+                                    } catch (e) {
+                                      reportUrl = test.resultUrl;
+                                    }
+                                  }
+                                  return reportUrl ? (
+                                    <a 
+                                      href={reportUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 text-purple-600 hover:text-purple-800 text-sm px-4 py-2 rounded-xl hover:bg-purple-100 transition-all duration-300 font-medium hover:shadow-md animate-pulse"
+                                    >
+                                      <ArrowDownTrayIcon className="h-4 w-4" />
+                                      View Report
+                                    </a>
+                                  ) : (
+                                    <span className="text-sm text-gray-400 italic flex items-center gap-1">
+                                      <ClockIcon className="h-4 w-4" />
+                                      No file attached
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <DocumentTextIcon className="h-8 w-8 text-gray-400" />
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-8 pt-8 border-t border-gray-200 text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-                      <SparklesIcon className="h-6 w-6 text-purple-400" />
-                      Completed Lab Tests
-                    </h3>
-                    <div className="bg-purple-50/50 rounded-2xl p-8 border border-purple-100 border-dashed">
-                      <p className="text-gray-500 italic">No completed lab tests found for this patient.</p>
-                    </div>
-                  </div>
+                        <p className="text-gray-600 text-lg">No lab tests found for this patient.</p>
+                        <p className="text-gray-500 text-sm mt-2">
+                          Lab test records will appear here once they are processed.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="mt-8 flex justify-end">
