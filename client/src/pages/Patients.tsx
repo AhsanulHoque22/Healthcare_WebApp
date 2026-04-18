@@ -198,6 +198,52 @@ const Patients: React.FC = () => {
     enabled: !!selectedPatient?.id && showMedicalRecords,
   });
 
+  const { data: labRecords, isLoading: labRecordsLoading } = useQuery<any[]>({
+    queryKey: ['patient-lab-reports', selectedPatient?.id],
+    queryFn: async () => {
+      try {
+        const [ordersRes, prescriptionTestsRes] = await Promise.all([
+          API.get(`/lab-tests/patients/${selectedPatient?.id}/lab-reports`),
+          API.get(`/lab-tests/patients/${selectedPatient?.id}/prescription-lab-tests`)
+        ]);
+        
+        const allTests: any[] = [];
+        const completedStatuses = ['completed', 'reported', 'confirmed', 'results_ready'];
+        
+        if (prescriptionTestsRes.data?.data?.labTests) {
+          prescriptionTestsRes.data.data.labTests.forEach((test: any) => {
+            if (completedStatuses.includes(test.status)) {
+              allTests.push({
+                ...test,
+                recordType: 'prescription',
+                date: test.createdAt
+              });
+            }
+          });
+        }
+        
+        if (ordersRes.data?.data?.orders) {
+          ordersRes.data.data.orders.forEach((order: any) => {
+            if (completedStatuses.includes(order.status)) {
+              allTests.push({
+                ...order,
+                recordType: 'ordered',
+                date: order.createdAt
+              });
+            }
+          });
+        }
+        
+        return allTests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      } catch (error) {
+        console.error("Error fetching lab reports:", error);
+        return [];
+      }
+    },
+    enabled: !!selectedPatient?.id && showMedicalRecords,
+  });
+
+
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
     setShowPatientModal(true);
@@ -990,6 +1036,85 @@ const Patients: React.FC = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Completed Lab Tests Section */}
+                {labRecordsLoading ? (
+                  <div className="text-center py-6 mt-6 border-t border-gray-100">
+                    <div className="animate-spin h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">Loading lab tests...</p>
+                  </div>
+                ) : labRecords && labRecords.length > 0 ? (
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                      <SparklesIcon className="h-7 w-7 text-purple-500" />
+                      Completed Lab Tests
+                    </h3>
+                    <div className="space-y-4">
+                      {labRecords.map((test, index) => (
+                        <div key={`lab-${index}`} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <span className={`px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800`}>
+                                  {test.recordType === 'ordered' ? 'Self-Ordered' : 'Prescribed'}
+                                </span>
+                                <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
+                                  {new Date(test.date).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </span>
+                                <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full uppercase tracking-wider">
+                                  {test.status.replace('_', ' ')}
+                                </span>
+                              </div>
+                              <h4 className="font-bold text-gray-900 text-lg mb-2">
+                                {test.recordType === 'ordered' ? 
+                                  (test.testDetails?.map((t: any) => t.name).join(', ') || 'Lab Test Order') : 
+                                  test.name}
+                              </h4>
+                              {test.doctorName && test.doctorName !== 'Unknown Doctor' && (
+                                <p className="text-sm text-gray-600 flex items-center gap-2">
+                                  <UserIcon className="h-4 w-4 text-purple-500" />
+                                  Ordered by: {test.doctorName}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 ml-6">
+                              {(() => {
+                                let reportUrl = test.testReports?.[0]?.path;
+                                if (!reportUrl && test.resultUrl) {
+                                  try {
+                                    reportUrl = test.resultUrl.startsWith('[') ? JSON.parse(test.resultUrl)[0]?.path : test.resultUrl;
+                                  } catch (e) {
+                                    reportUrl = test.resultUrl;
+                                  }
+                                }
+                                return reportUrl ? (
+                                  <a 
+                                    href={reportUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-purple-600 hover:text-purple-800 text-sm px-4 py-2 rounded-xl hover:bg-purple-100 transition-all duration-300 font-medium hover:shadow-md animate-pulse"
+                                  >
+                                    <ArrowDownTrayIcon className="h-4 w-4" />
+                                    View Report
+                                  </a>
+                                ) : (
+                                  <span className="text-sm text-gray-400 italic flex items-center gap-1">
+                                    <ClockIcon className="h-4 w-4" />
+                                    No file attached
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="mt-8 flex justify-end">
                   <button
