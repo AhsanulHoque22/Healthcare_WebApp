@@ -164,8 +164,8 @@ const Patients: React.FC = () => {
   useEffect(() => {
     if (patients && patients.length > 0) {
       patients.forEach(async (patient) => {
-        if (patientSummaries[patient.id]) return; // already cached
         try {
+          // Always fetch fresh to detect new criticalities
           const res = await API.get(`/patients/${patient.id}/medical-summary`);
           const summary = res.data?.data?.summary;
           if (summary) {
@@ -186,6 +186,8 @@ const Patients: React.FC = () => {
       return res.data?.data?.summary;
     },
     enabled: !!selectedPatient?.id && showMedicalRecords && activeRecordsTab === 'summary',
+    staleTime: 0, // Always fetch fresh
+    refetchOnWindowFocus: true
   });
 
   // Alert mutation

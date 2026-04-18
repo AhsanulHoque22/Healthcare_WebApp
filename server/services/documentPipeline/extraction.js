@@ -55,15 +55,19 @@ async function extractTextFromURL(url) {
 
             console.log(`[Extraction] API matched resource: Type=${resource.type}, Version=${resource.version}`);
 
-            // Use the utility specifically designed for secure downloads
-            const signedUrl = cloudinary.utils.private_download_url(publicId, extension, {
-              resource_type: resourceType,
-              type: resource.type,
-              version: resource.version,
-              expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour
+            // Manual signature generation as a robust fallback
+            const timestamp = Math.floor(Date.now() / 1000);
+            const signature = cloudinary.utils.sign_request({
+              timestamp: timestamp,
+              public_id: publicId,
+              version: resource.version
             });
+
+            // Construct the URL manually with query parameters for signing
+            // Format: https://res.cloudinary.com/<cloud_name>/<resource_type>/<type>/v<version>/<public_id>.<extension>?api_key=<api_key>&timestamp=<timestamp>&signature=<signature>
+            const signedUrl = `https://res.cloudinary.com/${cloudinary.config().cloud_name}/${resourceType}/${resource.type}/v${resource.version}/${publicId}.${extension}?api_key=${cloudinary.config().api_key}&timestamp=${timestamp}&signature=${signature.signature}`;
             
-            console.log(`[Extraction] Retrying with private_download_url: ${signedUrl.substring(0, 100)}...`);
+            console.log(`[Extraction] Retrying with manually signed URL: ${signedUrl}`);
             const signedResponse = await axios.get(signedUrl, { responseType: 'arraybuffer' });
             buffer = Buffer.from(signedResponse.data);
             contentType = signedResponse.headers['content-type'] || '';
