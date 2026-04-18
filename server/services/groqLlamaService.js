@@ -3,12 +3,12 @@ const axios = require('axios');
 const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const LLAMA_MODELS = Object.freeze({
-  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'mixtral-8x7b-32768',
-  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'mixtral-8x7b-32768',
+  documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'llama-3.3-70b-versatile',
+  patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'llama-3.1-8b-instant',
   documentVision: process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview',
   // Fallback models for when rate limits are hit
-  documentExtractionSmall: 'llama-3.2-11b-text-preview',
-  patientInsightSmall: 'llama-3.2-11b-text-preview'
+  documentExtractionSmall: 'llama-3.1-8b-instant',
+  patientInsightSmall: 'llama-3.1-8b-instant'
 });
 
 const MODEL_VERSIONS = Object.freeze({

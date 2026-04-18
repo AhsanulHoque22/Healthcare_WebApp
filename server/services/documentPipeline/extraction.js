@@ -29,8 +29,11 @@ async function extractTextFromURL(url) {
       return text;
     }
   } catch (err) {
-    console.error(`[Pipeline] Failed to extract text from ${url}:`, err.message);
-    throw new Error("Extraction failed");
+    console.error(`[Pipeline Error] ${url}:`, err.message);
+    if (err.stack) {
+      console.error(err.stack.split('\n').slice(0, 3).join('\n'));
+    }
+    throw new Error(`Extraction failed: ${err.message}`);
   }
 }
 
