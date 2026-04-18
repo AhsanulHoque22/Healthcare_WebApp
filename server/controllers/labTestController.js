@@ -635,7 +635,7 @@ const uploadLabResults = async (req, res, next) => {
       
       await order.update({
         resultUrl: uploadedFiles.length > 0 ? uploadedFiles[0].path : order.resultUrl,
-        testReports: uploadedFiles,
+        testReports: [...(order.testReports || []), ...uploadedFiles],
         status: newStatus,
         notes: notes || order.notes
       });
@@ -1597,6 +1597,7 @@ const updatePrescriptionLabTestStatus = async (req, res, next) => {
 const uploadPrescriptionLabResults = async (req, res, next) => {
   try {
     const { testId } = req.params;
+    const { notes } = req.body;
     
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -1702,6 +1703,7 @@ const uploadPrescriptionLabResults = async (req, res, next) => {
           testFound.testReports = [];
         }
         testFound.testReports.push(...uploadedFiles);
+        if (notes) testFound.notes = notes;
         
         // Automatically determine status based on results and payments
         testFound.status = determineAutomaticStatus(testFound);

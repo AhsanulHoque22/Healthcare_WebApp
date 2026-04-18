@@ -157,7 +157,8 @@ const AdminLabReports: React.FC = () => {
   const [prescriptionStatusData, setPrescriptionStatusData] = useState({
     status: ''
   });
-  const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadNotes, setUploadNotes] = useState('');
   
   const queryClient = useQueryClient();
 
@@ -225,17 +226,13 @@ const AdminLabReports: React.FC = () => {
 
   // Upload results mutation
   const uploadResultsMutation = useMutation({
-    mutationFn: async ({ orderId, files, notes }: { orderId: number; files: FileList | null; notes: string }) => {
+    mutationFn: async ({ orderId, files, notes }: { orderId: number; files: File[]; notes: string }) => {
       const formData = new FormData();
       
-      // Handle multiple files or single file
       if (files && files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          if (file) {
-            formData.append('files', file);
-          }
-        }
+        files.forEach(file => {
+          formData.append('files', file);
+        });
       }
       
       if (notes) formData.append('notes', notes);
@@ -248,7 +245,9 @@ const AdminLabReports: React.FC = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-lab-orders'] });
       toast.success(data.message || 'Lab results uploaded successfully');
-      setUploadedFiles(null);
+      setUploadedFiles([]);
+      setShowPrescriptionUploadModal(false);
+      setUploadNotes('');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to upload results');
@@ -292,15 +291,14 @@ const AdminLabReports: React.FC = () => {
   });
 
   const uploadPrescriptionResultsMutation = useMutation({
-    mutationFn: async ({ testId, files }: { testId: string; files: FileList }) => {
+    mutationFn: async ({ testId, files, notes }: { testId: string; files: File[]; notes?: string }) => {
       const formData = new FormData();
       
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file) {
-          formData.append('files', file);
-        }
-      }
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
+      if (notes) formData.append('notes', notes);
       
       const response = await API.post(`/admin/prescription-lab-tests/${testId}/upload-results`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -314,7 +312,8 @@ const AdminLabReports: React.FC = () => {
       });
       toast.success('Test results uploaded successfully');
       setShowPrescriptionUploadModal(false);
-      setUploadedFiles(null);
+      setUploadedFiles([]);
+      setUploadNotes('');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to upload results');
@@ -1073,18 +1072,27 @@ const AdminLabReports: React.FC = () => {
 
   // Prescription lab test handlers
 
-  const handleUploadPrescriptionResults = (test: PrescriptionLabTest) => {
+  const handleUploadPrescriptionResults = (test: any) => {
     setSelectedPrescriptionTest(test);
-    setUploadedFiles(null);
+    setUploadedFiles([]);
+    setUploadNotes('');
     setShowPrescriptionUploadModal(true);
   };
 
-
   const handlePrescriptionUploadSubmit = () => {
-    if (selectedPrescriptionTest && uploadedFiles && uploadedFiles.length > 0) {
+    if (!selectedPrescriptionTest || uploadedFiles.length === 0) return;
+
+    if (selectedPrescriptionTest.type === 'prescription') {
       uploadPrescriptionResultsMutation.mutate({
         testId: selectedPrescriptionTest.id,
-        files: uploadedFiles
+        files: uploadedFiles,
+        notes: uploadNotes
+      });
+    } else {
+      uploadResultsMutation.mutate({
+        orderId: selectedPrescriptionTest.id,
+        files: uploadedFiles,
+        notes: uploadNotes
       });
     }
   };
@@ -2183,80 +2191,145 @@ const AdminLabReports: React.FC = () => {
 
       {/* Upload Results Modal for Prescription Lab Tests */}
       {showPrescriptionUploadModal && selectedPrescriptionTest && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Upload Test Results - {selectedPrescriptionTest.name}
-              </h3>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Result Files (Multiple files allowed)
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.dcm,.dicom,.nii,.nifti,.mhd,.raw,.img,.hdr,.vti,.vtp,.stl,.obj,.ply,.xyz,.txt,.csv,.xlsx,.xls,.doc,.docx,.rtf,.odt,.ods,.odp"
-                  onChange={(e) => setUploadedFiles(e.target.files)}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: PDF, Images (JPG, PNG, GIF, BMP, TIFF), DICOM, Medical imaging (NII, NIFTI, MHD), Documents (DOC, DOCX, XLS, XLSX), and more. Max size: 50MB per file
-                </p>
-              </div>
-
-              {uploadedFiles && uploadedFiles.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Selected Files ({uploadedFiles.length}):</h4>
-                    <button
-                      type="button"
-                      onClick={() => setUploadedFiles(null)}
-                      className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
-                    >
-                      <XCircleIcon className="h-3 w-3" />
-                      Clear All
-                    </button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="relative max-w-2xl w-full">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30"></div>
+            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 w-full overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-xl">
+                    <ArrowUpTrayIcon className="h-6 w-6 text-purple-600" />
                   </div>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {Array.from(uploadedFiles).map((file, index) => (
-                      <li key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                        <DocumentTextIcon className="h-4 w-4 text-blue-500" />
-                        <span className="flex-1 truncate">{file.name}</span>
-                        <span className="text-gray-400 text-xs">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newFiles = Array.from(uploadedFiles).filter((_, i) => i !== index);
-                            const newFileList = new DataTransfer();
-                            newFiles.forEach(file => newFileList.items.add(file));
-                            setUploadedFiles(newFileList.files.length > 0 ? newFileList.files : null);
-                          }}
-                          className="ml-2 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
-                          title="Remove file"
-                        >
-                          <XCircleIcon className="h-4 w-4" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Upload Test Results</h3>
+                    <p className="text-sm text-gray-500 font-medium">{selectedPrescriptionTest.name}</p>
+                  </div>
                 </div>
-              )}
-
-              <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowPrescriptionUploadModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6 text-gray-400" />
+                </button>
+              </div>
+              
+              <div className="overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                {/* File Upload Area */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-bold text-gray-700">
+                    Select Result Documents
+                  </label>
+                  <div 
+                    className="relative group border-2 border-dashed border-purple-200 rounded-2xl p-8 transition-all duration-300 hover:border-purple-400 hover:bg-purple-50/50 cursor-pointer text-center"
+                    onClick={() => document.getElementById('file-upload-input')?.click()}
+                  >
+                    <input
+                      id="file-upload-input"
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.dcm,.dicom,.nii,.nifti,.mhd,.raw,.img,.hdr,.vti,.vtp,.stl,.obj,.ply,.xyz,.txt,.csv,.xlsx,.xls,.doc,.docx,.rtf,.odt,.ods,.odp"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          const newFiles = Array.from(e.target.files);
+                          setUploadedFiles(prev => [...prev, ...newFiles]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                        <DocumentDuplicateIcon className="h-8 w-8 text-purple-600" />
+                      </div>
+                      <p className="text-lg font-bold text-gray-900 mb-1">Click to select files</p>
+                      <p className="text-sm text-gray-500 font-medium">Multiple files supported (Max 50MB each)</p>
+                      <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-400 uppercase tracking-tighter">PDF</span>
+                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-400 uppercase tracking-tighter">IMAGES</span>
+                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-400 uppercase tracking-tighter">DICOM</span>
+                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-400 uppercase tracking-tighter">DOCS</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selected Files List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-4 animate-fade-in-up">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                        Selected Files ({uploadedFiles.length})
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFiles([])}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1.5 transition-colors"
+                      >
+                        <XCircleIcon className="h-4 w-4" />
+                        Remove All
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={`${file.name}-${index}`} className="flex items-center gap-4 p-4 bg-white/50 backdrop-blur-sm border border-white/40 rounded-2xl group transition-all hover:bg-white hover:shadow-md">
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <DocumentTextIcon className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-900 truncate">{file.name}</p>
+                            <p className="text-xs text-gray-500 font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-gray-700">
+                    Additional Notes (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={uploadNotes}
+                    onChange={(e) => setUploadNotes(e.target.value)}
+                    className="w-full px-4 py-3 border border-purple-200 rounded-2xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all resize-none font-medium"
+                    placeholder="Add any additional information about these reports..."
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 mt-8 pt-6 border-t border-gray-100 flex-shrink-0">
+                <button
+                  onClick={() => setShowPrescriptionUploadModal(false)}
+                  className="flex-1 px-6 py-3.5 border border-gray-200 rounded-2xl text-gray-700 font-bold hover:bg-gray-50 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePrescriptionUploadSubmit}
-                  disabled={!uploadedFiles || uploadedFiles.length === 0 || uploadPrescriptionResultsMutation.isPending}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
+                  disabled={uploadedFiles.length === 0 || uploadResultsMutation.isPending || uploadPrescriptionResultsMutation.isPending}
+                  className="flex-[2] px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-purple-200"
                 >
-                  {uploadPrescriptionResultsMutation.isPending ? 'Uploading...' : 'Upload Results'}
+                  {uploadResultsMutation.isPending || uploadPrescriptionResultsMutation.isPending ? (
+                    <div className="flex items-center justify-center gap-2">
+                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                       <span>Uploading...</span>
+                    </div>
+                  ) : (
+                    "Confirm Upload"
+                  )}
                 </button>
               </div>
             </div>
