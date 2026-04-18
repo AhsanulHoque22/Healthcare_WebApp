@@ -3,6 +3,8 @@ const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const path = require('path');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { createNotification } = require('../services/notificationService');
+const { sendEmail } = require('../services/emailService');
 
 // Get all doctors (public endpoint)
 const getAllDoctors = async (req, res, next) => {
@@ -560,6 +562,149 @@ const uploadProfileImage = async (req, res, next) => {
   }
 };
 
+// Send a critical health alert to a patient
+const sendPatientAlert = async (req, res, next) => {
+  try {
+    const { patientId } = req.params;
+    const { urgency, message, action, subject } = req.body;
+
+    if (!message || !urgency) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message and urgency level are required'
+      });
+    }
+
+    // Validate urgency
+    const validUrgency = ['routine', 'urgent', 'critical'];
+    if (!validUrgency.includes(urgency)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid urgency level. Must be: routine, urgent, or critical'
+      });
+    }
+
+    // Find doctor profile
+    const doctor = await Doctor.findOne({
+      where: { userId: req.user.id },
+      include: [{ association: 'user', attributes: ['firstName', 'lastName', 'email'] }]
+    });
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+    }
+
+    // Find patient and their user
+    const patient = await Patient.findByPk(patientId, {
+      include: [{ association: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] }]
+    });
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    const doctorName = `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`;
+    const patientName = `${patient.user.firstName} ${patient.user.lastName}`;
+
+    // Map urgency to notification type
+    const notifType = urgency === 'critical' ? 'error' : urgency === 'urgent' ? 'warning' : 'info';
+
+    // Action label mapping
+    const actionLabels = {
+      follow_up: 'Schedule a Follow-up',
+      admission: 'Immediate Admission Required',
+      medication_change: 'Medication Adjustment Needed',
+      monitoring: 'Increased Monitoring Advised'
+    };
+    const actionLabel = actionLabels[action] || action || '';
+
+    const notifTitle = urgency === 'critical'
+      ? `🚨 CRITICAL ALERT from ${doctorName}`
+      : urgency === 'urgent'
+        ? `⚠️ Urgent Message from ${doctorName}`
+        : `📋 Message from ${doctorName}`;
+
+    const notifMessage = `${message}${actionLabel ? `\n\nRecommended Action: ${actionLabel}` : ''}`;
+
+    // 1. Create in-app notification for the patient
+    await createNotification({
+      userId: patient.user.id,
+      title: notifTitle,
+      message: notifMessage,
+      type: notifType,
+      targetRole: 'patient',
+      actionType: `doctor_alert_${urgency}`,
+      entityId: doctor.id,
+      entityType: 'doctor'
+    });
+
+    // 2. Send email to the patient
+    const urgencyColors = {
+      critical: '#DC2626',
+      urgent: '#F59E0B',
+      routine: '#3B82F6'
+    };
+    const urgencyBg = {
+      critical: '#FEF2F2',
+      urgent: '#FFFBEB',
+      routine: '#EFF6FF'
+    };
+
+    const emailSubject = subject || notifTitle.replace(/[🚨⚠️📋] /g, '');
+
+    const emailHtml = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+      <div style="background: linear-gradient(135deg, ${urgencyColors[urgency]}, ${urgency === 'critical' ? '#991B1B' : urgency === 'urgent' ? '#D97706' : '#1D4ED8'}); padding: 32px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">Livora Healthcare</h1>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px;">Doctor Health Advisory</p>
+      </div>
+      <div style="padding: 32px;">
+        <div style="background: ${urgencyBg[urgency]}; border-left: 4px solid ${urgencyColors[urgency]}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+          <p style="margin: 0; font-weight: 700; color: ${urgencyColors[urgency]}; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+            ${urgency} Priority
+          </p>
+        </div>
+        <p style="color: #374151; font-size: 16px;">Dear <strong>${patientName}</strong>,</p>
+        <p style="color: #374151; font-size: 15px; line-height: 1.6;"> ${message}</p>
+        ${actionLabel ? `
+        <div style="background: #F3F4F6; padding: 16px; border-radius: 8px; margin: 24px 0;">
+          <p style="margin: 0; font-size: 14px; color: #6B7280;">Recommended Action:</p>
+          <p style="margin: 8px 0 0; font-weight: 700; font-size: 16px; color: #111827;">${actionLabel}</p>
+        </div>
+        ` : ''}
+        <p style="color: #6B7280; font-size: 14px; margin-top: 24px;">This message was sent by <strong>${doctorName}</strong>. Please log into your Livora account for more details or contact the clinic directly.</p>
+      </div>
+      <div style="background: #F9FAFB; padding: 20px 32px; text-align: center; border-top: 1px solid #E5E7EB;">
+        <p style="margin: 0; color: #9CA3AF; font-size: 12px;">Livora Healthcare • www.livora-health.app</p>
+      </div>
+    </div>
+    `;
+
+    try {
+      await sendEmail({
+        to: patient.user.email,
+        subject: emailSubject,
+        html: emailHtml
+      });
+      console.log(`✅ Alert email sent to ${patient.user.email} from ${doctorName}`);
+    } catch (emailErr) {
+      console.error('❌ Failed to send alert email:', emailErr.message);
+      // Don't fail the whole request if email fails - notification was still created
+    }
+
+    res.json({
+      success: true,
+      message: `Health alert sent to ${patientName} successfully`,
+      data: {
+        urgency,
+        action: actionLabel,
+        patientName,
+        emailSent: true
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllDoctors,
   getDoctorProfile,
@@ -570,5 +715,6 @@ module.exports = {
   getDoctorAppointments,
   updateAppointmentStatus,
   getDoctorPatients,
-  getDoctorDashboardStats
+  getDoctorDashboardStats,
+  sendPatientAlert
 };

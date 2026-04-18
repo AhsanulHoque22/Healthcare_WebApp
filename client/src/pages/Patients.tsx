@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import API from '../api/api';
 import { 
   UserGroupIcon, 
@@ -22,7 +22,13 @@ import {
   IdentificationIcon,
   MapPinIcon,
   MagnifyingGlassIcon,
-  SparklesIcon
+  SparklesIcon,
+  BeakerIcon,
+  BellAlertIcon,
+  EnvelopeIcon,
+  FireIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
@@ -115,16 +121,21 @@ interface PrescriptionData {
 
 const Patients: React.FC = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showMedicalRecords, setShowMedicalRecords] = useState(false);
-  const [activeRecordsTab, setActiveRecordsTab] = useState<'appointments' | 'labtests'>('appointments');
+  const [activeRecordsTab, setActiveRecordsTab] = useState<'appointments' | 'labtests' | 'summary'>('appointments');
   const [selectedRecord, setSelectedRecord] = useState<AppointmentMedicalRecord | null>(null);
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
   const [showRecordDetail, setShowRecordDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageLoaded, setPageLoaded] = useState(false);
   const [isDownloading, setIsDownloading] = useState<number | null>(null);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertPatient, setAlertPatient] = useState<Patient | null>(null);
+  const [alertForm, setAlertForm] = useState({ urgency: 'routine', message: '', action: 'follow_up' });
+  const [patientSummaries, setPatientSummaries] = useState<Record<number, any>>({});
 
   const [searchParams] = useSearchParams();
   const patientIdFromURL = searchParams.get('patientId');
@@ -148,6 +159,61 @@ const Patients: React.FC = () => {
     },
     enabled: !!doctorProfile?.id,
   });
+
+  // Fetch medical summaries for all patients to detect criticalities
+  useEffect(() => {
+    if (patients && patients.length > 0) {
+      patients.forEach(async (patient) => {
+        if (patientSummaries[patient.id]) return; // already cached
+        try {
+          const res = await API.get(`/patients/${patient.id}/medical-summary`);
+          const summary = res.data?.data?.summary;
+          if (summary) {
+            setPatientSummaries((prev) => ({ ...prev, [patient.id]: summary }));
+          }
+        } catch (err) {
+          // Silently handle — not every patient has summary
+        }
+      });
+    }
+  }, [patients]);
+
+  // Medical summary for selected patient (Records modal)
+  const { data: selectedPatientSummary, isLoading: summaryLoading } = useQuery<any>({
+    queryKey: ['patient-medical-summary', selectedPatient?.id],
+    queryFn: async () => {
+      const res = await API.get(`/patients/${selectedPatient?.id}/medical-summary`);
+      return res.data?.data?.summary;
+    },
+    enabled: !!selectedPatient?.id && showMedicalRecords && activeRecordsTab === 'summary',
+  });
+
+  // Alert mutation
+  const alertMutation = useMutation({
+    mutationFn: async (data: { patientId: number; urgency: string; message: string; action: string }) => {
+      const res = await API.post(`/doctors/patients/${data.patientId}/alert`, data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Alert sent successfully!');
+      setShowAlertModal(false);
+      setAlertForm({ urgency: 'routine', message: '', action: 'follow_up' });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to send alert');
+    }
+  });
+
+  // Helper to detect criticality from a patient summary
+  const getPatientCriticality = (patientId: number): 'Normal' | 'Caution' | 'Critical' | null => {
+    const summary = patientSummaries[patientId];
+    if (!summary) return null;
+    if (summary.llamaClinicalInsight?.overallStatus === 'Critical') return 'Critical';
+    if (summary.llamaClinicalInsight?.overallStatus === 'Caution') return 'Caution';
+    if (summary.allLabResultsSummary?.criticalCount > 0) return 'Critical';
+    if (summary.allLabResultsSummary?.cautionCount > 0) return 'Caution';
+    return 'Normal';
+  };
 
   // Filter patients based on search term
   const filteredPatients = patients?.filter((patient) => {
@@ -655,7 +721,45 @@ const Patients: React.FC = () => {
                       <DocumentTextIcon className="h-4 w-4" />
                       Records
                     </button>
+                    <button
+                      onClick={() => {
+                        setAlertPatient(patient);
+                        setShowAlertModal(true);
+                      }}
+                      className="px-3 py-3 bg-gradient-to-r from-rose-500 to-red-500 text-white text-sm rounded-xl hover:from-rose-600 hover:to-red-600 transition-all duration-300 hover:shadow-lg font-medium flex items-center gap-1"
+                      title="Send Health Alert"
+                    >
+                      <BellAlertIcon className="h-4 w-4" />
+                    </button>
                   </div>
+
+                  {/* Distress Signal Badge */}
+                  {(() => {
+                    const criticality = getPatientCriticality(patient.id);
+                    if (criticality === 'Critical') {
+                      return (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-50"></div>
+                            <div className="relative w-7 h-7 bg-gradient-to-r from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                              <ExclamationTriangleIcon className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (criticality === 'Caution') {
+                      return (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          <div className="w-7 h-7 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                            <ExclamationTriangleIcon className="h-4 w-4 text-white" />
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   </div>
                 </div>
               ))}
@@ -964,6 +1068,17 @@ const Patients: React.FC = () => {
                     <SparklesIcon className="h-4 w-4" />
                     Lab Tests
                   </button>
+                  <button
+                    onClick={() => setActiveRecordsTab('summary')}
+                    className={`flex-1 flex justify-center items-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                      activeRecordsTab === 'summary'
+                        ? 'bg-white text-indigo-600 shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-200/50 hover:text-gray-700'
+                    }`}
+                  >
+                    <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                    Medical Summary
+                  </button>
                 </div>
 
                 {activeRecordsTab === 'appointments' && (
@@ -1157,6 +1272,206 @@ const Patients: React.FC = () => {
                         <p className="text-gray-500 text-sm mt-2">
                           Lab test records will appear here once they are processed.
                         </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Medical Summary Tab */}
+                {activeRecordsTab === 'summary' && (
+                  <>
+                    {summaryLoading ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                          <ClipboardDocumentCheckIcon className="h-8 w-8 text-white" />
+                        </div>
+                        <p className="text-gray-600 text-lg">Running clinical analysis...</p>
+                      </div>
+                    ) : selectedPatientSummary ? (
+                      <div className="space-y-6">
+                        {/* Clinical Insight */}
+                        {selectedPatientSummary.llamaClinicalInsight && (
+                          <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 shadow-sm">
+                            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                              <div>
+                                <div className="mb-2 flex items-center gap-2">
+                                  <div className="rounded-md bg-violet-600 p-1 text-white">
+                                    <FireIcon className="h-4 w-4" />
+                                  </div>
+                                  <h4 className="text-md font-bold uppercase tracking-wider text-violet-900">Clinical Insight</h4>
+                                </div>
+                                <p className="text-sm text-violet-700">
+                                  Deep reconciliation across prescriptions, lab reports, and uploaded records.
+                                </p>
+                              </div>
+                              <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold ${
+                                selectedPatientSummary.llamaClinicalInsight.overallStatus === 'Critical'
+                                  ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                                  : selectedPatientSummary.llamaClinicalInsight.overallStatus === 'Caution'
+                                    ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                    : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              }`}>
+                                {selectedPatientSummary.llamaClinicalInsight.overallStatus}
+                              </span>
+                            </div>
+                            <p className="mb-4 rounded-xl border border-violet-100 bg-white/80 p-4 text-sm font-medium leading-relaxed text-gray-700">
+                              {selectedPatientSummary.llamaClinicalInsight.summary}
+                            </p>
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                              <div className="rounded-xl bg-white/80 p-4">
+                                <h5 className="mb-2 text-sm font-semibold text-emerald-700">Improved</h5>
+                                {selectedPatientSummary.llamaClinicalInsight.improved?.length ? (
+                                  <ul className="space-y-2 text-sm text-gray-700">
+                                    {selectedPatientSummary.llamaClinicalInsight.improved.map((item: string, idx: number) => (
+                                      <li key={idx} className="rounded-lg bg-emerald-50 px-3 py-2">{item}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-sm italic text-gray-500">No clear improvement trend.</p>
+                                )}
+                              </div>
+                              <div className="rounded-xl bg-white/80 p-4">
+                                <h5 className="mb-2 text-sm font-semibold text-amber-700">Needs Attention</h5>
+                                {selectedPatientSummary.llamaClinicalInsight.worsened?.length ? (
+                                  <ul className="space-y-2 text-sm text-gray-700">
+                                    {selectedPatientSummary.llamaClinicalInsight.worsened.map((item: string, idx: number) => (
+                                      <li key={idx} className="rounded-lg bg-amber-50 px-3 py-2">{item}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-sm italic text-gray-500">No worsening trend flagged.</p>
+                                )}
+                              </div>
+                              <div className="rounded-xl bg-white/80 p-4">
+                                <h5 className="mb-2 text-sm font-semibold text-blue-700">Follow-up Considerations</h5>
+                                {selectedPatientSummary.llamaClinicalInsight.followUpConsiderations?.length ? (
+                                  <ul className="space-y-2 text-sm text-gray-700">
+                                    {selectedPatientSummary.llamaClinicalInsight.followUpConsiderations.map((item: string, idx: number) => (
+                                      <li key={idx} className="rounded-lg bg-blue-50 px-3 py-2">{item}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-sm italic text-gray-500">No specific follow-up flagged.</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Lab Results Summary */}
+                        {selectedPatientSummary.allLabResultsSummary && (
+                          <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                            <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                              <BeakerIcon className="h-5 w-5 text-purple-600" /> Lab Results Overview
+                            </h4>
+                            <div className="grid grid-cols-2 gap-3 md:grid-cols-5 mb-4">
+                              <div className="rounded-xl bg-slate-50 p-3 text-center">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reports</p>
+                                <p className="text-lg font-bold text-slate-900">{selectedPatientSummary.allLabResultsSummary.totalReports}</p>
+                              </div>
+                              <div className="rounded-xl bg-blue-50 p-3 text-center">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Findings</p>
+                                <p className="text-lg font-bold text-blue-900">{selectedPatientSummary.allLabResultsSummary.totalFindings}</p>
+                              </div>
+                              <div className="rounded-xl bg-rose-50 p-3 text-center">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Critical</p>
+                                <p className="text-lg font-bold text-rose-900">{selectedPatientSummary.allLabResultsSummary.criticalCount}</p>
+                              </div>
+                              <div className="rounded-xl bg-amber-50 p-3 text-center">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Caution</p>
+                                <p className="text-lg font-bold text-amber-900">{selectedPatientSummary.allLabResultsSummary.cautionCount}</p>
+                              </div>
+                              <div className="rounded-xl bg-emerald-50 p-3 text-center">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Normal</p>
+                                <p className="text-lg font-bold text-emerald-900">{selectedPatientSummary.allLabResultsSummary.normalCount}</p>
+                              </div>
+                            </div>
+                            {selectedPatientSummary.allLabResultsSummary.highlightedFindings?.length > 0 && (
+                              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                                <h5 className="mb-3 text-sm font-semibold text-gray-900">Highlighted Findings</h5>
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                  {selectedPatientSummary.allLabResultsSummary.highlightedFindings.map((finding: any, idx: number) => (
+                                    <div key={idx} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+                                      <div className="mb-2 flex items-center justify-between gap-2">
+                                        <span className="text-sm font-semibold text-gray-900">{finding.test}</span>
+                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                          finding.status === 'Critical' ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                                            : finding.status === 'Caution' ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                              : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                        }`}>
+                                          {finding.status}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm font-medium text-gray-800">
+                                        {finding.value} {finding.unit}
+                                      </p>
+                                      {finding.referenceRange && (
+                                        <p className="text-xs text-gray-500">Reference: {finding.referenceRange}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Diagnoses & Symptoms */}
+                        {(selectedPatientSummary.summarizedDiagnoses?.length > 0 || selectedPatientSummary.recentSymptoms?.length > 0) && (
+                          <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                            <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                              <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600" /> Recent Medical Findings
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
+                                {selectedPatientSummary.summarizedDiagnoses?.length > 0 ? (
+                                  <ul className="space-y-2">
+                                    {selectedPatientSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
+                                      <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm">
+                                        {typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || JSON.stringify(diag)) : diag}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : <p className="text-sm text-gray-500 italic">No recent diagnoses.</p>}
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms</h5>
+                                {selectedPatientSummary.recentSymptoms?.length > 0 ? (
+                                  <ul className="space-y-2">
+                                    {selectedPatientSummary.recentSymptoms.map((symp: any, idx: number) => (
+                                      <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
+                                        {typeof symp === 'object' ? (symp?.symptom || symp?.name || JSON.stringify(symp)) : symp}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : <p className="text-sm text-gray-500 italic">No recent symptoms.</p>}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick Alert Action from Summary */}
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => {
+                              setAlertPatient(selectedPatient);
+                              setShowAlertModal(true);
+                            }}
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl hover:from-rose-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
+                          >
+                            <BellAlertIcon className="h-5 w-5" />
+                            Send Health Alert to Patient
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <ClipboardDocumentCheckIcon className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-600 text-lg">No medical summary available for this patient yet.</p>
+                        <p className="text-gray-500 text-sm mt-2">Summary will be generated after lab reports and documents are processed.</p>
                       </div>
                     )}
                   </>
@@ -1416,6 +1731,143 @@ const Patients: React.FC = () => {
                     className="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-sm hover:shadow-lg font-medium"
                   >
                     Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Send Health Alert Modal */}
+        {showAlertModal && alertPatient && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl max-w-lg w-full shadow-2xl border border-white/20 overflow-hidden">
+              {/* Header */}
+              <div className={`p-6 text-white ${
+                alertForm.urgency === 'critical' ? 'bg-gradient-to-r from-red-600 to-rose-700' :
+                alertForm.urgency === 'urgent' ? 'bg-gradient-to-r from-amber-500 to-orange-600' :
+                'bg-gradient-to-r from-blue-500 to-indigo-600'
+              } transition-all duration-500`}>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <BellAlertIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold">Send Health Alert</h2>
+                      <p className="text-white/80 text-sm">
+                        To: {alertPatient.user.firstName} {alertPatient.user.lastName}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAlertModal(false);
+                      setAlertForm({ urgency: 'routine', message: '', action: 'follow_up' });
+                    }}
+                    className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Urgency Level */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Priority Level</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'routine', label: 'Routine', icon: '📋', color: 'border-blue-300 bg-blue-50 text-blue-700', active: 'border-blue-500 bg-blue-100 ring-2 ring-blue-200' },
+                      { value: 'urgent', label: 'Urgent', icon: '⚠️', color: 'border-amber-300 bg-amber-50 text-amber-700', active: 'border-amber-500 bg-amber-100 ring-2 ring-amber-200' },
+                      { value: 'critical', label: 'Critical', icon: '🚨', color: 'border-red-300 bg-red-50 text-red-700', active: 'border-red-500 bg-red-100 ring-2 ring-red-200' }
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setAlertForm({ ...alertForm, urgency: opt.value })}
+                        className={`p-3 rounded-xl border-2 text-center transition-all duration-300 ${
+                          alertForm.urgency === opt.value ? opt.active : opt.color + ' hover:shadow-md'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">{opt.icon}</span>
+                        <span className="text-sm font-bold">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recommended Action */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Recommended Action</label>
+                  <select
+                    value={alertForm.action}
+                    onChange={(e) => setAlertForm({ ...alertForm, action: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 transition-all duration-300"
+                  >
+                    <option value="follow_up">📅 Schedule a Follow-up</option>
+                    <option value="admission">🏥 Immediate Admission Required</option>
+                    <option value="medication_change">💊 Medication Adjustment Needed</option>
+                    <option value="monitoring">👁️ Increased Monitoring Advised</option>
+                  </select>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Message to Patient</label>
+                  <textarea
+                    value={alertForm.message}
+                    onChange={(e) => setAlertForm({ ...alertForm, message: e.target.value })}
+                    rows={4}
+                    placeholder="Describe the findings and your recommendation..."
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400 transition-all duration-300 resize-none"
+                  />
+                </div>
+
+                {/* Delivery note */}
+                <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3 border border-gray-100">
+                  <EnvelopeIcon className="h-5 w-5 text-indigo-500 flex-shrink-0" />
+                  <p className="text-xs text-gray-600">
+                    This alert will be sent as both an <strong>in-app notification</strong> and an <strong>email</strong> to the patient.
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowAlertModal(false);
+                      setAlertForm({ urgency: 'routine', message: '', action: 'follow_up' });
+                    }}
+                    className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!alertForm.message.trim()) {
+                        toast.error('Please write a message to the patient');
+                        return;
+                      }
+                      alertMutation.mutate({
+                        patientId: alertPatient.id,
+                        urgency: alertForm.urgency,
+                        message: alertForm.message,
+                        action: alertForm.action
+                      });
+                    }}
+                    disabled={alertMutation.isPending}
+                    className={`flex-1 px-6 py-3 text-white rounded-xl transition-all duration-300 font-medium flex items-center justify-center gap-2 ${
+                      alertForm.urgency === 'critical' ? 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700' :
+                      alertForm.urgency === 'urgent' ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' :
+                      'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                    } ${alertMutation.isPending ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-lg'}`}
+                  >
+                    {alertMutation.isPending ? (
+                      <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <BellAlertIcon className="h-5 w-5" />
+                    )}
+                    {alertMutation.isPending ? 'Sending...' : 'Send Alert'}
                   </button>
                 </div>
               </div>

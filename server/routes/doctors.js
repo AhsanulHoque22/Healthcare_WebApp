@@ -114,4 +114,7 @@ router.get('/:id/patients', authorizeRoles('doctor', 'admin'), doctorController.
 // Appointment management routes
 router.put('/appointments/:appointmentId', authorizeRoles('doctor', 'admin'), updateAppointmentValidation, doctorController.updateAppointmentStatus);
 
+// Doctor patient alert route
+router.post('/patients/:patientId/alert', authorizeRoles('doctor'), doctorController.sendPatientAlert);
+
 module.exports = router;
