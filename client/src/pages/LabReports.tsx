@@ -215,10 +215,11 @@ const LabReports: React.FC = () => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'ordered': return 'bg-slate-100 text-slate-800 border border-slate-300';
-      case 'approved': return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+      case 'approved': return 'bg-blue-100 text-blue-800 border border-blue-300';
       case 'sample_processing': return 'bg-purple-100 text-purple-800 border border-purple-300';
       case 'sample_taken': return 'bg-indigo-100 text-indigo-800 border border-indigo-300';
-      case 'reported': return 'bg-blue-100 text-blue-800 border border-blue-300';
+      case 'reported': return 'bg-amber-100 text-amber-800 border border-amber-300';
+      case 'completed': return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
       case 'confirmed': return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
       case 'cancelled': return 'bg-red-100 text-red-800 border border-red-300';
       default: return 'bg-gray-100 text-gray-800 border border-gray-300';
@@ -243,11 +244,12 @@ const LabReports: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'ordered': return <ClockIcon className="h-4 w-4" />;
-      case 'approved': return <CheckCircleIcon className="h-4 w-4" />;
+      case 'approved': return <CheckCircleIcon className="h-4 w-4 text-blue-500" />;
       case 'sample_processing': return <ArrowPathIcon className="h-4 w-4" />;
       case 'sample_taken': return <PlayIcon className="h-4 w-4" />;
-      case 'reported': return <ArrowDownTrayIcon className="h-4 w-4" />;
-      case 'confirmed': return <CheckCircleIcon className="h-4 w-4" />;
+      case 'reported': return <ArrowDownTrayIcon className="h-4 w-4 text-amber-500" />;
+      case 'completed': return <CheckCircleIcon className="h-4 w-4 text-emerald-500" />;
+      case 'confirmed': return <CheckCircleIcon className="h-4 w-4 text-emerald-500" />;
       default: return <ClockIcon className="h-4 w-4" />;
     }
   };
@@ -266,7 +268,7 @@ const LabReports: React.FC = () => {
     // Check if test has reports and is in a status where reports should be available
     const hasReports = (test.testReports && test.testReports.length > 0) || 
                       (test.type === 'ordered' && test.resultUrl);
-    const reportAvailableStatuses = ['reported', 'confirmed', 'results_ready', 'completed'];
+    const reportAvailableStatuses = ['reported', 'completed', 'confirmed', 'results_ready'];
     
     return hasReports && reportAvailableStatuses.includes(test.status);
   };
@@ -821,16 +823,11 @@ const LabReports: React.FC = () => {
                   <option value="">All Statuses</option>
                   <option value="ordered">Ordered</option>
                   <option value="approved">Approved</option>
-                  <option value="verified">Verified</option>
-                  <option value="payment_pending">Payment Pending</option>
-                  <option value="payment_partial">Partially Paid</option>
-                  <option value="paid">Paid</option>
-                  <option value="reported">Reported</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="sample_collected">Sample Collected</option>
-                  <option value="processing">Processing</option>
-                  <option value="results_ready">Results Ready</option>
+                  <option value="sample_processing">Sample Processing</option>
+                  <option value="sample_taken">Sample Taken</option>
+                  <option value="reported">Reported (Results Uploaded)</option>
                   <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
 

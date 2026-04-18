@@ -55,17 +55,13 @@ const LabTestOrder = sequelize.define('LabTestOrder', {
   },
   status: {
     type: DataTypes.ENUM(
-      'ordered',
-      'verified', 
-      'payment_pending',
-      'payment_partial',
-      'payment_completed',
-      'sample_collection_scheduled',
-      'sample_collected',
-      'processing',
-      'results_ready',
-      'completed',
-      'cancelled'
+      'ordered',          // Initial request
+      'approved',         // Admin reviewed and approved
+      'sample_processing', // In progress/Collecting sample
+      'sample_taken',      // Sample collected and in lab
+      'reported',          // Results uploaded (internal)
+      'completed',         // Results confirmed and sent to patient
+      'cancelled'          // Order cancelled
     ),
     defaultValue: 'ordered'
   },

@@ -13,26 +13,21 @@ const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Helper function to automatically determine test status based on payment and completion
 const determineAutomaticStatus = (test) => {
-  // This function determines TEST PROCESSING STATUS based on logical workflow
-  // Test processing statuses: ordered, approved, sample_processing, sample_taken, results_ready, confirmed
-  
-  // If test is confirmed (finalized), preserve this status
-  if (test.status === 'confirmed') {
-    return 'confirmed';
+  // If test is completed (finalized), maintain it
+  if (test.status === 'completed' || test.status === 'confirmed' || test.status === 'done' || test.status === 'finalized') {
+    return 'completed';
   }
   
-  // If test has results uploaded, it's results_ready (regardless of payment status)
+  // If results are uploaded, it's 'reported'
   if (test.testReports && test.testReports.length > 0) {
-    return 'results_ready';
+    return 'reported';
   }
   
-  // If test is manually set to specific processing statuses, maintain them
+  // Maintain current processing status if it's already beyond 'ordered'
   if (test.status && ['approved', 'sample_processing', 'sample_taken'].includes(test.status)) {
     return test.status;
   }
   
-  // For prescription tests, default status should be 'ordered' until admin approves
-  // This ensures proper workflow: ordered -> approved -> sample_processing -> sample_taken -> results_ready -> confirmed
   return 'ordered';
 };
 
@@ -485,7 +480,7 @@ const updateOrderStatus = async (req, res, next) => {
     if (expectedResultDate) updateData.expectedResultDate = expectedResultDate;
     
     // Set verification details for specific statuses
-    if (status === 'verified') {
+    if (status === 'approved' || status === 'verified') {
       updateData.verifiedAt = new Date();
       updateData.verifiedBy = req.user.id;
     }
@@ -515,6 +510,14 @@ const processOfflinePayment = async (req, res, next) => {
         message: 'Order not found'
       });
     }
+
+    // Check if test is approved
+    if (order.status === 'ordered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot process payment for unapproved orders. Please approve the test first.'
+      });
+    }
     
     // Create payment record
     const payment = await LabPayment.create({
@@ -531,17 +534,10 @@ const processOfflinePayment = async (req, res, next) => {
     const newPaidAmount = parseFloat(order.paidAmount) + parseFloat(amount);
     const newDueAmount = parseFloat(order.totalAmount) - newPaidAmount;
     
-    let newStatus = order.status;
-    if (newDueAmount <= 0) {
-      newStatus = 'payment_completed';
-    } else if (newPaidAmount > 0) {
-      newStatus = 'payment_partial';
-    }
-    
     await order.update({
       paidAmount: newPaidAmount,
       dueAmount: newDueAmount,
-      status: newStatus,
+      // Status is no longer automatically changed based on payment
       paymentMethod: order.paymentMethod === 'online' ? 'mixed' : 'offline'
     });
     
@@ -634,27 +630,15 @@ const uploadLabResults = async (req, res, next) => {
         });
       }
       
-      // Store files as JSON in resultUrl field for backward compatibility
-      // If testReports field exists, use it; otherwise use resultUrl
-      const updateData = {
-        status: 'results_ready',
-        notes: notes || order.notes
-      };
+      // Update order status based on results
+      const newStatus = 'reported';
       
-      // Try to use testReports field if it exists, otherwise use resultUrl
-      try {
-        await order.update({
-          ...updateData,
-          testReports: uploadedFiles,
-          resultUrl: uploadedFiles.length > 0 ? uploadedFiles[0].path : order.resultUrl
-        });
-      } catch (dbError) {
-        // Fallback to resultUrl only if testReports field doesn't exist
-        await order.update({
-          ...updateData,
-          resultUrl: uploadedFiles.length > 0 ? JSON.stringify(uploadedFiles) : order.resultUrl
-        });
-      }
+      await order.update({
+        resultUrl: uploadedFiles.length > 0 ? uploadedFiles[0].path : order.resultUrl,
+        testReports: uploadedFiles,
+        status: newStatus,
+        notes: notes || order.notes
+      });
 
       const orderWithPatient = await LabTestOrder.findByPk(orderId, {
         include: [{ association: 'patient', include: [{ association: 'user' }] }]
@@ -1832,10 +1816,16 @@ const processPrescriptionLabPayment = async (req, res, next) => {
           return { name: cleanName, description: '', status: 'ordered', testReports: [] };
         });
       }
-      const testIndex = tests.findIndex(t => t.name === testName);
-      
       if (testIndex !== -1) {
         testFound = tests[testIndex];
+        
+        // Check if test is approved
+        if (testFound.status === 'ordered') {
+          return res.status(400).json({
+            success: false,
+            message: 'Cannot process payment for unapproved tests. Please approve the test first.'
+          });
+        }
         
         // Update test payment status
         if (!testFound.payments) {
@@ -2101,9 +2091,9 @@ const confirmLabOrderReports = async (req, res, next) => {
       });
     }
 
-    // Update status to confirmed (finalized)
+    // Update status to completed (finalized)
     await order.update({
-      status: 'confirmed'
+      status: 'completed'
     });
 
     const orderWithPatient = await LabTestOrder.findByPk(orderId, {
@@ -2119,7 +2109,7 @@ const confirmLabOrderReports = async (req, res, next) => {
       message: 'Reports confirmed and sent to patient',
       data: {
         orderId: order.id,
-        status: 'confirmed'
+        status: 'completed'
       }
     });
   } catch (error) {
@@ -2140,11 +2130,11 @@ const revertLabOrderReports = async (req, res, next) => {
       });
     }
 
-    // Only allow reverting from confirmed status
-    if (order.status !== 'confirmed') {
+    // Only allow reverting from completed status
+    if (order.status !== 'completed' && order.status !== 'confirmed') {
       return res.status(400).json({
         success: false,
-        message: 'Can only revert from confirmed status'
+        message: 'Can only revert from completed status'
       });
     }
 
@@ -2213,11 +2203,11 @@ const revertPrescriptionLabTestReports = async (req, res, next) => {
 
     const test = tests[testIndex];
 
-    // Only allow reverting from confirmed status
-    if (test.status !== 'confirmed') {
+    // Only allow reverting from completed status
+    if (test.status !== 'completed' && test.status !== 'confirmed') {
       return res.status(400).json({
         success: false,
-        message: 'Can only revert from confirmed status'
+        message: 'Can only revert from completed status'
       });
     }
 
@@ -2314,8 +2304,8 @@ const confirmPrescriptionLabTestReports = async (req, res, next) => {
       });
     }
 
-    // Update test status to confirmed (finalized)
-    test.status = 'confirmed';
+    // Update test status to completed (finalized)
+    test.status = 'completed';
     tests[testIndex] = test;
 
     await prescription.update({
@@ -2337,7 +2327,7 @@ const confirmPrescriptionLabTestReports = async (req, res, next) => {
       data: {
         prescriptionId: prescription.id,
         testName: test.name,
-        status: 'confirmed'
+        status: 'completed'
       }
     });
   } catch (error) {
@@ -2811,6 +2801,14 @@ const recordCashPaymentForOrder = async (req, res, next) => {
       });
     }
 
+    // Check if test is approved
+    if (order.status === 'ordered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot record cash payment for unapproved orders. Please approve the test first.'
+      });
+    }
+
     // Validate amount
     const totalAmount = parseFloat(order.totalAmount || 0);
     const currentPaidAmount = parseFloat(order.paidAmount || 0);
@@ -2935,6 +2933,14 @@ const recordCashPaymentForPrescription = async (req, res, next) => {
       } catch (e) {
         console.log('Error fetching lab test price:', e.message);
       }
+    }
+
+    // Check if test is approved
+    if (testData.status === 'ordered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot record cash payment for unapproved tests. Please approve the test first.'
+      });
     }
 
     // Validate amount

@@ -552,7 +552,7 @@ const triggerLabOrderCreated = async (order, patient) => {
   await notifyUsers({
     userIds: patient?.userId || patient?.user?.id,
     title: 'Lab Test Order Placed',
-    message: `Your lab test order #${order.id} has been placed. Complete payment to proceed.`,
+    message: `Your lab test order #${order.id} has been placed. Awaiting admin approval.`,
     type: 'info',
     targetRole: 'patient',
     actionType: 'lab_order_created',
@@ -561,13 +561,13 @@ const triggerLabOrderCreated = async (order, patient) => {
     emailOptions: {
       subject: 'Lab Test Order Confirmed – Livora',
       html: buildEmailHtml('Lab Test Order Confirmed', `
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your lab test order has been successfully placed.</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 16px;">Your lab test order has been successfully placed and is awaiting admin approval.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#ebf8ff;border-left:4px solid #3182ce;border-radius:4px;padding:20px;margin:0 0 20px;">
           <tr><td style="padding:6px 0;color:#718096;font-size:14px;width:140px;">Order ID</td><td style="padding:6px 0;color:#2d3748;font-weight:600;">#${order.id}</td></tr>
           ${order.totalAmount ? `<tr><td style="padding:6px 0;color:#718096;font-size:14px;">Total Amount</td><td style="padding:6px 0;color:#2d3748;">৳${parseFloat(order.totalAmount).toFixed(2)}</td></tr>` : ''}
-          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Status</td><td style="padding:6px 0;color:#d97706;font-weight:600;">Awaiting Payment</td></tr>
+          <tr><td style="padding:6px 0;color:#718096;font-size:14px;">Status</td><td style="padding:6px 0;color:#d97706;font-weight:600;">Awaiting Approval</td></tr>
         </table>
-        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Please complete your payment through your Livora dashboard to proceed with sample collection. Our team will contact you once the payment is confirmed.</p>
+        <p style="color:#4a5568;line-height:1.7;margin:0 0 20px;">Once approved by our admin team, you will be able to complete your payment and proceed with sample collection.</p>
         <p style="color:#718096;font-size:14px;margin:0;">Best regards,<br/><strong>The Livora Team</strong></p>
       `)
     }

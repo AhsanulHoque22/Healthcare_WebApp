@@ -791,11 +791,11 @@ const AdminLabReports: React.FC = () => {
   const getStatusBadgeColor = (status: string) => {
     const colors = {
       'ordered': 'bg-slate-100 text-slate-800 border border-slate-300',
-      'approved': 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+      'approved': 'bg-blue-100 text-blue-800 border border-blue-300',
       'sample_processing': 'bg-purple-100 text-purple-800 border border-purple-300',
       'sample_taken': 'bg-indigo-100 text-indigo-800 border border-indigo-300',
-      'reported': 'bg-blue-100 text-blue-800 border border-blue-300',
-      'confirmed': 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+      'reported': 'bg-amber-100 text-amber-800 border border-amber-300',
+      'completed': 'bg-emerald-100 text-emerald-800 border border-emerald-300',
       'cancelled': 'bg-red-100 text-red-800 border border-red-300'
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border border-gray-300';
@@ -811,6 +811,7 @@ const AdminLabReports: React.FC = () => {
   };
 
   const formatStatus = (status: string) => {
+    if (!status) return 'N/A';
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -828,7 +829,7 @@ const AdminLabReports: React.FC = () => {
 
     tests.forEach(test => {
       console.log(`Processing test: ${test.name} with status: "${test.status}" (type: ${typeof test.status})`);
-      if (test.status === 'confirmed') {
+      if (test.status === 'completed' || test.status === 'confirmed') {
         categories.completed.push(test);
         console.log(`✅ Added ${test.name} to completed`);
       } else if (test.status === 'reported') {
@@ -1027,15 +1028,17 @@ const AdminLabReports: React.FC = () => {
             </button>
           )}
 
-          <button
-            onClick={() => handlePaymentProcessingClick(test)}
-            className="group relative px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-xl text-sm font-semibold hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 hover:shadow-md border border-blue-200/50 overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            <span className="relative z-10">Payment Processing</span>
-          </button>
+          {test.status !== 'ordered' && (
+            <button
+              onClick={() => handlePaymentProcessingClick(test)}
+              className="group relative px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-xl text-sm font-semibold hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 hover:shadow-md border border-blue-200/50 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <span className="relative z-10">Payment Processing</span>
+            </button>
+          )}
 
-          {(test.totalAmount || test.price || 0) > (test.paidAmount || 0) && (
+          {test.status !== 'ordered' && (test.totalAmount || test.price || 0) > (test.paidAmount || 0) && (
             <button
               onClick={() => handleCashPaymentClick(test)}
               className="group relative px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl text-sm font-semibold hover:from-orange-700 hover:to-red-700 transition-all duration-300 hover:shadow-lg overflow-hidden"
@@ -1061,15 +1064,7 @@ const AdminLabReports: React.FC = () => {
 
   // Prescription lab test helper functions
   const getPrescriptionStatusBadgeColor = (status: string) => {
-    const colors = {
-      'ordered': 'bg-gray-100 text-gray-800',
-      'approved': 'bg-blue-100 text-blue-800',
-      'paid': 'bg-green-100 text-green-800',
-      'done': 'bg-purple-100 text-purple-800',
-      'reported': 'bg-green-100 text-green-800',
-      'completed': 'bg-green-100 text-green-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return getStatusBadgeColor(status);
   };
 
   const formatPrescriptionStatus = (status: string) => {
@@ -1218,29 +1213,25 @@ const AdminLabReports: React.FC = () => {
 
   const getNextStatus = (currentStatus: string) => {
     const statusFlow = {
-      'ordered': 'verified',
-      'verified': 'payment_pending',
-      'payment_pending': 'payment_completed',
-      'payment_partial': 'payment_completed',
-      'payment_completed': 'sample_collection_scheduled',
-      'sample_collection_scheduled': 'sample_collected',
-      'sample_collected': 'processing',
-      'processing': 'results_ready',
-      'results_ready': 'completed'
+      'ordered': 'approved',
+      'approved': 'sample_processing',
+      'sample_processing': 'sample_taken',
+      'sample_taken': 'reported',
+      'reported': 'completed'
     };
     return statusFlow[currentStatus as keyof typeof statusFlow];
   };
 
   const canUpdateStatus = (status: string) => {
-    return ['ordered', 'verified', 'payment_completed', 'sample_collection_scheduled', 'sample_collected', 'processing'].includes(status);
+    return ['ordered', 'approved', 'sample_processing', 'sample_taken'].includes(status);
   };
 
   const canProcessPayment = (order: LabOrder) => {
-    return ['verified', 'payment_pending', 'payment_partial'].includes(order.status) && order.dueAmount > 0;
+    return order.status !== 'ordered' && order.dueAmount > 0;
   };
 
   const canUploadResults = (order: LabOrder) => {
-    return order.status === 'processing' && order.dueAmount <= 0;
+    return order.status === 'sample_taken' && order.dueAmount <= 0;
   };
 
   const handleStatusUpdate = (order: LabOrder, newStatus: string) => {
@@ -1704,19 +1695,10 @@ const AdminLabReports: React.FC = () => {
               >
                 <option value="">All Status</option>
                 <option value="ordered">Ordered</option>
-                <option value="verified">Verified</option>
                 <option value="approved">Approved</option>
-                <option value="payment_pending">Payment Pending</option>
-                <option value="payment_partial">Payment Partial</option>
-                <option value="payment_completed">Payment Completed</option>
-                <option value="sample_collection_scheduled">Sample Collection Scheduled</option>
-                <option value="sample_collected">Sample Collected</option>
                 <option value="sample_processing">Sample Processing</option>
                 <option value="sample_taken">Sample Taken</option>
-                <option value="processing">Processing</option>
                 <option value="reported">Reported</option>
-                <option value="results_ready">Results Ready</option>
-                <option value="confirmed">Confirmed</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
