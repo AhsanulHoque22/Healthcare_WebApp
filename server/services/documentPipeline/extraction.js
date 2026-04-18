@@ -55,35 +55,32 @@ async function extractTextFromURL(url) {
 
             console.log(`[Extraction] API matched resource: Type=${resource.type}, Version=${resource.version}`);
 
-            // Type-Rotation Fetcher: Try different delivery types (upload, authenticated, private)
-            // Some accounts restrict basic 'upload' even if that's the stored type.
-            const deliveryTypes = [resource.type, 'authenticated', 'private'];
+            // Use private_download_url which is more robust for protected assets
+            // It generates an api.cloudinary.com signed download link
+            const deliveryTypes = [resource.type, 'upload', 'authenticated', 'private'];
             let lastError = null;
 
             for (const type of deliveryTypes) {
               try {
-                const signedUrl = cloudinary.url(publicId, {
-                  sign_url: true,
+                const signedUrl = cloudinary.utils.private_download_url(publicId, extension, {
                   resource_type: resourceType,
                   type: type,
-                  version: resource.version,
-                  format: extension,
-                  secure: true
+                  expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
                 });
 
                 console.log(`[Extraction] Trying delivery as ${type}: ${signedUrl.substring(0, 80)}...`);
                 const signedResponse = await axios.get(signedUrl, { 
                   responseType: 'arraybuffer',
-                  timeout: 10000 
+                  timeout: 15000 
                 });
                 
                 buffer = Buffer.from(signedResponse.data);
                 contentType = signedResponse.headers['content-type'] || '';
-                console.log(`[Extraction] Successfully fetched as ${type}`);
+                console.log(`[Extraction] Successfully fetched as ${type} (Size: ${buffer.length} bytes)`);
                 break; // Success!
               } catch (retryErr) {
                 lastError = retryErr;
-                console.log(`[Extraction] ${type} delivery failed (${retryErr.response?.status})`);
+                console.log(`[Extraction] ${type} delivery failed (${retryErr.response?.status || retryErr.message})`);
               }
             }
 

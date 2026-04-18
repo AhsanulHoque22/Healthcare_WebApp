@@ -1,7 +1,8 @@
+require('dotenv').config();
 const { extractDataFromDocument } = require('./services/extractionService');
 
 // Test URL from the error
-const testUrl = 'https://res.cloudinary.com/dfnaaukdq/image/upload/v1774812737/prescription_lab_results/jl2wgikzejdu0o121ngy.jpg';
+const testUrl = 'https://res.cloudinary.com/dfnaaukdq/image/upload/v1776526940/prescription_lab_results/t88nfa4njuutxxhrlgoz.pdf';
 
 console.log('\n=== Testing Document Extraction ===');
 console.log(`URL: ${testUrl}\n`);
