@@ -123,7 +123,7 @@ const AdminLabReports: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Prescription lab test management states
-  const [selectedPrescriptionTest, setSelectedPrescriptionTest] = useState<PrescriptionLabTest | null>(null);
+  const [selectedPrescriptionTest, setSelectedPrescriptionTest] = useState<any | null>(null);
   const [showPrescriptionUploadModal, setShowPrescriptionUploadModal] = useState(false);
   const [showPaymentProcessingModal, setShowPaymentProcessingModal] = useState(false);
   const [selectedTestForPayment, setSelectedTestForPayment] = useState<any>(null);
@@ -1090,7 +1090,7 @@ const AdminLabReports: React.FC = () => {
       });
     } else {
       uploadResultsMutation.mutate({
-        orderId: selectedPrescriptionTest.id,
+        orderId: Number(selectedPrescriptionTest.id),
         files: uploadedFiles,
         notes: uploadNotes
       });
