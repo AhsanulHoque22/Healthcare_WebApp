@@ -34,26 +34,34 @@ async function extractTextFromURL(url) {
           const urlParts = url.split('/');
           const uploadIndex = urlParts.indexOf('upload');
           if (uploadIndex !== -1) {
+            const resourceType = urlParts[uploadIndex - 1] || 'image'; // 'image' or 'raw'
             // Remove everything up to and including 'upload'
             const postUploadParts = urlParts.slice(uploadIndex + 1);
             // Remove the version (starts with 'v') if present
             if (postUploadParts[0].startsWith('v')) {
               postUploadParts.shift();
             }
-            // Join the remaining parts and remove extension
             const fullId = postUploadParts.join('/');
-            const publicId = fullId.substring(0, fullId.lastIndexOf('.')) || fullId;
             const extension = fullId.substring(fullId.lastIndexOf('.') + 1);
+            // For 'raw' resources, public_id includes the extension
+            const publicId = resourceType === 'raw' ? fullId : fullId.substring(0, fullId.lastIndexOf('.'));
             
-            console.log(`[Extraction] Derived Public ID: ${publicId}, Extension: ${extension}`);
+            console.log(`[Extraction] Derived Public ID: ${publicId}, Format: ${extension}, Type: ${resourceType}`);
             
-            const signedUrl = cloudinary.url(publicId, {
+            const urlOptions = {
               sign_url: true,
-              resource_type: 'auto',
+              resource_type: resourceType,
               secure: true
-            });
+            };
+
+            // Only add format for non-raw resources
+            if (resourceType !== 'raw') {
+              urlOptions.format = extension;
+            }
+
+            const signedUrl = cloudinary.url(publicId, urlOptions);
             
-            console.log(`[Extraction] Retrying with signed URL...`);
+            console.log(`[Extraction] Retrying with signed URL: ${signedUrl.substring(0, 80)}...`);
             const signedResponse = await axios.get(signedUrl, { responseType: 'arraybuffer' });
             buffer = Buffer.from(signedResponse.data);
             contentType = signedResponse.headers['content-type'] || '';
