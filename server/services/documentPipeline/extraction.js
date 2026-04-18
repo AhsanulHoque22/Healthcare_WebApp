@@ -55,22 +55,41 @@ async function extractTextFromURL(url) {
 
             console.log(`[Extraction] API matched resource: Type=${resource.type}, Version=${resource.version}`);
 
-            // Manual signature generation as a robust fallback
-            const timestamp = Math.floor(Date.now() / 1000);
-            const signature = cloudinary.utils.sign_request({
-              timestamp: timestamp,
-              public_id: publicId,
-              version: resource.version
-            });
+            // Type-Rotation Fetcher: Try different delivery types (upload, authenticated, private)
+            // Some accounts restrict basic 'upload' even if that's the stored type.
+            const deliveryTypes = [resource.type, 'authenticated', 'private'];
+            let lastError = null;
 
-            // Construct the URL manually with query parameters for signing
-            // Format: https://res.cloudinary.com/<cloud_name>/<resource_type>/<type>/v<version>/<public_id>.<extension>?api_key=<api_key>&timestamp=<timestamp>&signature=<signature>
-            const signedUrl = `https://res.cloudinary.com/${cloudinary.config().cloud_name}/${resourceType}/${resource.type}/v${resource.version}/${publicId}.${extension}?api_key=${cloudinary.config().api_key}&timestamp=${timestamp}&signature=${signature.signature}`;
-            
-            console.log(`[Extraction] Retrying with manually signed URL: ${signedUrl}`);
-            const signedResponse = await axios.get(signedUrl, { responseType: 'arraybuffer' });
-            buffer = Buffer.from(signedResponse.data);
-            contentType = signedResponse.headers['content-type'] || '';
+            for (const type of deliveryTypes) {
+              try {
+                const signedUrl = cloudinary.url(publicId, {
+                  sign_url: true,
+                  resource_type: resourceType,
+                  type: type,
+                  version: resource.version,
+                  format: extension,
+                  secure: true
+                });
+
+                console.log(`[Extraction] Trying delivery as ${type}: ${signedUrl.substring(0, 80)}...`);
+                const signedResponse = await axios.get(signedUrl, { 
+                  responseType: 'arraybuffer',
+                  timeout: 10000 
+                });
+                
+                buffer = Buffer.from(signedResponse.data);
+                contentType = signedResponse.headers['content-type'] || '';
+                console.log(`[Extraction] Successfully fetched as ${type}`);
+                break; // Success!
+              } catch (retryErr) {
+                lastError = retryErr;
+                console.log(`[Extraction] ${type} delivery failed (${retryErr.response?.status})`);
+              }
+            }
+
+            if (!buffer) {
+              throw lastError;
+            }
           } else {
             throw err;
           }
