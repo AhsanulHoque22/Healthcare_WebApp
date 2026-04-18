@@ -200,13 +200,16 @@ const MedicalRecords: React.FC = () => {
   });
 
   // Fetch Medical Summary
-  const { data: medicalSummary, isLoading: isLoadingSummary } = useQuery<MedicalSummary>({
+  const { data: medicalSummary, isLoading: isLoadingSummary, refetch: refetchSummary } = useQuery<MedicalSummary>({
     queryKey: ['patient-medical-summary', patientProfile?.id],
     queryFn: async () => {
       const response = await API.get(`/patients/${patientProfile.id}/medical-summary`);
       return response.data.data.summary;
     },
-    enabled: !!patientProfile?.id
+    enabled: !!patientProfile?.id,
+    staleTime: 0,
+    gcTime: 60_000,
+    refetchOnWindowFocus: true,
   });
 
   const { mutate: reanalyzeWithLlama, isPending: isReanalyzing } = useMutation({
@@ -449,15 +452,25 @@ const MedicalRecords: React.FC = () => {
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
             <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
-              <div className="flex items-center mb-6">
-                <div className="relative group mr-2">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-                  <ClipboardDocumentCheckIcon className="relative h-6 w-6 text-blue-600 animate-pulse" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="relative group mr-2">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+                    <ClipboardDocumentCheckIcon className="relative h-6 w-6 text-blue-600 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Comprehensive Medical Summary</h3>
+                    <p className="text-sm text-gray-600">Aggregated view of your recent medical history</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Comprehensive Medical Summary</h3>
-                  <p className="text-sm text-gray-600">Aggregated view of your recent medical history</p>
-                </div>
+                <button
+                  onClick={() => refetchSummary()}
+                  disabled={isLoadingSummary}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-200"
+                >
+                  <svg className={`h-4 w-4 ${isLoadingSummary ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  {isLoadingSummary ? 'Refreshing...' : 'Refresh'}
+                </button>
               </div>
               
               {isLoadingSummary ? (

@@ -958,7 +958,7 @@ const getPatientMedicalSummary = async (req, res, next) => {
       where: {
         patientId,
         [Op.or]: [
-          { status: { [Op.in]: ['completed', 'results_ready'] } },
+          { status: { [Op.in]: ['completed', 'results_ready', 'reported', 'confirmed'] } },
           { testReports: { [Op.ne]: null } },
           { resultUrl: { [Op.ne]: null } }
         ]
