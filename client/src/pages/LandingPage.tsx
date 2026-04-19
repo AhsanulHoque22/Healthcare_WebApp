@@ -318,7 +318,6 @@ const LandingPage: React.FC = () => {
       {/* ═══ HOW IT WORKS — Immersive Caduceus Journey ═══ */}
       <section id="flow" className="py-40 bg-slate-50 relative overflow-hidden">
         {/* Immersive Backgrounds */}
-        <HeartbeatLine />
         <div className="absolute inset-0 bg-gradient-to-b from-white via-indigo-50/30 to-white pointer-events-none" />
         
         {/* Floating Background Particles */}
