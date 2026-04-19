@@ -42,6 +42,7 @@ const ChatbotWidget: React.FC = () => {
   const socketRef = useRef<Socket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -53,21 +54,36 @@ const ChatbotWidget: React.FC = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await API.get('/chatbot/history');
-        if (response.data.data.length > 0) {
-          const formattedHistory = response.data.data.map((h: any) => ({
-            role: h.role,
-            content: h.content,
-            intent: h.intent,
-            isEmergency: h.intent === 'EMERGENCY',
-            availableDoctors: h.availableDoctors,
-            bookingDetails: h.bookingDetails,
-            context: h.context
-          }));
-          setMessages(formattedHistory);
-          setTimeout(() => {
-            scrollRef.current?.scrollIntoView({ behavior: 'auto' });
-          }, 100);
+        // Try to get existing session from localStorage
+        let activeId = localStorage.getItem('lastChatbotSessionId');
+        
+        // If none in storage, try to fetch the most recent one from API
+        if (!activeId) {
+          const sessionsResp = await API.get('/chatbot/sessions');
+          if (sessionsResp.data.data && sessionsResp.data.data.length > 0) {
+            activeId = sessionsResp.data.data[0].conversationId;
+          }
+        }
+
+        if (activeId) {
+          setConversationId(activeId);
+          localStorage.setItem('lastChatbotSessionId', activeId);
+          const response = await API.get(`/chatbot/history?conversationId=${activeId}`);
+          if (response.data.data.length > 0) {
+            const formattedHistory = response.data.data.map((h: any) => ({
+              role: h.role,
+              content: h.content,
+              intent: h.intent,
+              isEmergency: h.intent === 'EMERGENCY',
+              availableDoctors: h.availableDoctors,
+              bookingDetails: h.bookingDetails,
+              context: h.context
+            }));
+            setMessages(formattedHistory);
+            setTimeout(() => {
+              scrollRef.current?.scrollIntoView({ behavior: 'auto' });
+            }, 100);
+          }
         }
       } catch (error) {
         console.error("Failed to load history");
@@ -111,6 +127,9 @@ const ChatbotWidget: React.FC = () => {
     streamRef.current = null;
   };
 
+  const generateSessionId = () =>
+    Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
 
@@ -120,10 +139,25 @@ const ChatbotWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
+      let activeId = conversationId;
+      let isNewSession = false;
+
+      if (!activeId) {
+        activeId = generateSessionId();
+        setConversationId(activeId);
+        localStorage.setItem('lastChatbotSessionId', activeId);
+        isNewSession = true;
+      }
+
       // Send history to LLM for context (stripped to role/content only)
       const history = newMessages.map(m => ({ role: m.role, content: m.content }));
       
-      const response = await API.post('/chatbot/message', { message: text, history });
+      const response = await API.post('/chatbot/message', { 
+        message: text, 
+        history, 
+        conversationId: activeId,
+        title: isNewSession ? text.substring(0, 30) + '...' : undefined
+      });
       
       const aiData = response.data.data;
       setMessages([...newMessages, { 
@@ -154,8 +188,10 @@ const ChatbotWidget: React.FC = () => {
   const clearHistory = async () => {
     if (!window.confirm("Are you sure you want to permanently delete your chat history?")) return;
     try {
-      await API.delete('/chatbot/history');
+      await API.delete(`/chatbot/history?conversationId=${conversationId}`);
       setMessages([{ role: 'assistant', content: "History deleted. I'm starting fresh!" }]);
+      setConversationId(null);
+      localStorage.removeItem('lastChatbotSessionId');
       toast.success('History wiped');
     } catch (e) {
       toast.error('Could not clear history');
@@ -164,6 +200,8 @@ const ChatbotWidget: React.FC = () => {
 
   const startNewChat = () => {
     setMessages([{ role: 'assistant', content: "Starting a new conversation. What's on your mind?" }]);
+    setConversationId(null);
+    localStorage.removeItem('lastChatbotSessionId');
     toast.success('New chat started');
   };
 
@@ -250,7 +288,7 @@ const ChatbotWidget: React.FC = () => {
               <button 
                 onClick={() => {
                   setIsOpen(false);
-                  navigate('/app/assistant');
+                  navigate(`/app/assistant?sessionId=${conversationId || ''}`);
                 }} 
                 className="hover:bg-white/20 p-2 rounded-full transition-all" 
                 title="Full screen history"

@@ -15,7 +15,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -51,6 +51,7 @@ const Assistant: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,9 +61,20 @@ const Assistant: React.FC = () => {
     fetchSessions();
   }, []);
 
+  // Handle URL parameters for session synchronization
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlSessionId = params.get('sessionId');
+    if (urlSessionId) {
+      setCurrentSessionId(urlSessionId);
+      localStorage.setItem('lastChatbotSessionId', urlSessionId);
+    }
+  }, [location.search]);
+
   useEffect(() => {
     if (currentSessionId) {
       fetchHistory(currentSessionId);
+      localStorage.setItem('lastChatbotSessionId', currentSessionId);
     } else {
       setMessages([]);
     }
@@ -162,6 +174,7 @@ const Assistant: React.FC = () => {
   const startNewChat = () => {
     setCurrentSessionId(null);
     setMessages([]);
+    localStorage.removeItem('lastChatbotSessionId');
     inputRef.current?.focus();
   };
 
