@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 /**
  * Caduceus Animation Component
  * Renders the central staff and serpents that animate on scroll
- * Optimized with static majestic wings and symmetrical design
+ * Optimized with static majestic wings and symmetrical feathered design
  */
 export const CaduceusStaff: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,47 +33,36 @@ export const CaduceusStaff: React.FC = () => {
           </linearGradient>
         </defs>
 
-        {/* --- MAJESTIC WIDE WINGS (STATIC) --- */}
+        {/* --- MAJESTIC WIDE FEATHERED WINGS (STATIC) --- */}
         <g filter="url(#glow)">
-          {/* Left Wing - Large Span */}
-          <path 
-            d="M 200 40 
-               L 180 20 
-               C 120 -20, 20 0, 10 60 
-               C -5 100, 50 120, 100 110 
-               C 130 105, 170 90, 200 70" 
-            fill="url(#rodGradient)" 
-            fillOpacity="0.08"
-            stroke="url(#rodGradient)" 
-            strokeWidth="3" 
-            strokeOpacity="0.6"
-          />
-          {/* Feather details - LEFT */}
-<g stroke="url(#rodGradient)" fill="none">
-  <path d="M 70 50 Q 120 65 165 70" strokeWidth="1.5" strokeOpacity="0.35" />
-  <path d="M 55 70 Q 115 85 155 88" strokeWidth="1.3" strokeOpacity="0.3" />
-  <path d="M 60 90 Q 110 105 145 105" strokeWidth="1.1" strokeOpacity="0.25" />
-</g>
-          {/* Right Wing - Large Span */}
-          <path 
-            d="M 200 40 
-               L 220 20 
-               C 280 -20, 380 0, 390 60 
-               C 405 100, 350 120, 300 110 
-               C 270 105, 230 90, 200 70" 
-            fill="url(#rodGradient)" 
-            fillOpacity="0.08"
-            stroke="url(#rodGradient)" 
-            strokeWidth="3" 
-            strokeOpacity="0.6"
-          />
-          {/* Feather details - RIGHT */}
-<g stroke="url(#rodGradient)" fill="none">
-  <path d="M 330 50 Q 280 65 235 70" strokeWidth="1.5" strokeOpacity="0.35" />
-  <path d="M 345 70 Q 285 85 245 88" strokeWidth="1.3" strokeOpacity="0.3" />
-  <path d="M 340 90 Q 290 105 255 105" strokeWidth="1.1" strokeOpacity="0.25" />
-</g>
-</g>
+          {/* LEFT WING - Redesigned with individual layered feathers */}
+          <g fill="url(#rodGradient)" fillOpacity="0.05" stroke="url(#rodGradient)" strokeWidth="2.5" strokeOpacity="0.6">
+            {/* Main Top Arc */}
+            <path d="M 200 60 C 180 40, 120 20, 20 60 C -10 75, 40 100, 70 120" />
+            {/* Feather Layer 1 (Top) */}
+            <path d="M 50 65 Q 125 90 200 90" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Feather Layer 2 */}
+            <path d="M 40 90 Q 120 110 200 110" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Feather 3 (Middle) */}
+            <path d="M 60 120 Q 130 130 200 130" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Bottom Scalloped Edge */}
+            <path d="M 70 120 Q 100 150 130 145 Q 165 140 200 120" fillOpacity="0.03" />
+          </g>
+
+          {/* RIGHT WING - Symmetrical feathered design */}
+          <g fill="url(#rodGradient)" fillOpacity="0.05" stroke="url(#rodGradient)" strokeWidth="2.5" strokeOpacity="0.6">
+            {/* Main Top Arc */}
+            <path d="M 200 60 C 220 40, 280 20, 380 60 C 410 75, 360 100, 330 120" />
+            {/* Feather Layer 1 (Top) */}
+            <path d="M 350 65 Q 275 90 200 90" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Feather Layer 2 */}
+            <path d="M 360 90 Q 280 110 200 110" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Feather 3 (Middle) */}
+            <path d="M 340 120 Q 270 130 200 130" strokeWidth="1.5" strokeOpacity="0.3" />
+            {/* Bottom Scalloped Edge */}
+            <path d="M 330 120 Q 300 150 270 145 Q 235 140 200 120" fillOpacity="0.03" />
+          </g>
+        </g>
 
         {/* --- THE STAFF (ROD) --- */}
         <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
@@ -121,9 +110,4 @@ export const CaduceusStaff: React.FC = () => {
   );
 };
 
-/**
- * Empty component as HeartbeatLine is removed from main page but kept here for potential reuse
- */
-export const HeartbeatLine: React.FC = () => {
-  return null;
-};
+export const HeartbeatLine: React.FC = () => null;
