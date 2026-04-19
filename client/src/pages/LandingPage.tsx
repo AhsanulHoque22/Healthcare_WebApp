@@ -20,7 +20,7 @@ import {
 /* ─── Shared animation variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
-  visible: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] } })
+  visible: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } })
 };
 
 const LandingPage: React.FC = () => {
