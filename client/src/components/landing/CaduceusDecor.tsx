@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 /**
  * Caduceus Animation Component
  * Renders the central staff and serpents that animate on scroll
- * Optimized with static majestic wings and symmetrical feathered design
+ * Clean version with only the staff and serpents (wings removed)
  */
 export const CaduceusStaff: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,37 +32,6 @@ export const CaduceusStaff: React.FC = () => {
             <stop offset="100%" stopColor="#4f46e5" />
           </linearGradient>
         </defs>
-
-        {/* --- MAJESTIC WIDE FEATHERED WINGS (STATIC) --- */}
-        <g filter="url(#glow)">
-          {/* LEFT WING - Redesigned with individual layered feathers */}
-          <g fill="url(#rodGradient)" fillOpacity="0.05" stroke="url(#rodGradient)" strokeWidth="2.5" strokeOpacity="0.6">
-            {/* Main Top Arc */}
-            <path d="M 200 60 C 180 40, 120 20, 20 60 C -10 75, 40 100, 70 120" />
-            {/* Feather Layer 1 (Top) */}
-            <path d="M 50 65 Q 125 90 200 90" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Feather Layer 2 */}
-            <path d="M 40 90 Q 120 110 200 110" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Feather 3 (Middle) */}
-            <path d="M 60 120 Q 130 130 200 130" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Bottom Scalloped Edge */}
-            <path d="M 70 120 Q 100 150 130 145 Q 165 140 200 120" fillOpacity="0.03" />
-          </g>
-
-          {/* RIGHT WING - Symmetrical feathered design */}
-          <g fill="url(#rodGradient)" fillOpacity="0.05" stroke="url(#rodGradient)" strokeWidth="2.5" strokeOpacity="0.6">
-            {/* Main Top Arc */}
-            <path d="M 200 60 C 220 40, 280 20, 380 60 C 410 75, 360 100, 330 120" />
-            {/* Feather Layer 1 (Top) */}
-            <path d="M 350 65 Q 275 90 200 90" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Feather Layer 2 */}
-            <path d="M 360 90 Q 280 110 200 110" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Feather 3 (Middle) */}
-            <path d="M 340 120 Q 270 130 200 130" strokeWidth="1.5" strokeOpacity="0.3" />
-            {/* Bottom Scalloped Edge */}
-            <path d="M 330 120 Q 300 150 270 145 Q 235 140 200 120" fillOpacity="0.03" />
-          </g>
-        </g>
 
         {/* --- THE STAFF (ROD) --- */}
         <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
