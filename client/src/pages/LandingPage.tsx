@@ -70,7 +70,7 @@ const flowSteps = [
   { step: "03", title: "Doctor Approves & Consults", desc: "Doctor reviews the request, approves or reschedules, then starts the consultation — in person or via Jitsi video call — and creates a structured digital prescription.", icon: ClipboardDocumentListIcon, color: "from-violet-500 to-purple-600", who: "Doctor" },
   { step: "04", title: "AI Analyzes Your Health", desc: "Our AI reads your full medical history, lab reports, and prescriptions to generate a clinical narrative, flag critical findings, and track health trends over time.", icon: CpuChipIcon, color: "from-emerald-500 to-teal-600", who: "AI Engine" },
   { step: "05", title: "Lab Tests & Results", desc: "Lab tests ordered via prescription or self-service. Pay with bKash, track sample collection status, and get AI-extracted insights from uploaded results.", icon: BeakerIcon, color: "from-amber-500 to-orange-600", who: "Patient + Admin" },
-  { step: "06", title: "AI Report Intelligence", desc: "Real-time AI reads every lab report the moment it's uploaded — performs criticality analysis, flags abnormal values, suggests next steps, alerts your doctor for urgent intervention, and triggers the emergency notification system.", icon: BellAlertIcon, color: "from-red-500 to-rose-600", who: "AI + Doctor" },
+  { step: "06", title: "AI Report Intelligence", desc: "As soon as a report is uploaded, AI analyzes it instantly, triggering real-time alerts for doctors and patients. Doctors can intervene for emergency actions, while patients receive immediate triggers via direct notifications and emails.", icon: BellAlertIcon, color: "from-red-500 to-rose-600", who: "AI + Doctor" },
   { step: "07", title: "Rate, Review & Continue", desc: "After each appointment, rate your doctor, view your prescription, set medicine reminders, and keep your entire health vault up to date.", icon: StarIcon, color: "from-pink-500 to-rose-600", who: "Patient" },
 ];
 
@@ -338,13 +338,13 @@ const LandingPage: React.FC = () => {
                     <div className={`md:flex items-center gap-8 md:min-h-[180px] ${isLeft ? '' : 'md:flex-row-reverse'}`}>
                       {/* Content card */}
                       <div className={`flex-1 ${isLeft ? 'md:text-right' : 'md:text-left'}`}>
-                        <div className={`inline-block bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 hover:-translate-y-1 max-w-md ${isLeft ? 'md:ml-auto' : ''}`}>
+                        <div className={`inline-block bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 hover:-translate-y-1 max-w-lg ${isLeft ? 'md:ml-auto' : ''}`}>
                           <div className={`flex items-center gap-3 mb-4 ${isLeft ? 'md:justify-end' : ''}`}>
-                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg">Step {step.step}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{step.who}</span>
+                            <span className="text-xs font-black uppercase tracking-[0.25em] text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-lg">Step {step.step}</span>
+                            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{step.who}</span>
                           </div>
-                          <h3 className="text-xl font-black text-slate-900 mb-3">{step.title}</h3>
-                          <p className="text-slate-500 font-medium text-[14px] leading-relaxed">{step.desc}</p>
+                          <h3 className="text-2xl font-black text-slate-900 mb-3">{step.title}</h3>
+                          <p className="text-slate-500 font-medium text-base leading-relaxed">{step.desc}</p>
                         </div>
                       </div>
 
