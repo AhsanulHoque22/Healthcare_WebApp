@@ -73,6 +73,7 @@ export const CaduceusStaff: React.FC = () => {
   <path d="M 345 70 Q 285 85 245 88" strokeWidth="1.3" strokeOpacity="0.3" />
   <path d="M 340 90 Q 290 105 255 105" strokeWidth="1.1" strokeOpacity="0.25" />
 </g>
+</g>
 
         {/* --- THE STAFF (ROD) --- */}
         <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
