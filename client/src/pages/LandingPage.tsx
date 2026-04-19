@@ -20,7 +20,7 @@ import {
 /* ═══ DATA ═══ */
 const stakeholders = [
   {
-    label: "For Patients", emoji: "🩺",
+    label: "Patients",
     tagline: "Your health, one tap away.",
     features: [
       { icon: CalendarIcon, title: "Smart Appointment Booking", desc: "Find doctors by specialty, check real-time availability, and book with serial number confirmation." },
@@ -32,7 +32,7 @@ const stakeholders = [
     ]
   },
   {
-    label: "For Doctors", emoji: "👨‍⚕️",
+    label: "Doctors",
     tagline: "Run your practice, digitally.",
     features: [
       { icon: ClipboardDocumentListIcon, title: "Digital Prescriptions", desc: "Create structured prescriptions with medicines, dosages, lab orders, and lifestyle suggestions." },
@@ -44,7 +44,7 @@ const stakeholders = [
     ]
   },
   {
-    label: "For Hospitals", emoji: "🏥",
+    label: "Hospitals",
     tagline: "Complete administrative control.",
     features: [
       { icon: BuildingOffice2Icon, title: "Admin Dashboard", desc: "Bird's-eye view of appointments, users, revenue, and real-time operational analytics." },
@@ -70,7 +70,8 @@ const flowSteps = [
   { step: "03", title: "Doctor Approves & Consults", desc: "Doctor reviews the request, approves or reschedules, then starts the consultation — in person or via Jitsi video call — and creates a structured digital prescription.", icon: ClipboardDocumentListIcon, color: "from-violet-500 to-purple-600", who: "Doctor" },
   { step: "04", title: "AI Analyzes Your Health", desc: "Our AI reads your full medical history, lab reports, and prescriptions to generate a clinical narrative, flag critical findings, and track health trends over time.", icon: CpuChipIcon, color: "from-emerald-500 to-teal-600", who: "AI Engine" },
   { step: "05", title: "Lab Tests & Results", desc: "Lab tests ordered via prescription or self-service. Pay with bKash, track sample collection status, and get AI-extracted insights from uploaded results.", icon: BeakerIcon, color: "from-amber-500 to-orange-600", who: "Patient + Admin" },
-  { step: "06", title: "Rate, Review & Continue", desc: "After each appointment, rate your doctor, view your prescription, set medicine reminders, and keep your entire health vault up to date.", icon: StarIcon, color: "from-pink-500 to-rose-600", who: "Patient" },
+  { step: "06", title: "AI Report Intelligence", desc: "Real-time AI reads every lab report the moment it's uploaded — performs criticality analysis, flags abnormal values, suggests next steps, alerts your doctor for urgent intervention, and triggers the emergency notification system.", icon: BellAlertIcon, color: "from-red-500 to-rose-600", who: "AI + Doctor" },
+  { step: "07", title: "Rate, Review & Continue", desc: "After each appointment, rate your doctor, view your prescription, set medicine reminders, and keep your entire health vault up to date.", icon: StarIcon, color: "from-pink-500 to-rose-600", who: "Patient" },
 ];
 
 /* ═══ COMPONENT ═══ */
@@ -385,7 +386,7 @@ const LandingPage: React.FC = () => {
                   className={`px-6 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                     activeStakeholder === i ? 'bg-white text-slate-900 shadow-lg shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700'
                   }`}>
-                  <span className="text-base">{s.emoji}</span> {s.label}
+                  {s.label}
                 </button>
               ))}
             </div>
