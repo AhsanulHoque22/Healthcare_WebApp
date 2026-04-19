@@ -316,21 +316,21 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* ═══ HOW IT WORKS — Immersive Caduceus Journey ═══ */}
-      <section id="flow" className="py-40 bg-[#020617] relative overflow-hidden">
+      <section id="flow" className="py-40 bg-slate-50 relative overflow-hidden">
         {/* Immersive Backgrounds */}
         <HeartbeatLine />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-indigo-50/30 to-white pointer-events-none" />
         
         {/* Floating Background Particles */}
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(20)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-blue-400/20 rounded-full"
+              className="absolute w-1 h-1 bg-blue-500/10 rounded-full"
               initial={{ x: `${Math.random() * 100}%`, y: `${Math.random() * 100}%` }}
               animate={{ 
                 y: [null, `${Math.random() * 100}%`],
-                opacity: [0.1, 0.4, 0.1]
+                opacity: [0.2, 0.5, 0.2]
               }}
               transition={{ 
                 duration: 10 + Math.random() * 20, 
@@ -343,16 +343,12 @@ const LandingPage: React.FC = () => {
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <Reveal className="text-center mb-32">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-6 border border-red-500/20">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-500 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-6 border border-red-500/20">
               The Lifeline Process
             </span>
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-8">
+            <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-8">
               Guided <span className="text-red-500 italic">Medical</span> Journey.
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
-              A dynamic, intelligent ecosystem designed to move with you. 
-              Scroll to explore the path to better health.
-            </p>
           </Reveal>
 
           <div className="relative min-h-[1200px]">
@@ -374,12 +370,12 @@ const LandingPage: React.FC = () => {
                         className={`inline-block group relative ${isLeft ? 'md:ml-auto' : ''}`}
                       >
                         {/* Glow effect behind card */}
-                        <div className={`absolute -inset-2 bg-gradient-to-tr ${step.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500`} />
+                        <div className={`absolute -inset-2 bg-gradient-to-tr ${step.color} opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500`} />
                         
-                        {/* Glassmorphism Card */}
-                        <div className="relative bg-slate-900/40 backdrop-blur-2xl p-8 rounded-[40px] border border-white/10 shadow-2xl hover:border-white/20 transition-all duration-500 hover:-translate-y-2 max-w-lg overflow-hidden">
+                        {/* Light Theme Glassmorphism Card */}
+                        <div className="relative bg-white/70 backdrop-blur-md p-8 rounded-[40px] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-indigo-200 transition-all duration-500 hover:-translate-y-2 max-w-lg overflow-hidden">
                           {/* Shimmer overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-slate-100/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                           
                           <div className={`flex items-center gap-4 mb-6 ${isLeft ? 'md:justify-end' : ''}`}>
                             <div className={`p-4 rounded-2xl bg-gradient-to-tr ${step.color} shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
@@ -391,11 +387,11 @@ const LandingPage: React.FC = () => {
                             </div>
                           </div>
                           
-                          <h3 className="text-2xl font-black text-white mb-4 group-hover:text-red-500 transition-colors">{step.title}</h3>
-                          <p className="text-slate-400 font-medium text-base leading-relaxed">{step.desc}</p>
+                          <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-red-500 transition-colors">{step.title}</h3>
+                          <p className="text-slate-600 font-medium text-base leading-relaxed">{step.desc}</p>
                           
                           {/* Animated line connecting to center rod */}
-                          <div className={`hidden md:block absolute top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent w-full ${isLeft ? 'left-full ml-6' : 'right-full mr-6'}`}>
+                          <div className={`hidden md:block absolute top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent w-full ${isLeft ? 'left-full ml-6' : 'right-full mr-6'}`}>
                             <motion.div 
                               className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]"
                               animate={{ 
