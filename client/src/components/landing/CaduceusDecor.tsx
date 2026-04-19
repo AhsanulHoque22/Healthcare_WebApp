@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 /**
  * Caduceus Animation Component
  * Renders the central staff and serpents that animate on scroll
- * Redesigned for light background and larger, more majestic wings
+ * High-fidelity majestic wings and symmetrical design
  */
 export const CaduceusStaff: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,80 +20,94 @@ export const CaduceusStaff: React.FC = () => {
   const serpent2 = "M 200 0 Q 80 100 200 200 Q 320 300 200 400 Q 80 500 200 600 Q 320 700 200 800 Q 80 900 200 1000";
 
   return (
-    <div ref={containerRef} className="absolute inset-0 flex justify-center pointer-events-none z-0">
+    <div ref={containerRef} className="w-full h-full flex justify-center pointer-events-none overflow-visible">
       <svg width="400" height="100%" viewBox="0 0 400 1000" preserveAspectRatio="none" className="h-full overflow-visible">
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
+          <linearGradient id="wingGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#ff3b3b" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#6366f1" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#ff3b3b" stopOpacity="0.8" />
+          </linearGradient>
           <linearGradient id="rodGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ff3b3b" />
             <stop offset="100%" stopColor="#4f46e5" />
           </linearGradient>
         </defs>
 
-        {/* Majestic Wings atop the Staff - Much larger now */}
-        <motion.path 
-          d="M 200 40 
-             C 120 -20, 0 20, 0 80 
-             C 0 130, 80 110, 200 110 
-             C 320 110, 400 130, 400 80 
-             C 400 20, 280 -20, 200 40 Z" 
-          fill="url(#rodGradient)" 
-          fillOpacity="0.05"
-          stroke="url(#rodGradient)" 
-          strokeWidth="3" 
-          filter="url(#glow)"
-          style={{ pathLength }}
-        />
-        
-        {/* Inner wing details */}
-        <motion.path 
-           d="M 60 70 Q 130 80 200 80 M 340 70 Q 270 80 200 80"
-           fill="none"
-           stroke="url(#rodGradient)"
-           strokeWidth="1.5"
-           strokeOpacity="0.3"
-           style={{ pathLength }}
-        />
+        {/* --- MAJESTIC SYMMETRICAL WINGS --- */}
+        <g filter="url(#glow)">
+          {/* Left Wing */}
+          <motion.path 
+            d="M 200 60 
+               C 150 20, 100 0, 40 40 
+               C 20 50, 10 90, 40 100 
+               C 70 110, 120 100, 200 80" 
+            fill="url(#rodGradient)" 
+            fillOpacity="0.1"
+            stroke="url(#rodGradient)" 
+            strokeWidth="2.5" 
+            style={{ pathLength }}
+          />
+          <motion.path 
+             d="M 80 60 Q 140 75 200 75 M 60 85 Q 130 90 200 90"
+             fill="none"
+             stroke="url(#rodGradient)"
+             strokeWidth="1"
+             strokeOpacity="0.4"
+             style={{ pathLength }}
+          />
 
-        {/* The Staff (Rod) - Guide Line */}
-        <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" />
+          {/* Right Wing */}
+          <motion.path 
+            d="M 200 60 
+               C 250 20, 300 0, 360 40 
+               C 380 50, 390 90, 360 100 
+               C 330 110, 280 100, 200 80" 
+            fill="url(#rodGradient)" 
+            fillOpacity="0.1"
+            stroke="url(#rodGradient)" 
+            strokeWidth="2.5" 
+            style={{ pathLength }}
+          />
+          <motion.path 
+             d="M 320 60 Q 260 75 200 75 M 340 85 Q 270 90 200 90"
+             fill="none"
+             stroke="url(#rodGradient)"
+             strokeWidth="1"
+             strokeOpacity="0.4"
+             style={{ pathLength }}
+          />
+          
+          {/* Wing Top Connector (The 'Head' of the staff) */}
+          <circle cx="200" cy="50" r="12" fill="url(#rodGradient)" fillOpacity="0.2" stroke="url(#rodGradient)" strokeWidth="2" />
+        </g>
+
+        {/* --- THE STAFF (ROD) --- */}
+        <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
         
-        {/* The Staff (Rod) - Animated Glow */}
         <motion.line 
           x1="200" y1="0" x2="200" y2="1000" 
           stroke="url(#rodGradient)" 
-          strokeWidth="5" 
+          strokeWidth="6" 
           filter="url(#glow)"
           style={{ pathLength }}
         />
 
-        {/* Gray Background Serpents */}
-        <motion.path 
-          d={serpent1} 
-          fill="none" 
-          stroke="#4f46e5" 
-          strokeWidth="2" 
-          strokeOpacity="0.1" 
-          strokeDasharray="12 6"
-        />
-        <motion.path 
-          d={serpent2} 
-          fill="none" 
-          stroke="#ff3b3b" 
-          strokeWidth="2" 
-          strokeOpacity="0.1" 
-          strokeDasharray="12 6"
-        />
+        {/* --- SERPENTS --- */}
+        {/* Background static serpents for depth */}
+        <path d={serpent1} fill="none" stroke="#4f46e5" strokeWidth="2" strokeOpacity="0.05" />
+        <path d={serpent2} fill="none" stroke="#ff3b3b" strokeWidth="2" strokeOpacity="0.05" />
         
-        {/* Animated Glow Serpents */}
+        {/* Active Animated Serpents */}
         <motion.path 
           d={serpent1} 
           fill="none" 
           stroke="#4f46e5" 
-          strokeWidth="3" 
+          strokeWidth="3.5" 
           style={{ pathLength }}
           filter="url(#glow)"
         />
@@ -101,7 +115,7 @@ export const CaduceusStaff: React.FC = () => {
           d={serpent2} 
           fill="none" 
           stroke="#ff3b3b" 
-          strokeWidth="3" 
+          strokeWidth="3.5" 
           style={{ pathLength }}
           filter="url(#glow)"
         />
@@ -110,7 +124,7 @@ export const CaduceusStaff: React.FC = () => {
         <motion.circle 
           cx="200" 
           cy="0" 
-          r="10" 
+          r="12" 
           fill="#ff3b3b" 
           filter="url(#glow)"
           style={{ 
@@ -124,40 +138,23 @@ export const CaduceusStaff: React.FC = () => {
 };
 
 /**
- * Heartbeat background animation - Darker for light background visibility
+ * Heartbeat background animation
  */
 export const HeartbeatLine: React.FC = () => {
   return (
-    <div className="absolute inset-0 opacity-[0.15] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 opacity-[0.2] pointer-events-none overflow-hidden">
       <svg width="200%" height="100%" viewBox="0 0 1000 100" preserveAspectRatio="none" className="h-full w-[200%] animate-[slide-left_25s_linear_infinite]">
         <path 
           d="M 0 50 L 100 50 L 110 40 L 120 70 L 130 20 L 140 80 L 150 50 L 160 50 L 250 50" 
           fill="none" 
           stroke="#ef4444" 
-          strokeWidth="1.5" 
+          strokeWidth="2" 
           vectorEffect="non-scaling-stroke"
         />
-        <path 
-          d="M 250 50 L 350 50 L 360 40 L 370 70 L 380 20 L 390 80 L 400 50 L 410 50 L 500 50" 
-          fill="none" 
-          stroke="#ef4444" 
-          strokeWidth="1.5" 
-          vectorEffect="non-scaling-stroke"
-        />
-        <path 
-          d="M 500 50 L 600 50 L 610 40 L 620 70 L 630 20 L 640 80 L 650 50 L 660 50 L 750 50" 
-          fill="none" 
-          stroke="#ef4444" 
-          strokeWidth="1.5" 
-          vectorEffect="non-scaling-stroke"
-        />
-        <path 
-          d="M 750 50 L 850 50 L 860 40 L 870 70 L 880 20 L 890 80 L 900 50 L 910 50 L 1000 50" 
-          fill="none" 
-          stroke="#ef4444" 
-          strokeWidth="1.5" 
-          vectorEffect="non-scaling-stroke"
-        />
+        {/* Repeated segment */}
+        <path d="M 250 50 L 350 50 L 360 40 L 370 70 L 380 20 L 390 80 L 400 50 L 410 50 L 500 50" fill="none" stroke="#ef4444" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <path d="M 500 50 L 600 50 L 610 40 L 620 70 L 630 20 L 640 80 L 650 50 L 660 50 L 750 50" fill="none" stroke="#ef4444" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <path d="M 750 50 L 850 50 L 860 40 L 870 70 L 880 20 L 890 80 L 900 50 L 910 50 L 1000 50" fill="none" stroke="#ef4444" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       </svg>
     </div>
   );

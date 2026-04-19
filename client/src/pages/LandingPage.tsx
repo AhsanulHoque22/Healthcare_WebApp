@@ -351,9 +351,11 @@ const LandingPage: React.FC = () => {
             </h2>
           </Reveal>
 
-          <div className="relative min-h-[1200px]">
+          <div className="relative pt-20 min-h-[1200px]">
             {/* The Central Staff & Serpents */}
-            <CaduceusStaff />
+            <div className="absolute inset-0 flex justify-center pointer-events-none overflow-visible">
+              <CaduceusStaff />
+            </div>
 
             <div className="space-y-40 md:space-y-0 relative z-10">
               {flowSteps.map((step, i) => {
