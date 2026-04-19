@@ -48,9 +48,12 @@ export const CaduceusStaff: React.FC = () => {
             strokeWidth="3" 
             strokeOpacity="0.6"
           />
-          {/* Feather details */}
-          <path d="M 60 45 L 140 70 M 40 75 L 130 85 M 50 95 L 120 100" stroke="url(#rodGradient)" strokeWidth="1" strokeOpacity="0.3" />
-
+          {/* Feather details - LEFT */}
+<g stroke="url(#rodGradient)" fill="none">
+  <path d="M 70 50 Q 120 65 165 70" strokeWidth="1.5" strokeOpacity="0.35" />
+  <path d="M 55 70 Q 115 85 155 88" strokeWidth="1.3" strokeOpacity="0.3" />
+  <path d="M 60 90 Q 110 105 145 105" strokeWidth="1.1" strokeOpacity="0.25" />
+</g>
           {/* Right Wing - Large Span */}
           <path 
             d="M 200 40 
@@ -64,9 +67,12 @@ export const CaduceusStaff: React.FC = () => {
             strokeWidth="3" 
             strokeOpacity="0.6"
           />
-          {/* Feather details */}
-          <path d="M 340 45 L 260 70 M 360 75 L 270 85 M 350 95 L 280 100" stroke="url(#rodGradient)" strokeWidth="1" strokeOpacity="0.3" />
-        </g>
+          {/* Feather details - RIGHT */}
+<g stroke="url(#rodGradient)" fill="none">
+  <path d="M 330 50 Q 280 65 235 70" strokeWidth="1.5" strokeOpacity="0.35" />
+  <path d="M 345 70 Q 285 85 245 88" strokeWidth="1.3" strokeOpacity="0.3" />
+  <path d="M 340 90 Q 290 105 255 105" strokeWidth="1.1" strokeOpacity="0.25" />
+</g>
 
         {/* --- THE STAFF (ROD) --- */}
         <line x1="200" y1="0" x2="200" y2="1000" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
