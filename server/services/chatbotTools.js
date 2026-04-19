@@ -285,7 +285,6 @@ const implementations = {
       height: p.height,
       weight: p.weight,
       allergies: p.allergies,
-      allergies: p.allergies,
       chronicConditions: p.chronicConditions,
       currentMedications: p.currentMedications,
       physicalActivity: p.physicalActivity,
@@ -330,7 +329,7 @@ const implementations = {
   search_doctors: async (params) => {
     const where = { isVerified: true };
     if (params.department) {
-      where.department = { [Op.like]: `%${params.department.toLowerCase().replace(/\s+/g, '_')}%` };
+      where.department = { [Op.like]: `%${params.department.toLowerCase()}%` };
     }
     if (params.keyword) {
       where[Op.or] = [
