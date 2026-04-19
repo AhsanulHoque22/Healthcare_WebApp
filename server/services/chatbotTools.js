@@ -18,12 +18,14 @@ const { aggregateMedicalData } = require('./chatbot/medicalDataAggregator');
 
 // ─── TOOL DEFINITIONS (JSON Schema for LLM) ───────────────────────────────────
 
+// ─── TOOL DEFINITIONS (JSON Schema for LLM) ───────────────────────────────────
+
 const TOOL_DEFINITIONS = [
   {
     type: "function",
     function: {
       name: "generate_medical_summary",
-      description: "Aggregates ALL patient data (profile, appointments, prescriptions, labs, Med Vault docs) into a holistic summary. Use for general health queries or 'how am I doing?'.",
+      description: "Harness this tool when the user asks vague, high-level, or holistic health questions like 'How am I doing?', 'Summarize my health', or 'What's my status?'. It aggregates profile data, vitals, active medications, upcoming appointments, recent lab results, and medical vault documents into a comprehensive 'Patient 360' overview.",
       parameters: { type: "object", properties: {}, required: [] }
     }
   },
@@ -31,7 +33,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_patient_profile",
-      description: "Gets basic info (allergies, blood type, vitals).",
+      description: "Use this to retrieve the user's core demographic and clinical profile. This includes blood type, height, weight, allergies, chronic conditions, and general medical history. Ideal for answering 'What's my blood type?' or 'What allergies do I have on record?'.",
       parameters: { type: "object", properties: {}, required: [] }
     }
   },
@@ -39,12 +41,20 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_appointments",
-      description: "Gets patient appointments (past/upcoming).",
+      description: "Retrieve a list of the user's medical appointments. Use this for queries like 'When is my next doctor visit?', 'What's my appointment history?', or 'Do I have any meetings tomorrow?'. It can filter by status (scheduled, confirmed, completed, upcoming) and supports a limit for concise lists.",
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["scheduled", "confirmed", "completed", "all", "upcoming"] },
-          limit: { type: "integer", maximum: 5 }
+          status: { 
+            type: "string", 
+            enum: ["scheduled", "confirmed", "completed", "all", "upcoming"],
+            description: "Filter by appointment status. Use 'upcoming' for meetings in the future."
+          },
+          limit: { 
+            type: "integer", 
+            maximum: 10,
+            description: "Number of records to return. Default is 5."
+          }
         }
       }
     }
@@ -53,12 +63,18 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "search_doctors",
-      description: "Finds doctors by department or keyword.",
+      description: "Crucial tool for 'Doctor Matchmaking'. Use this when a user expresses a need for a doctor, mentions a symptom (e.g., 'my chest hurts', 'I have a rash'), searches for a specific hospital (e.g., 'Applo', 'Square'), or asks for a specialist (e.g., 'Cardiologist', 'Dentist'). It maps symptoms to medical departments automatically.",
       parameters: {
         type: "object",
         properties: {
-          department: { type: "string" },
-          keyword: { type: "string" }
+          department: { 
+            type: "string", 
+            description: "The medical department (e.g., cardiology, dermatology). Auto-mapped from symptoms if not explicitly mentioned." 
+          },
+          keyword: { 
+            type: "string", 
+            description: "Keywords like hospital name, doctor's name, or localized area." 
+          }
         }
       }
     }
@@ -67,12 +83,12 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_prescriptions",
-      description: "Gets medications/prescriptions with history.",
+      description: "Fetch the user's prescription history. Use this when the user asks 'What did Dr. Smith prescribe last month?', 'Show my recent prescriptions', or 'What was my diagnosis in my last visit?'. It identifies the doctor, date, diagnosis, and suggested medications.",
       parameters: { 
         type: "object", 
         properties: { 
-          limit: { type: "integer", maximum: 3 },
-          doctorName: { type: "string", description: "Filter by doctor's name" }
+          limit: { type: "integer", maximum: 5 },
+          doctorName: { type: "string", description: "Optional filter for a specific doctor's name." }
         } 
       }
     }
@@ -81,7 +97,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_active_medicines",
-      description: "Gets currently active medications.",
+      description: "Access the list of medications the user is CURRENTLY taking. Essential for questions like 'What medicines should I take right now?', 'Show my current dosage', or 'What is my frequency for Paracetamol?'. Returns drug names, dosages, and precise instructions.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -89,7 +105,7 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_lab_orders",
-      description: "Gets status/results of lab tests.",
+      description: "Retrieve laboratory test status and results. Use this when the user asks 'Is my blood test ready?', 'Show my lab reports', or 'What was the result of my CBC?'. Includes order numbers and links to actual PDF results if available.",
       parameters: { type: "object", properties: {} }
     }
   },
@@ -97,12 +113,12 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "get_medical_records",
-      description: "Gets patient medical history records.",
+      description: "Get broad medical history records, including consultations, imaging, and physical exams. Use for 'Show my medical history' or 'What imaging tests have I done recently?'.",
       parameters: {
         type: "object",
         properties: {
           recordType: { type: "string", enum: ["consultation", "lab_result", "imaging", "prescription", "all"] },
-          limit: { type: "integer", maximum: 3 }
+          limit: { type: "integer", maximum: 5 }
         }
       }
     }
@@ -111,12 +127,12 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "analyze_medical_document",
-      description: "Analyzes specific medical PDF/Image via OCR. Needs documentUrl.",
+      description: "Perform Deep Inspection on a specific PDF or Image report. Use this ONLY when the user asks a question about a specific document in their vault or a lab report they just viewed. Requires a documentUrl.",
       parameters: {
         type: "object",
         properties: {
-          documentUrl: { type: "string" },
-          query: { type: "string" }
+          documentUrl: { type: "string", description: "The URL of the PDF/Image to analyze." },
+          query: { type: "string", description: "The specific question to ask the OCR engine (e.g. 'What is my hemoglobin level?')." }
         },
         required: ["documentUrl"]
       }
@@ -126,14 +142,14 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "book_appointment",
-      description: "Books an appointment with doctorId, date, time, symptoms.",
+      description: "Executes the final booking of an appointment. Use ONLY after a doctor has been identified (doctorId), and a date and time slot have been agreed upon. Usually follows a 'search_doctors' call.",
       parameters: {
         type: "object",
         properties: {
-          doctorId: { type: "integer" },
-          appointmentDate: { type: "string", description: "YYYY-MM-DD" },
-          timeBlock: { type: "string", description: "e.g. '09:00 AM - 12:00 PM'" },
-          symptoms: { type: "string" }
+          doctorId: { type: "integer", description: "The ID of the doctor to book with." },
+          appointmentDate: { type: "string", description: "Date in YYYY-MM-DD format." },
+          timeBlock: { type: "string", description: "The selected time slot (e.g. '09:00 AM - 12:00 PM')." },
+          symptoms: { type: "string", description: "Brief description of why the user is booking." }
         },
         required: ["doctorId", "appointmentDate", "timeBlock"]
       }
@@ -143,11 +159,11 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "cancel_appointment",
-      description: "Cancels an appointment by ID.",
+      description: "Cancel a scheduled appointment. Use when the user says 'Cancel my visit' or 'Delete my appointment tomorrow'. Only works for appointments at least 24 hours in the future.",
       parameters: {
         type: "object",
         properties: {
-          appointmentId: { type: "integer" }
+          appointmentId: { type: "integer", description: "The unique ID of the appointment to cancel." }
         },
         required: ["appointmentId"]
       }
@@ -157,13 +173,13 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "reschedule_appointment",
-      description: "Reschedules an appointment.",
+      description: "Moves an existing appointment to a new date/time. Use when the user asks to 'move', 'change', or 'postpone' an appointment. Requires the original appointmentId and new slot details.",
       parameters: {
         type: "object",
         properties: {
           appointmentId: { type: "integer" },
-          newDate: { type: "string" },
-          timeBlock: { type: "string" }
+          newDate: { type: "string", description: "New date in YYYY-MM-DD format." },
+          timeBlock: { type: "string", description: "New time slot." }
         },
         required: ["appointmentId", "newDate", "timeBlock"]
       }
@@ -173,14 +189,28 @@ const TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "trigger_emergency",
-      description: "Only for life-threatening crisis symptoms.",
+      description: "CRITICAL: Trigger this tool immediately if the user reports life-threatening symptoms such as heavy chest pain, sudden paralysis, severe bleeding, or unconsciousness. It alerts the hospital and provides the patient with immediate life-saving next steps.",
       parameters: {
         type: "object",
         properties: {
-          symptoms: { type: "string" },
+          symptoms: { type: "string", description: "The severe symptoms detected." },
           confidence: { type: "string", enum: ["high", "very_high"] }
         },
         required: ["symptoms", "confidence"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_medical_knowledge",
+      description: "The 'Livora Medical Wiki'. Use this tool when the user asks general medical questions that are NOT about their own data, such as 'What are the symptoms of Flu?', 'Side effects of Paracetamol?', or 'How to manage high blood pressure?'. It searches a vast medical knowledge base for evidence-based information.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "The medical question or topic to search for." }
+        },
+        required: ["query"]
       }
     }
   }
@@ -219,6 +249,26 @@ function parseTimeBlock(timeBlock) {
 const implementations = {
   generate_medical_summary: async (_, userId) => {
     return await aggregateMedicalData(userId);
+  },
+
+  search_medical_knowledge: async (params) => {
+    const { createChatCompletion } = require('./groqLlamaService');
+    const systemPrompt = "You are the Livora Medical Knowledge Base. Provide concise, evidence-based answers to general medical questions. Do not give personalized medical advice. If you don't know, say information is not available in the wiki.";
+    const userPrompt = `Search query: ${params.query}`;
+    
+    try {
+      const result = await createChatCompletion({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.0
+      });
+      return { source: "Livora Medical Wiki", answer: result };
+    } catch (e) {
+      return { error: true, message: "Medical Wiki is currently offline." };
+    }
   },
 
   get_patient_profile: async (_, userId) => {
@@ -350,10 +400,14 @@ const implementations = {
   get_active_medicines: async (_, userId) => {
     const patient = await Patient.findOne({ where: { userId } });
     if (!patient) return [];
-    return await Medicine.findAll({ 
+    const meds = await Medicine.findAll({ 
       where: { patientId: patient.id, isActive: true },
       attributes: ['medicineName', 'dosage', 'frequency', 'instructions', 'startDate', 'isActive']
     });
+    return meds.map(m => ({
+      ...m.toJSON(),
+      warning: "Ensure you follow the dosage instructions strictly. Contact your doctor if side effects occur."
+    }));
   },
 
   get_lab_orders: async (_, userId) => {
