@@ -6,6 +6,7 @@ import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from '../components/NotificationDropdown';
 import { Reveal, Parallax, fadeUp, staggerContainer, MagneticButton } from '../components/landing/AnimatedSection';
+import { CaduceusStaff, HeartbeatLine } from '../components/landing/CaduceusDecor';
 import toast from 'react-hot-toast';
 import {
   HeartIcon, UserGroupIcon, CalendarIcon, DocumentTextIcon, BeakerIcon,
@@ -70,7 +71,7 @@ const flowSteps = [
   { step: "03", title: "Doctor Approves & Consults", desc: "Doctor reviews the request, approves or reschedules, then starts the consultation — in person or via Jitsi video call — and creates a structured digital prescription.", icon: ClipboardDocumentListIcon, color: "from-violet-500 to-purple-600", who: "Doctor" },
   { step: "04", title: "AI Analyzes Your Health", desc: "Our AI reads your full medical history, lab reports, and prescriptions to generate a clinical narrative, flag critical findings, and track health trends over time.", icon: CpuChipIcon, color: "from-emerald-500 to-teal-600", who: "AI Engine" },
   { step: "05", title: "Lab Tests & Results", desc: "Lab tests ordered via prescription or self-service. Pay with bKash, track sample collection status, and get AI-extracted insights from uploaded results.", icon: BeakerIcon, color: "from-amber-500 to-orange-600", who: "Patient + Admin" },
-  { step: "06", title: "AI Report Intelligence", desc: "As soon as a report is uploaded, AI analyzes it instantly, triggering real-time alerts for doctors and patients. Doctors can intervene for emergency actions, while patients receive immediate triggers via direct notifications and emails.", icon: BellAlertIcon, color: "from-red-500 to-rose-600", who: "AI + Doctor" },
+  { step: "06", title: "AI + Doctor Emergency Alert", desc: "As soon as a report is uploaded, AI analyzes it instantly, triggering real-time alerts for doctors and patients. Doctors can intervene for emergency actions, while patients receive immediate triggers via direct notifications and emails.", icon: BellAlertIcon, color: "from-red-500 to-rose-600", who: "AI + Doctor" },
   { step: "07", title: "Rate, Review & Continue", desc: "After each appointment, rate your doctor, view your prescription, set medicine reminders, and keep your entire health vault up to date.", icon: StarIcon, color: "from-pink-500 to-rose-600", who: "Patient" },
 ];
 
@@ -314,51 +315,106 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══ HOW IT WORKS — Vertical Timeline ═══ */}
-      <section id="flow" className="py-32 bg-gradient-to-b from-[#fafbff] to-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4">
-          <Reveal className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6">
-              Your Healthcare <span className="text-gradient bg-gradient-to-r from-indigo-600 to-violet-600">Journey</span>
+      {/* ═══ HOW IT WORKS — Immersive Caduceus Journey ═══ */}
+      <section id="flow" className="py-40 bg-[#020617] relative overflow-hidden">
+        {/* Immersive Backgrounds */}
+        <HeartbeatLine />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 pointer-events-none" />
+        
+        {/* Floating Background Particles */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-blue-400/20 rounded-full"
+              initial={{ x: `${Math.random() * 100}%`, y: `${Math.random() * 100}%` }}
+              animate={{ 
+                y: [null, `${Math.random() * 100}%`],
+                opacity: [0.1, 0.4, 0.1]
+              }}
+              transition={{ 
+                duration: 10 + Math.random() * 20, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <Reveal className="text-center mb-32">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-6 border border-red-500/20">
+              The Lifeline Process
+            </span>
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-8">
+              Guided <span className="text-red-500 italic">Medical</span> Journey.
             </h2>
-            <p className="text-xl text-slate-500 max-w-3xl mx-auto font-medium">
-              From your first sign-up to ongoing care — here's exactly how Livora works.
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
+              A dynamic, intelligent ecosystem designed to move with you. 
+              Scroll to explore the path to better health.
             </p>
           </Reveal>
 
-          <div className="relative">
-            {/* Vertical connecting line */}
-            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-slate-200 via-indigo-200 via-violet-200 via-emerald-200 to-pink-200 -translate-x-1/2 z-0" />
+          <div className="relative min-h-[1200px]">
+            {/* The Central Staff & Serpents */}
+            <CaduceusStaff />
 
-            <div className="space-y-16 md:space-y-0 relative z-10">
+            <div className="space-y-40 md:space-y-0 relative z-10">
               {flowSteps.map((step, i) => {
                 const isLeft = i % 2 === 0;
                 return (
-                  <Reveal key={i} delay={i} variant={isLeft ? 'slideLeft' : 'slideRight'}>
-                    <div className={`md:flex items-center gap-8 md:min-h-[180px] ${isLeft ? '' : 'md:flex-row-reverse'}`}>
-                      {/* Content card */}
-                      <div className={`flex-1 ${isLeft ? 'md:text-right' : 'md:text-left'}`}>
-                        <div className={`inline-block bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 hover:-translate-y-1 max-w-lg ${isLeft ? 'md:ml-auto' : ''}`}>
-                          <div className={`flex items-center gap-3 mb-4 ${isLeft ? 'md:justify-end' : ''}`}>
-                            <span className="text-xs font-black uppercase tracking-[0.25em] text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-lg">Step {step.step}</span>
-                            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{step.who}</span>
+                  <div key={i} className={`md:flex items-center gap-12 md:min-h-[300px] ${isLeft ? '' : 'md:flex-row-reverse'}`}>
+                    {/* Content card */}
+                    <div className={`flex-1 ${isLeft ? 'md:text-right' : 'md:text-left'}`}>
+                      <motion.div 
+                        initial={{ opacity: 0, x: isLeft ? -50 : 50, scale: 0.95 }}
+                        whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
+                        className={`inline-block group relative ${isLeft ? 'md:ml-auto' : ''}`}
+                      >
+                        {/* Glow effect behind card */}
+                        <div className={`absolute -inset-2 bg-gradient-to-tr ${step.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500`} />
+                        
+                        {/* Glassmorphism Card */}
+                        <div className="relative bg-slate-900/40 backdrop-blur-2xl p-8 rounded-[40px] border border-white/10 shadow-2xl hover:border-white/20 transition-all duration-500 hover:-translate-y-2 max-w-lg overflow-hidden">
+                          {/* Shimmer overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          
+                          <div className={`flex items-center gap-4 mb-6 ${isLeft ? 'md:justify-end' : ''}`}>
+                            <div className={`p-4 rounded-2xl bg-gradient-to-tr ${step.color} shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
+                              <step.icon className="h-6 w-6 text-white" />
+                            </div>
+                            <div className={isLeft ? 'md:text-right' : ''}>
+                              <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-1">Step {step.step}</span>
+                              <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-500">{step.who}</span>
+                            </div>
                           </div>
-                          <h3 className="text-2xl font-black text-slate-900 mb-3">{step.title}</h3>
-                          <p className="text-slate-500 font-medium text-base leading-relaxed">{step.desc}</p>
+                          
+                          <h3 className="text-2xl font-black text-white mb-4 group-hover:text-red-500 transition-colors">{step.title}</h3>
+                          <p className="text-slate-400 font-medium text-base leading-relaxed">{step.desc}</p>
+                          
+                          {/* Animated line connecting to center rod */}
+                          <div className={`hidden md:block absolute top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent w-full ${isLeft ? 'left-full ml-6' : 'right-full mr-6'}`}>
+                            <motion.div 
+                              className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]"
+                              animate={{ 
+                                x: isLeft ? [0, 100] : [0, -100],
+                                opacity: [0, 1, 0]
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
                         </div>
-                      </div>
-
-                      {/* Center icon node */}
-                      <div className="hidden md:flex flex-shrink-0 w-16 h-16 items-center justify-center relative z-20">
-                        <div className={`w-14 h-14 rounded-[20px] bg-gradient-to-tr ${step.color} flex items-center justify-center shadow-xl`}>
-                          <step.icon className="h-7 w-7 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Empty spacer for the other side */}
-                      <div className="flex-1 hidden md:block" />
+                      </motion.div>
                     </div>
-                  </Reveal>
+
+                    {/* Desktop spacer for icon node (visualized centrally by CaduceusStaff) */}
+                    <div className="hidden md:block w-32 flex-shrink-0" />
+
+                    {/* Empty spacer for the other side */}
+                    <div className="flex-1 hidden md:block" />
+                  </div>
                 );
               })}
             </div>
@@ -367,6 +423,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* ═══ STAKEHOLDER FEATURES — Tabbed Presentation ═══ */}
+
       <section id="features" className="py-32 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <Reveal className="text-center mb-16">
