@@ -65,10 +65,12 @@ const aiCapabilities = [
 ];
 
 const flowSteps = [
-  { step: "01", title: "Patient Books", desc: "Search specialists, check availability, and book an appointment instantly.", icon: CalendarIcon, color: "from-blue-500 to-indigo-600" },
-  { step: "02", title: "Doctor Consults", desc: "Review patient history, conduct video/in-person consultation, create digital prescriptions.", icon: ClipboardDocumentListIcon, color: "from-violet-500 to-purple-600" },
-  { step: "03", title: "AI Analyzes", desc: "AI engine generates clinical summaries, flags critical findings, and tracks health trends.", icon: CpuChipIcon, color: "from-emerald-500 to-teal-600" },
-  { step: "04", title: "Admin Manages", desc: "Hospital admins oversee operations, verify doctors, process payments, and manage lab tests.", icon: BuildingOffice2Icon, color: "from-amber-500 to-orange-600" },
+  { step: "01", title: "Create Your Account", desc: "Register as a patient, doctor, or admin. Doctors submit their BMDC registration and department for verification.", icon: UserGroupIcon, color: "from-slate-600 to-slate-800", who: "Everyone" },
+  { step: "02", title: "Book an Appointment", desc: "Search verified doctors by specialty, pick their chamber and time slot, choose in-person, telemedicine, or follow-up — and receive a serial number confirmation.", icon: CalendarIcon, color: "from-blue-500 to-indigo-600", who: "Patient" },
+  { step: "03", title: "Doctor Approves & Consults", desc: "Doctor reviews the request, approves or reschedules, then starts the consultation — in person or via Jitsi video call — and creates a structured digital prescription.", icon: ClipboardDocumentListIcon, color: "from-violet-500 to-purple-600", who: "Doctor" },
+  { step: "04", title: "AI Analyzes Your Health", desc: "Our AI reads your full medical history, lab reports, and prescriptions to generate a clinical narrative, flag critical findings, and track health trends over time.", icon: CpuChipIcon, color: "from-emerald-500 to-teal-600", who: "AI Engine" },
+  { step: "05", title: "Lab Tests & Results", desc: "Lab tests ordered via prescription or self-service. Pay with bKash, track sample collection status, and get AI-extracted insights from uploaded results.", icon: BeakerIcon, color: "from-amber-500 to-orange-600", who: "Patient + Admin" },
+  { step: "06", title: "Rate, Review & Continue", desc: "After each appointment, rate your doctor, view your prescription, set medicine reminders, and keep your entire health vault up to date.", icon: StarIcon, color: "from-pink-500 to-rose-600", who: "Patient" },
 ];
 
 /* ═══ COMPONENT ═══ */
@@ -311,33 +313,53 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══ HOW IT WORKS — Flow Visualization ═══ */}
+      {/* ═══ HOW IT WORKS — Vertical Timeline ═══ */}
       <section id="flow" className="py-32 bg-gradient-to-b from-[#fafbff] to-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-4">
           <Reveal className="text-center mb-20">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-6">
-              How Livora <span className="text-gradient bg-gradient-to-r from-indigo-600 to-violet-600">Connects</span> Everyone
+              Your Healthcare <span className="text-gradient bg-gradient-to-r from-indigo-600 to-violet-600">Journey</span>
             </h2>
             <p className="text-xl text-slate-500 max-w-3xl mx-auto font-medium">
-              A living ecosystem where every stakeholder is seamlessly connected.
+              From your first sign-up to ongoing care — here's exactly how Livora works.
             </p>
           </Reveal>
 
           <div className="relative">
-            {/* Connecting line */}
-            <div className="hidden lg:block absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-blue-200 via-violet-200 to-amber-200 -translate-y-1/2 z-0" />
+            {/* Vertical connecting line */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-slate-200 via-indigo-200 via-violet-200 via-emerald-200 to-pink-200 -translate-x-1/2 z-0" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-              {flowSteps.map((step, i) => (
-                <Reveal key={i} delay={i} className="flex flex-col items-center text-center">
-                  <div className={`w-20 h-20 rounded-[28px] bg-gradient-to-tr ${step.color} flex items-center justify-center mb-6 shadow-xl animate-float`} style={{ animationDelay: `${i * 0.5}s` }}>
-                    <step.icon className="h-9 w-9 text-white" />
-                  </div>
-                  <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">Step {step.step}</span>
-                  <h3 className="text-xl font-black text-slate-900 mb-3">{step.title}</h3>
-                  <p className="text-slate-500 font-medium text-sm leading-relaxed">{step.desc}</p>
-                </Reveal>
-              ))}
+            <div className="space-y-16 md:space-y-0 relative z-10">
+              {flowSteps.map((step, i) => {
+                const isLeft = i % 2 === 0;
+                return (
+                  <Reveal key={i} delay={i} variant={isLeft ? 'slideLeft' : 'slideRight'}>
+                    <div className={`md:flex items-center gap-8 md:min-h-[180px] ${isLeft ? '' : 'md:flex-row-reverse'}`}>
+                      {/* Content card */}
+                      <div className={`flex-1 ${isLeft ? 'md:text-right' : 'md:text-left'}`}>
+                        <div className={`inline-block bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 hover:-translate-y-1 max-w-md ${isLeft ? 'md:ml-auto' : ''}`}>
+                          <div className={`flex items-center gap-3 mb-4 ${isLeft ? 'md:justify-end' : ''}`}>
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg">Step {step.step}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{step.who}</span>
+                          </div>
+                          <h3 className="text-xl font-black text-slate-900 mb-3">{step.title}</h3>
+                          <p className="text-slate-500 font-medium text-[14px] leading-relaxed">{step.desc}</p>
+                        </div>
+                      </div>
+
+                      {/* Center icon node */}
+                      <div className="hidden md:flex flex-shrink-0 w-16 h-16 items-center justify-center relative z-20">
+                        <div className={`w-14 h-14 rounded-[20px] bg-gradient-to-tr ${step.color} flex items-center justify-center shadow-xl`}>
+                          <step.icon className="h-7 w-7 text-white" />
+                        </div>
+                      </div>
+
+                      {/* Empty spacer for the other side */}
+                      <div className="flex-1 hidden md:block" />
+                    </div>
+                  </Reveal>
+                );
+              })}
             </div>
           </div>
         </div>
