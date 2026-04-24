@@ -274,11 +274,11 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   // 4. Document Analysis
   // Safety limits: prevent memory spikes on Render's free tier
   // - Queue at most 20 documents (sort newest first, discard the rest)
-  // - Only run fresh OCR+LLM on 3 uncached docs per request; remaining
-  //   uncached docs are skipped and will be picked up on a subsequent load
+  // - Normal load:  extract up to 3 fresh (uncached) docs; the rest are deferred
+  // - reanalyze=true (explicit user action): extract up to 6 at once
   // - Hard 45s timeout per document so one bad file can't hang the request
   const MAX_DOCS_TO_QUEUE = 20;
-  const MAX_FRESH_EXTRACTIONS = 3;
+  const MAX_FRESH_EXTRACTIONS = reanalyze ? 6 : 3;
   const DOC_TIMEOUT_MS = 45_000;
 
   const withDocTimeout = (promise) =>
@@ -294,7 +294,7 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   let documentMedications = [];
   let documentEvidence = [];
   let upgradedCount = 0; let reusableCount = 0; let legacyCount = 0;
-  let freshExtractions = 0;
+  let freshExtractions = 0; let deferredCount = 0;
 
   allMedicalDocuments.sort((a,b) => new Date(b.date) - new Date(a.date));
   const docsToProcess = allMedicalDocuments.slice(0, MAX_DOCS_TO_QUEUE);
@@ -308,7 +308,8 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
 
       if (!docCache || !docCache.extractedData || (reanalyze && needsUpgrade)) {
         if (freshExtractions >= MAX_FRESH_EXTRACTIONS) {
-          console.log(`[ClinicalService] Fresh extraction cap reached — deferring: ${doc.url}`);
+          deferredCount++;
+          console.log(`[ClinicalService] Fresh extraction cap reached — deferring (${deferredCount}): ${doc.url}`);
           continue;
         }
         freshExtractions++;
@@ -367,7 +368,7 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
     recentMedications: reconciledMeds,
     recentLabResults: recentLabResults,
     allLabResultsSummary: buildLabResultsSummary(recentLabResults),
-    cacheMeta: { analyzedDocuments: allMedicalDocuments.length, reusableCount, legacyCount, upgradedCount }
+    cacheMeta: { analyzedDocuments: allMedicalDocuments.length, reusableCount, legacyCount, upgradedCount, deferredCount }
   };
 };
 

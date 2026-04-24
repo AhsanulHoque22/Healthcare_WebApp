@@ -131,12 +131,11 @@ interface MedicalSummary {
   llamaClinicalInsight?: LlamaClinicalInsight;
   llamaReasoningModel?: string;
   cacheMeta?: {
-    modelVersion?: string;
     analyzedDocuments?: number;
-    reusableCacheCount?: number;
-    legacyCacheCount?: number;
-    upgradedDocumentCount?: number;
-    reanalysisPerformed?: boolean;
+    reusableCount?: number;
+    legacyCount?: number;
+    upgradedCount?: number;
+    deferredCount?: number;
   };
   summarizedDiagnoses: any[];
   recentSymptoms: any[];
@@ -221,7 +220,7 @@ const MedicalRecords: React.FC = () => {
     },
     onSuccess: (updatedSummary) => {
       queryClient.setQueryData(['patient-medical-summary', patientProfile?.id], updatedSummary);
-      toast.success('Legacy document cache refreshed with Llama analysis.');
+      toast.success('Documents analyzed. Click again if more remain.');
     },
     onError: () => {
       toast.error('Could not re-analyze documents right now. Please try again.');
@@ -482,12 +481,30 @@ const MedicalRecords: React.FC = () => {
                 </div>
               ) : medicalSummary ? (
                 <div className="space-y-6">
-                  {medicalSummary?.cacheMeta?.legacyCacheCount ? (
+                  {(medicalSummary?.cacheMeta?.deferredCount ?? 0) > 0 ? (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-amber-900">
+                          {medicalSummary!.cacheMeta!.deferredCount} document{medicalSummary!.cacheMeta!.deferredCount! > 1 ? 's are' : ' is'} pending analysis
+                        </p>
+                        <p className="text-sm text-amber-700">
+                          Documents are analyzed in batches to prevent server overload. Click to process the next batch.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => reanalyzeWithLlama()}
+                        disabled={isReanalyzing}
+                        className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isReanalyzing ? 'Analyzing...' : 'Analyze next batch'}
+                      </button>
+                    </div>
+                  ) : (medicalSummary?.cacheMeta?.legacyCount ?? 0) > 0 ? (
                     <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-amber-900">Legacy AI cache detected</p>
                         <p className="text-sm text-amber-700">
-                          {medicalSummary.cacheMeta.legacyCacheCount} document{medicalSummary.cacheMeta.legacyCacheCount > 1 ? 's were' : ' was'} analyzed before the Llama migration.
+                          {medicalSummary!.cacheMeta!.legacyCount} document{medicalSummary!.cacheMeta!.legacyCount! > 1 ? 's were' : ' was'} analyzed with an older model.
                         </p>
                       </div>
                       <button
