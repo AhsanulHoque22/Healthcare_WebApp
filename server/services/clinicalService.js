@@ -294,7 +294,7 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   let documentMedications = [];
   let documentEvidence = [];
   let upgradedCount = 0; let reusableCount = 0; let legacyCount = 0;
-  let freshExtractions = 0; let deferredCount = 0;
+  let freshExtractions = 0; let deferredCount = 0; let failedCount = 0;
 
   allMedicalDocuments.sort((a,b) => new Date(b.date) - new Date(a.date));
   const docsToProcess = allMedicalDocuments.slice(0, MAX_DOCS_TO_QUEUE);
@@ -343,12 +343,16 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
         reusableCount++;
       }
 
-      if (docCache && docCache.extractedData && !docCache.extractedData.error) {
-        const data = docCache.extractedData;
-        if (data.labResults?.length) recentLabResults.push({ orderId: doc.orderId || doc.name || 'Lab Report', date: doc.date, testNames: doc.testNames || data.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
-        if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: `Extracted from ${doc.source}` })));
-        if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: `Extracted from ${doc.source}`, status: m?.status || 'active' })));
-        documentEvidence.push({ documentType: data.documentType || 'other', source: doc.source, date: doc.date, diagnoses: (data.diagnoses || []).slice(0, 4), labResults: (data.labResults || []).slice(0, 6) });
+      if (docCache && docCache.extractedData) {
+        if (docCache.extractedData.error) {
+          failedCount++;
+        } else {
+          const data = docCache.extractedData;
+          if (data.labResults?.length) recentLabResults.push({ orderId: doc.orderId || doc.name || 'Lab Report', date: doc.date, testNames: doc.testNames || data.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
+          if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: `Extracted from ${doc.source}` })));
+          if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: `Extracted from ${doc.source}`, status: m?.status || 'active' })));
+          documentEvidence.push({ documentType: data.documentType || 'other', source: doc.source, date: doc.date, diagnoses: (data.diagnoses || []).slice(0, 4), labResults: (data.labResults || []).slice(0, 6) });
+        }
       }
     } catch (e) { console.error("[ClinicalService] Doc error:", e.message); }
   }
@@ -375,7 +379,7 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
     recentMedications: reconciledMeds,
     recentLabResults: recentLabResults,
     allLabResultsSummary: buildLabResultsSummary(recentLabResults),
-    cacheMeta: { analyzedDocuments: allMedicalDocuments.length, reusableCount, legacyCount, upgradedCount, deferredCount }
+    cacheMeta: { analyzedDocuments: allMedicalDocuments.length, reusableCount, legacyCount, upgradedCount, deferredCount, failedCount }
   };
 };
 

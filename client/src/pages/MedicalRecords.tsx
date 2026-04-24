@@ -136,6 +136,7 @@ interface MedicalSummary {
     legacyCount?: number;
     upgradedCount?: number;
     deferredCount?: number;
+    failedCount?: number;
   };
   summarizedDiagnoses: any[];
   recentSymptoms: any[];
@@ -513,6 +514,24 @@ const MedicalRecords: React.FC = () => {
                         className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isReanalyzing ? 'Refreshing...' : 'Re-analyze with Llama'}
+                      </button>
+                    </div>
+                  ) : (medicalSummary?.cacheMeta?.failedCount ?? 0) > 0 ? (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-rose-900">
+                          {medicalSummary!.cacheMeta!.failedCount} document{medicalSummary!.cacheMeta!.failedCount! > 1 ? 's' : ''} failed to analyze
+                        </p>
+                        <p className="text-sm text-rose-700">
+                          Some documents were unreadable or timed out. Click below to retry.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => reanalyzeWithLlama()}
+                        disabled={isReanalyzing}
+                        className="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isReanalyzing ? 'Retrying...' : 'Retry extraction'}
                       </button>
                     </div>
                   ) : null}
