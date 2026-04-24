@@ -5,7 +5,6 @@
  * Hardened against prompt injection, hallucination, and data leakage.
  */
 
-const axios = require('axios');
 const { TOOL_DEFINITIONS, executeTool } = require('./chatbotTools');
 const { detectSensitiveLeak } = require('./chatbot/chatbotSanitizer');
 const { classifyIntent } = require('./chatbot/intentClassifier');
@@ -17,12 +16,8 @@ const { getPatientContext, updatePatientContext } = require('./chatbot/patientMe
 const obs = require('./chatbot/observability');
 const { callWithFallback, callWithFallbackStandard } = require('./llm/llmDispatcher');
 
-// 70B for clinical reasoning accuracy; 8B fallback only when rate-limited
-const CHATBOT_MODEL = process.env.GROQ_CHATBOT_MODEL || 'llama-3.3-70b-versatile';
-const CHATBOT_FALLBACK_MODEL = 'llama-3.1-8b-instant';
 const MAX_TOOL_ROUNDS = 5;
 const MAX_TOOL_OUTPUT_LENGTH = 800;
-const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
 // Intent → tool name allowlist. Keeps each Groq call to only the tools it needs,
 // cutting token usage from ~2,100 (all 16 tools) to ~200–600 per request.
@@ -190,7 +185,8 @@ class ChatbotService {
       try {
         choice = await callWithFallbackStandard(messages, filteredTools);
       } catch (err) {
-        console.error('[LLM-ERROR]', err.message);
+        const errDetail = err.response?.data ? JSON.stringify(err.response.data).slice(0, 400) : '';
+        console.error('[LLM-ERROR]', err.message, errDetail || '');
         obs.finalizeTrace(trace, { output: null, metadata: { error: err.message } });
         obs.flush();
         return this._buildResponse(

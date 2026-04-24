@@ -130,7 +130,7 @@ async function callStreaming(providerKey, messages, tools, { onToken, onToolStar
 async function callStandard(providerKey, messages, tools) {
   const provider = PROVIDERS[providerKey];
   const apiKey = provider.key();
-  
+
   const payload = {
     model: provider.model,
     messages,
@@ -143,7 +143,11 @@ async function callStandard(providerKey, messages, tools) {
   }
 
   const res = await axios.post(provider.url, payload, {
-    headers: { Authorization: `Bearer ${apiKey}` },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://livora.health',
+      'X-Title': 'Livora Healthcare',
+    },
     timeout: 25000,
   });
 
@@ -176,11 +180,13 @@ async function callWithFallback(messages, tools, options) {
       const status = err.response?.status;
       console.error(`[Dispatcher] ${p} failed (Status: ${status || 'Err'}):`, err.message);
       
-      // If it's a 401/403 or context limit, we definitely want to skip. 429 is the main trigger.
-      if (status === 429 || status >= 500 || err.code === 'ECONNABORTED') {
-        continue; // Try next provider
+      const errBody = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : '';
+      if (errBody) console.error(`[Dispatcher] ${p} error body:`, errBody);
+      // 400 can mean retired model or provider-specific schema rejection — try next
+      if (status === 400 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') {
+        continue;
       }
-      throw err; // Critical error, abort
+      throw err; // 401/403 = bad key, abort immediately
     }
   }
 
@@ -193,11 +199,19 @@ async function callWithFallbackStandard(messages, tools) {
 
   for (const p of chain) {
     try {
-      if (!PROVIDERS[p].key()) continue;
+      if (!PROVIDERS[p].key()) {
+        console.warn(`[Dispatcher] Skipping ${p} - Key not configured.`);
+        continue;
+      }
+      console.log(`[Dispatcher] Attempting ${p} (standard)...`);
       return await callStandard(p, messages, tools);
     } catch (err) {
       lastError = err;
-      if (err.response?.status === 429 || err.response?.status >= 500) continue;
+      const status = err.response?.status;
+      const errBody = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : '';
+      console.error(`[Dispatcher] ${p} failed (Status: ${status || 'Err'}):`, err.message, errBody || '');
+      // 400 can mean retired model or provider-specific schema rejection — try next
+      if (status === 400 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') continue;
       throw err;
     }
   }
