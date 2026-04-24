@@ -33,8 +33,12 @@ services:
         value: "false"
 
       # ── Auth ─────────────────────────────────────────
+      # IMPORTANT: Set JWT_SECRET manually in the Render dashboard.
+      # Do NOT use generateValue — it regenerates on every new service deploy,
+      # invalidating all existing user sessions.
+      # Generate a stable secret: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
       - key: JWT_SECRET
-        generateValue: true   # Render auto-generates a secure secret
+        sync: false
 
       # ── CORS (Vercel frontend URL) ────────────────────
       - key: CLIENT_URL
