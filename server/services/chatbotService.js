@@ -15,6 +15,7 @@ const { applyOutputConstraints } = require('./chatbot/outputConstraints');
 const { getLatestSummary } = require('./chatbot/conversationSummarizer');
 const { getPatientContext, updatePatientContext } = require('./chatbot/patientMemory');
 const obs = require('./chatbot/observability');
+const { callWithFallback, callWithFallbackStandard } = require('./llm/llmDispatcher');
 
 // 70B for clinical reasoning accuracy; 8B fallback only when rate-limited
 const CHATBOT_MODEL = process.env.GROQ_CHATBOT_MODEL || 'llama-3.3-70b-versatile';
@@ -184,10 +185,10 @@ class ChatbotService {
         });
       }
 
-      let llmResponse;
+      let choice;
       const genStart = new Date();
       try {
-        llmResponse = await this._callGroqWithRetry(messages, filteredTools);
+        choice = await callWithFallbackStandard(messages, filteredTools);
       } catch (err) {
         console.error('[LLM-ERROR]', err.message);
         obs.finalizeTrace(trace, { output: null, metadata: { error: err.message } });
@@ -199,13 +200,11 @@ class ChatbotService {
       }
       const genEnd = new Date();
 
-      const choice = llmResponse.choices[0];
       obs.logGeneration(trace, {
-        name: `groq-round-${rounds}`,
-        model: llmResponse.model || CHATBOT_MODEL,
+        name: `llm-round-${rounds}`,
+        model: choice.provider,
         messages: messages.map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content.slice(0, 300) : '[structured]' })),
-        output: choice.message.content || '[tool_calls]',
-        usageTokens: llmResponse.usage,
+        output: choice.content || '[tool_calls]',
         startTime: genStart,
         endTime: genEnd,
       });
@@ -377,35 +376,15 @@ class ChatbotService {
         }
 
         const genStart = new Date();
-        let result;
-        let useFallback = false;
-
-        try {
-          result = await this._callGroqStreaming(messages, filteredTools, {
-            onToken: (token) => onToken(token),
-            onToolStart: (toolName) => onToolStart(toolName),
-            model: CHATBOT_MODEL
-          });
-        } catch (err) {
-          const is429 = err.response?.status === 429;
-          if (is429) {
-            console.warn(`[Groq-Stream] 429 on ${CHATBOT_MODEL}, retrying with fallback ${CHATBOT_FALLBACK_MODEL}`);
-            result = await this._callGroqStreaming(messages, filteredTools, {
-              onToken: (token) => onToken(token),
-              onToolStart: (toolName) => onToolStart(toolName),
-              model: CHATBOT_FALLBACK_MODEL
-            });
-            useFallback = true;
-          } else {
-            throw err;
-          }
-        }
-
+        const result = await callWithFallback(messages, filteredTools, {
+          onToken: (token) => onToken(token),
+          onToolStart: (toolName) => onToolStart(toolName),
+        });
         const genEnd = new Date();
 
         obs.logGeneration(trace, {
-          name: `groq-stream-round-${rounds}`,
-          model: useFallback ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL,
+          name: `llm-stream-round-${rounds}`,
+          model: result.provider,
           messages: messages.map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content.slice(0, 300) : '[structured]' })),
           output: result.content || '[tool_calls]',
           startTime: genStart,
@@ -498,80 +477,6 @@ class ChatbotService {
 
   // ─── STREAMING GROQ CALL ─────────────────────────────────────────────────────
 
-  async _callGroqStreaming(messages, tools, { onToken, onToolStart, model = CHATBOT_MODEL }) {
-
-    const payload = {
-      model,
-      messages,
-      temperature: 0.0,
-      stream: true
-    };
-
-    if (tools && tools.length > 0) {
-      payload.tools = tools;
-      payload.tool_choice = 'auto';
-    }
-
-    const res = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      payload,
-      {
-        headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-        responseType: 'stream',
-        timeout: 30000,
-      }
-    );
-
-    return new Promise((resolve, reject) => {
-      let buffer = '';
-      let fullContent = '';
-      let finishReason = null;
-      // Accumulate tool call deltas by index
-      const toolCallMap = {};
-
-      res.data.on('data', (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const payload = line.slice(6).trim();
-          if (payload === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(payload);
-            const delta = parsed.choices?.[0]?.delta;
-            finishReason = parsed.choices?.[0]?.finish_reason || finishReason;
-
-            if (delta?.content) {
-              fullContent += delta.content;
-              onToken(delta.content);
-            }
-
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                const idx = tc.index;
-                if (!toolCallMap[idx]) {
-                  toolCallMap[idx] = { id: tc.id || '', function: { name: tc.function?.name || '', arguments: '' } };
-                }
-                if (tc.id) toolCallMap[idx].id = tc.id;
-                if (tc.function?.name) toolCallMap[idx].function.name += tc.function.name;
-                if (tc.function?.arguments) toolCallMap[idx].function.arguments += tc.function.arguments;
-              }
-            }
-          } catch { /* skip malformed chunks */ }
-        }
-      });
-
-      res.data.on('end', () => {
-        const toolCalls = Object.values(toolCallMap);
-        resolve({ finishReason, content: fullContent, toolCalls });
-      });
-
-      res.data.on('error', (err) => reject(err));
-    });
-  }
 
   _formatHistory(history) {
     // MINIMAL HISTORY: Only the very last exchange to stay under TPM limits
@@ -588,46 +493,6 @@ class ChatbotService {
     return TOOL_DEFINITIONS.filter(t => nameSet.has(t.function.name));
   }
 
-  async _callGroqWithRetry(messages, tools, retries = 3) {
-    let useFallback = false;
-    for (let i = 0; i <= retries; i++) {
-      const model = useFallback ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL;
-      const payload = {
-        model,
-        messages,
-        temperature: 0.0,
-      };
-
-      if (tools && tools.length > 0) {
-        payload.tools = tools;
-        payload.tool_choice = 'auto';
-      }
-
-      try {
-        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
-          headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-          timeout: 25000,
-        });
-        return res.data;
-      } catch (err) {
-        const is429 = err.response?.status === 429;
-        if (is429 && i < retries) {
-          // Switch to 8B immediately on first rate limit hit
-          if (!useFallback) {
-            console.warn(`[Groq] 429 on ${CHATBOT_MODEL}, switching to ${CHATBOT_FALLBACK_MODEL}`);
-            useFallback = true;
-          }
-          // Respect the retry-after header Groq sends; default to 15s
-          const retryAfter = parseInt(err.response?.headers?.['retry-after'] || '15', 10);
-          const waitMs = Math.min(retryAfter * 1000, 60000);
-          console.warn(`[Groq] Waiting ${waitMs}ms before retry (retry-after: ${retryAfter}s)`);
-          await sleep(waitMs);
-          continue;
-        }
-        throw err;
-      }
-    }
-  }
   _buildResponse(message, booking, doctors, emergency, classification = null, gateDecision = null, validationResult = null) {
     return {
       message,
