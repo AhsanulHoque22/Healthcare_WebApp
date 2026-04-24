@@ -16,10 +16,9 @@ const PROVIDERS = {
   },
   GEMINI: {
     name: 'Gemini',
-    // Google AI Studio OpenAI Compatibility
     url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     key: () => process.env.GEMINI_API_KEY,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-2.0-flash'
   },
   OPENROUTER: {
     name: 'OpenRouter',
@@ -182,8 +181,8 @@ async function callWithFallback(messages, tools, options) {
       
       const errBody = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : '';
       if (errBody) console.error(`[Dispatcher] ${p} error body:`, errBody);
-      // 400 can mean retired model or provider-specific schema rejection — try next
-      if (status === 400 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') {
+      // 400 = malformed/retired model; 404 = model not found; 429 = rate limit — all recoverable by trying next provider
+      if (status === 400 || status === 404 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') {
         continue;
       }
       throw err; // 401/403 = bad key, abort immediately
@@ -210,8 +209,8 @@ async function callWithFallbackStandard(messages, tools) {
       const status = err.response?.status;
       const errBody = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : '';
       console.error(`[Dispatcher] ${p} failed (Status: ${status || 'Err'}):`, err.message, errBody || '');
-      // 400 can mean retired model or provider-specific schema rejection — try next
-      if (status === 400 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') continue;
+      // 400 = malformed/retired model; 404 = model not found; 429 = rate limit — all recoverable by trying next provider
+      if (status === 400 || status === 404 || status === 429 || status >= 500 || err.code === 'ECONNABORTED') continue;
       throw err;
     }
   }
