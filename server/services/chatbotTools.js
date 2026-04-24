@@ -394,10 +394,10 @@ ${context}`;
 
   search_doctors: async (params) => {
     const where = { isVerified: true };
-    if (params.department) {
+    if (params.department && typeof params.department === 'string') {
       where.department = { [Op.like]: `%${params.department.toLowerCase()}%` };
     }
-    if (params.keyword) {
+    if (params.keyword && typeof params.keyword === 'string') {
       where[Op.or] = [
         { hospital: { [Op.like]: `%${params.keyword}%` } },
         { department: { [Op.like]: `%${params.keyword}%` } }
@@ -529,6 +529,7 @@ ${context}`;
     });
     if (!patient || !doctor) throw new Error("Entity mismatch during booking.");
     
+    if (!params.timeBlock) throw new Error("timeBlock is required for booking.");
     const appointmentTime = parseTimeBlock(params.timeBlock);
     
     const appointment = await Appointment.create({
@@ -588,6 +589,7 @@ ${context}`;
       };
     }
 
+    if (!params.timeBlock) throw new Error("timeBlock is required for rescheduling.");
     const appointmentTime = parseTimeBlock(params.timeBlock);
 
     // Update to requested status for re-approval
