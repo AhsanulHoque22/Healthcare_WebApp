@@ -536,6 +536,28 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   ) : null}
 
+                  {/* Document Analysis Transparency */}
+                  {medicalSummary?.cacheMeta && medicalSummary.cacheMeta.analyzedDocuments !== undefined && (
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-2">
+                        <div className="rounded-xl bg-white border border-gray-100 p-3 text-center shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Vault Docs</p>
+                          <p className="text-lg font-bold text-gray-900">{medicalSummary.cacheMeta.analyzedDocuments}</p>
+                        </div>
+                        <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Successfully Scanned</p>
+                          <p className="text-lg font-bold text-indigo-900">{medicalSummary.cacheMeta.reusableCount || 0}</p>
+                        </div>
+                        <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">Pending Background</p>
+                          <p className="text-lg font-bold text-amber-900">{medicalSummary.cacheMeta.deferredCount || 0}</p>
+                        </div>
+                        <div className="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Failed / Unreadable</p>
+                          <p className="text-lg font-bold text-rose-900">{medicalSummary.cacheMeta.failedCount || 0}</p>
+                        </div>
+                    </div>
+                  )}
+
                   {medicalSummary?.llamaClinicalInsight ? (
                     <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 shadow-sm">
                       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
