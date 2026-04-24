@@ -48,6 +48,18 @@ const TOOL_WHITELISTS = {
   ],
   analyze_medical_document: [
     'documentUrl', 'findings'
+  ],
+  check_drug_interaction: [
+    'source', 'citation', 'drugA', 'drugB', 'knownInteractionFound',
+    'interactionDataA', 'interactionDataB', 'warningsA', 'warningsB', 'disclaimer', 'error', 'message'
+  ],
+  get_dosage_info: [
+    'source', 'citation', 'genericName', 'brandNames', 'indicationsAndUsage',
+    'dosageAndAdministration', 'warnings', 'contraindications', 'adverseReactions',
+    'condition', 'disclaimer', 'error', 'message'
+  ],
+  search_medical_knowledge: [
+    'source', 'answer', 'retrieved', 'error', 'message'
   ]
 };
 

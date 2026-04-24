@@ -3,6 +3,10 @@ const axios = require('axios');
 const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const LLAMA_MODELS = Object.freeze({
+  // Primary reasoning engine for the chatbot — needs strong clinical accuracy
+  chatbotReasoning: process.env.GROQ_CHATBOT_MODEL || 'llama-3.3-70b-versatile',
+  // Fast/cheap tasks: routing, extraction, summarization, intent classification
+  chatbotFast: 'llama-3.1-8b-instant',
   documentExtraction: process.env.GROQ_DEEP_MEDICAL_MODEL || 'llama-3.3-70b-versatile',
   patientInsight: process.env.GROQ_FAST_INSIGHT_MODEL || 'llama-3.1-8b-instant',
   documentVision: process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview',

@@ -13,11 +13,15 @@ import {
   ChevronRightIcon,
   Bars3Icon,
   ShieldCheckIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
+  FlagIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Message {
+  id?: number;
   role: 'user' | 'assistant';
   content: string;
   isEmergency?: boolean;
@@ -25,7 +29,17 @@ interface Message {
   bookingDetails?: any;
   intent?: string;
   createdAt?: string;
+  feedbackRating?: 'thumbs_up' | 'thumbs_down' | null;
+  feedbackFlagged?: boolean;
 }
+
+const FLAG_REASONS = [
+  'Inaccurate information',
+  'Missing disclaimer',
+  'Dangerous advice',
+  'Inappropriate content',
+  'Other',
+];
 
 interface Session {
   conversationId: string;
@@ -48,6 +62,7 @@ const Assistant: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [flagOpenForIndex, setFlagOpenForIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -97,6 +112,7 @@ const Assistant: React.FC = () => {
       if (resp.data.data) {
         setMessages(
           resp.data.data.map((h: any) => ({
+            id: h.id,
             role: h.role,
             content: h.content,
             isEmergency: h.intent === 'EMERGENCY',
@@ -104,6 +120,8 @@ const Assistant: React.FC = () => {
             bookingDetails: h.bookingDetails,
             intent: h.intent,
             createdAt: h.createdAt,
+            feedbackRating: h.feedbackRating,
+            feedbackFlagged: h.feedbackFlagged,
           }))
         );
       }
@@ -152,6 +170,7 @@ const Assistant: React.FC = () => {
       setMessages(prev => [
         ...prev,
         {
+          id: aiResponse.messageId,
           role: 'assistant',
           content: aiResponse.message,
           intent: aiResponse.intent,
@@ -194,6 +213,27 @@ const Assistant: React.FC = () => {
       toast.success('Conversation deleted');
     } catch {
       toast.error('Failed to delete');
+    }
+  };
+
+  const submitFeedback = async (
+    index: number,
+    rating?: 'thumbs_up' | 'thumbs_down',
+    flagged?: boolean,
+    flagReason?: string
+  ) => {
+    const msg = messages[index];
+    if (!msg.id) return;
+    try {
+      await API.post('/chatbot/feedback', { messageId: msg.id, rating, flagged, flagReason });
+      setMessages(prev => prev.map((m, i) =>
+        i === index
+          ? { ...m, feedbackRating: rating ?? m.feedbackRating, feedbackFlagged: flagged ?? m.feedbackFlagged }
+          : m
+      ));
+      toast.success(flagged ? 'Response flagged — thank you.' : 'Feedback recorded.');
+    } catch {
+      toast.error('Failed to submit feedback');
     }
   };
 
@@ -514,6 +554,48 @@ const Assistant: React.FC = () => {
                     <p className="text-[10px] text-gray-400 font-semibold mt-1 px-1 uppercase tracking-wider">
                       {formatTime(m.createdAt)}
                     </p>
+
+                    {/* Feedback bar — only for assistant messages with a persisted id */}
+                    {m.role === 'assistant' && m.id && (
+                      <div className="flex items-center gap-0.5 mt-1 px-1">
+                        <button
+                          onClick={() => submitFeedback(i, 'thumbs_up')}
+                          title="Good response"
+                          className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_up' ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500 hover:bg-green-50'}`}
+                        >
+                          <HandThumbUpIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => submitFeedback(i, 'thumbs_down')}
+                          title="Bad response"
+                          className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_down' ? 'text-red-500 bg-red-50' : 'text-gray-300 hover:text-red-400 hover:bg-red-50'}`}
+                        >
+                          <HandThumbDownIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="relative">
+                          <button
+                            onClick={() => setFlagOpenForIndex(flagOpenForIndex === i ? null : i)}
+                            title="Flag response"
+                            className={`p-1 rounded-lg transition-all ${m.feedbackFlagged ? 'text-orange-500 bg-orange-50' : 'text-gray-300 hover:text-orange-400 hover:bg-orange-50'}`}
+                          >
+                            <FlagIcon className="h-3.5 w-3.5" />
+                          </button>
+                          {flagOpenForIndex === i && (
+                            <div className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[180px] z-10">
+                              {FLAG_REASONS.map(reason => (
+                                <button
+                                  key={reason}
+                                  onClick={() => { submitFeedback(i, undefined, true, reason); setFlagOpenForIndex(null); }}
+                                  className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all"
+                                >
+                                  {reason}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

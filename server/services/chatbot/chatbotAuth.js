@@ -21,7 +21,9 @@ const RBAC_POLICIES = {
       'cancel_appointment',
       'reschedule_appointment',
       'trigger_emergency',
-      'search_doctors'
+      'search_doctors',
+      'check_drug_interaction',
+      'get_dosage_info'
     ]
   },
   doctor: {

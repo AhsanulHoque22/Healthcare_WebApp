@@ -8,6 +8,34 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// Fail fast if required secrets are missing — better to crash on boot than
+// to serve requests that silently fail or use undefined credentials.
+const REQUIRED_ENV_VARS = [
+  'JWT_SECRET',
+  'GROQ_API_KEY',
+  'DEEPGRAM_API_KEY',
+  'DB_HOST',
+  'DB_PASSWORD',
+];
+const missingVars = REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
+if (missingVars.length > 0) {
+  console.error(`[STARTUP] Missing required environment variables: ${missingVars.join(', ')}`);
+  console.error('[STARTUP] Copy server/.env.example to server/.env and fill in all values.');
+  process.exit(1);
+}
+
+const WEAK_JWT_SECRETS = [
+  'your-super-secret-jwt-key-change-this-in-production',
+  'secret',
+  'changeme',
+  'REPLACE_WITH_64_CHAR_RANDOM_HEX',
+];
+if (WEAK_JWT_SECRETS.includes(process.env.JWT_SECRET)) {
+  console.error('[STARTUP] JWT_SECRET is set to a known weak placeholder value.');
+  console.error('[STARTUP] Generate a strong secret: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  process.exit(1);
+}
+
 const { sequelize } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');

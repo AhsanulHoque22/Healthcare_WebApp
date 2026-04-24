@@ -15,6 +15,7 @@ const {
 const { secureExecute } = require('./chatbot/secureToolWrapper');
 const { analyzeDocument } = require('./extractionService');
 const { aggregateMedicalData } = require('./chatbot/medicalDataAggregator');
+const { checkDrugInteraction, getDosageInfo } = require('./chatbot/deterministicMedicalTools');
 
 // ─── TOOL DEFINITIONS (JSON Schema for LLM) ───────────────────────────────────
 
@@ -203,6 +204,36 @@ const TOOL_DEFINITIONS = [
   {
     type: "function",
     function: {
+      name: "check_drug_interaction",
+      description: "Look up known interactions between two medications using official FDA drug label data. Use this when a user asks 'Can I take X with Y?', 'Is it safe to combine X and Y?', or 'Do X and Y interact?'. Always use this tool for drug interaction questions — never guess.",
+      parameters: {
+        type: "object",
+        properties: {
+          drugA: { type: "string", description: "Name of the first drug (generic or brand name)." },
+          drugB: { type: "string", description: "Name of the second drug (generic or brand name)." }
+        },
+        required: ["drugA", "drugB"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_dosage_info",
+      description: "Retrieve official FDA dosage and administration information for a medication. Use this when a user asks 'What is the correct dose of X?', 'How often should I take X?', or 'What is the maximum dose of X?'. Always use this tool for dosage questions — never generate dosage numbers yourself.",
+      parameters: {
+        type: "object",
+        properties: {
+          drugName: { type: "string", description: "Name of the drug (generic or brand name)." },
+          condition: { type: "string", description: "Optional: the condition being treated, for context." }
+        },
+        required: ["drugName"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "search_medical_knowledge",
       description: "The 'Livora Medical Wiki'. Use this tool when the user asks general medical questions that are NOT about their own data, such as 'What are the symptoms of Flu?', 'Side effects of Paracetamol?', or 'How to manage high blood pressure?'. It searches a vast medical knowledge base for evidence-based information.",
       parameters: {
@@ -253,21 +284,56 @@ const implementations = {
 
   search_medical_knowledge: async (params) => {
     const { createChatCompletion } = require('./groqLlamaService');
-    const systemPrompt = "You are the Livora Medical Knowledge Base. Provide concise, evidence-based answers to general medical questions. Do not give personalized medical advice. If you don't know, say information is not available in the wiki.";
-    const userPrompt = `Search query: ${params.query}`;
-    
+    const { retrieve } = require('./chatbot/medicalRetriever');
+
+    const { source, chunks } = await retrieve(params.query);
+
+    // If retrieval found nothing, tell the LLM explicitly so it says
+    // "not in knowledge base" rather than guessing
+    if (chunks.length === 0) {
+      return {
+        source: 'Livora Medical Knowledge Base',
+        answer: 'This topic is not currently covered in our verified medical knowledge base. Please consult a qualified healthcare provider for accurate information.',
+        retrieved: false,
+      };
+    }
+
+    const context = chunks.join('\n\n---\n\n');
+
+    const systemPrompt = `You are the Livora Medical Knowledge Base assistant.
+Answer the user's question using ONLY the verified medical context provided below.
+Do NOT add information beyond what is in the context.
+If the context does not contain a direct answer, say "The available guidelines do not cover this specific question — please consult a healthcare provider."
+Be concise, factual, and professional.
+
+VERIFIED CONTEXT:
+${context}`;
+
     try {
-      const result = await createChatCompletion({
-        model: "llama-3.1-8b-instant",
+      const answer = await createChatCompletion({
+        model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: params.query },
         ],
-        temperature: 0.0
+        temperature: 0.0,
+        maxTokens: 600,
+        fallbackModel: 'llama-3.1-8b-instant',
       });
-      return { source: "Livora Medical Wiki", answer: result };
+
+      return {
+        source,
+        answer,
+        retrieved: true,
+      };
     } catch (e) {
-      return { error: true, message: "Medical Wiki is currently offline." };
+      console.error('[search_medical_knowledge] LLM synthesis failed:', e.message);
+      // Return raw context as fallback if synthesis fails
+      return {
+        source,
+        answer: chunks[0],
+        retrieved: true,
+      };
     }
   },
 
@@ -536,6 +602,14 @@ const implementations = {
       message: `Reschedule requested for ${params.newDate}. Awaiting new approval.`,
       newDate: params.newDate
     };
+  },
+
+  check_drug_interaction: async (params) => {
+    return await checkDrugInteraction(params);
+  },
+
+  get_dosage_info: async (params) => {
+    return await getDosageInfo(params);
   },
 
   trigger_emergency: async (params, userId) => {

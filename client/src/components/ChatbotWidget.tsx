@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { 
-  ChatBubbleLeftRightIcon, 
-  XMarkIcon, 
+import {
+  ChatBubbleLeftRightIcon,
+  XMarkIcon,
   PaperAirplaneIcon,
   MicrophoneIcon,
   StopIcon,
@@ -13,20 +13,36 @@ import {
   UserIcon,
   TrashIcon,
   PlusCircleIcon,
-  ArrowTopRightOnSquareIcon
+  ArrowTopRightOnSquareIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
+  FlagIcon,
 } from '@heroicons/react/24/outline';
 
 import API from '../api/api';
 import toast from 'react-hot-toast';
 
 interface Message {
+  id?: number;
   role: 'user' | 'assistant';
   content: string;
   intent?: string;
   isEmergency?: boolean;
   availableDoctors?: any[];
   bookingDetails?: any;
+  isStreaming?: boolean;
+  toolStatus?: string;
+  feedbackRating?: 'thumbs_up' | 'thumbs_down' | null;
+  feedbackFlagged?: boolean;
 }
+
+const FLAG_REASONS = [
+  'Inaccurate information',
+  'Missing disclaimer',
+  'Dangerous advice',
+  'Inappropriate content',
+  'Other',
+];
 
 const ChatbotWidget: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +59,7 @@ const ChatbotWidget: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [flagOpenForIndex, setFlagOpenForIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -71,13 +88,15 @@ const ChatbotWidget: React.FC = () => {
           const response = await API.get(`/chatbot/history?conversationId=${activeId}`);
           if (response.data.data.length > 0) {
             const formattedHistory = response.data.data.map((h: any) => ({
+              id: h.id,
               role: h.role,
               content: h.content,
               intent: h.intent,
               isEmergency: h.intent === 'EMERGENCY',
               availableDoctors: h.availableDoctors,
               bookingDetails: h.bookingDetails,
-              context: h.context
+              feedbackRating: h.feedbackRating,
+              feedbackFlagged: h.feedbackFlagged,
             }));
             setMessages(formattedHistory);
             setTimeout(() => {
@@ -133,55 +152,128 @@ const ChatbotWidget: React.FC = () => {
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
 
-    const newMessages = [...messages, { role: 'user' as const, content: text }];
+    const userMessage: Message = { role: 'user', content: text };
+    const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
-    try {
-      let activeId = conversationId;
-      let isNewSession = false;
+    let activeId = conversationId;
+    let isNewSession = false;
+    if (!activeId) {
+      activeId = generateSessionId();
+      setConversationId(activeId);
+      localStorage.setItem('lastChatbotSessionId', activeId);
+      isNewSession = true;
+    }
 
-      if (!activeId) {
-        activeId = generateSessionId();
-        setConversationId(activeId);
-        localStorage.setItem('lastChatbotSessionId', activeId);
-        isNewSession = true;
+    const history = newMessages.map(m => ({ role: m.role, content: m.content }));
+    const baseUrl = (process.env as any).REACT_APP_API_URL || '/api';
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+
+    // Add a placeholder streaming message
+    const streamingPlaceholder: Message = { role: 'assistant', content: '', isStreaming: true };
+    setMessages([...newMessages, streamingPlaceholder]);
+
+    try {
+      const response = await fetch(`${baseUrl}/chatbot/message/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          message: text,
+          history,
+          conversationId: activeId,
+          title: isNewSession ? text.substring(0, 30) + '...' : undefined,
+        }),
+      });
+
+      if (!response.ok || !response.body) throw new Error('Stream request failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let streamedContent = '';
+      let finalData: any = null;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === 'token') {
+              streamedContent += parsed.token;
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: 'assistant', content: streamedContent, isStreaming: true };
+                return updated;
+              });
+            } else if (parsed.type === 'tool') {
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { ...updated[updated.length - 1], toolStatus: `Running: ${parsed.tool}…` };
+                return updated;
+              });
+            } else if (parsed.type === 'done') {
+              finalData = parsed;
+            }
+          } catch { /* skip malformed */ }
+        }
       }
 
-      // Send history to LLM for context (stripped to role/content only)
-      const history = newMessages.map(m => ({ role: m.role, content: m.content }));
-      
-      const response = await API.post('/chatbot/message', { 
-        message: text, 
-        history, 
-        conversationId: activeId,
-        title: isNewSession ? text.substring(0, 30) + '...' : undefined
-      });
-      
-      const aiData = response.data.data;
-      setMessages([...newMessages, { 
-        role: 'assistant', 
-        content: aiData.message,
-        intent: aiData.intent,
-        isEmergency: aiData.isEmergency,
-        availableDoctors: aiData.availableDoctors,
-        bookingDetails: aiData.bookingDetails
-      }]);
-
-      if (aiData.isEmergency) {
-        toast.error("Emergency Alert Triggered!");
+      // Replace streaming placeholder with final complete message
+      if (finalData) {
+        setMessages([...newMessages, {
+          id: finalData.messageId,
+          role: 'assistant',
+          content: finalData.message || streamedContent,
+          intent: finalData.intent,
+          isEmergency: finalData.isEmergency,
+          availableDoctors: finalData.availableDoctors,
+          bookingDetails: finalData.bookingDetails,
+          isStreaming: false,
+        }]);
+        if (finalData.isEmergency) toast.error('Emergency Alert Triggered!');
       }
 
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || "Failed to connect to AI server";
-      console.error("[Chatbot] Error:", error);
-      toast.error(errorMsg);
-      // Rollback messages if failed
+      console.error('[Chatbot] Stream error:', error);
+      toast.error('Failed to connect to AI server');
       setMessages(messages);
       setInput(text);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const submitFeedback = async (
+    index: number,
+    rating?: 'thumbs_up' | 'thumbs_down',
+    flagged?: boolean,
+    flagReason?: string
+  ) => {
+    const msg = messages[index];
+    if (!msg.id) return;
+    try {
+      await API.post('/chatbot/feedback', { messageId: msg.id, rating, flagged, flagReason });
+      setMessages(prev => prev.map((m, i) =>
+        i === index
+          ? { ...m, feedbackRating: rating ?? m.feedbackRating, feedbackFlagged: flagged ?? m.feedbackFlagged }
+          : m
+      ));
+      toast.success(flagged ? 'Response flagged.' : 'Thanks for the feedback!');
+    } catch {
+      toast.error('Failed to submit feedback');
     }
   };
 
@@ -318,7 +410,13 @@ const ChatbotWidget: React.FC = () => {
                       ? 'bg-red-50 border-2 border-red-200 text-red-900 rounded-tl-none'
                       : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+                  {m.toolStatus && m.isStreaming && (
+                    <p className="text-[10px] text-blue-400 italic mb-1 animate-pulse">{m.toolStatus}</p>
+                  )}
+                  <p className="text-sm whitespace-pre-wrap">
+                    {m.content}
+                    {m.isStreaming && m.content && <span className="inline-block w-1.5 h-3.5 bg-blue-400 ml-0.5 animate-pulse rounded-sm" />}
+                  </p>
                   
                   {/* Emergency Warning */}
                   {m.isEmergency && (
@@ -366,6 +464,48 @@ const ChatbotWidget: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-green-900">Appointment Confirmed!</p>
                         <p className="text-[10px] text-green-700">Serial #{m.bookingDetails.serialNumber}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Feedback bar — assistant messages with a persisted id only */}
+                  {m.role === 'assistant' && m.id && !m.isStreaming && (
+                    <div className="flex items-center gap-0.5 mt-2 pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => submitFeedback(i, 'thumbs_up')}
+                        title="Good response"
+                        className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_up' ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500 hover:bg-green-50'}`}
+                      >
+                        <HandThumbUpIcon className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => submitFeedback(i, 'thumbs_down')}
+                        title="Bad response"
+                        className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_down' ? 'text-red-500 bg-red-50' : 'text-gray-300 hover:text-red-400 hover:bg-red-50'}`}
+                      >
+                        <HandThumbDownIcon className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => setFlagOpenForIndex(flagOpenForIndex === i ? null : i)}
+                          title="Flag response"
+                          className={`p-1 rounded-lg transition-all ${m.feedbackFlagged ? 'text-orange-500 bg-orange-50' : 'text-gray-300 hover:text-orange-400 hover:bg-orange-50'}`}
+                        >
+                          <FlagIcon className="h-3.5 w-3.5" />
+                        </button>
+                        {flagOpenForIndex === i && (
+                          <div className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[170px] z-10">
+                            {FLAG_REASONS.map(reason => (
+                              <button
+                                key={reason}
+                                onClick={() => { submitFeedback(i, undefined, true, reason); setFlagOpenForIndex(null); }}
+                                className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all"
+                              >
+                                {reason}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

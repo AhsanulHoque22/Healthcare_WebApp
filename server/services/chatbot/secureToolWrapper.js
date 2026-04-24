@@ -18,7 +18,7 @@ async function secureExecute(toolFn, toolName, params, context) {
 
   try {
     // 1. Rate Limiting
-    checkRateLimit(userId, toolName);
+    await checkRateLimit(userId, toolName);
 
     // 2. Authorization (RBAC/ABAC)
     await enforceAccess({ userId, role, toolName, params });

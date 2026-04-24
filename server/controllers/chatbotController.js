@@ -8,6 +8,8 @@
 
 const chatbotService = require('../services/chatbotService');
 const { Patient, ChatHistory, Notification } = require('../models');
+const { scanInput } = require('../services/chatbot/inputGuard');
+const { maybeSummarize } = require('../services/chatbot/conversationSummarizer');
 
 class ChatbotController {
 
@@ -24,7 +26,24 @@ class ChatbotController {
         return res.status(400).json({ success: false, message: 'Message cannot be empty' });
       }
 
-      // 1. Persist the user's message
+      // 1. Input guard — block prompt injection before anything else runs
+      const guardResult = await scanInput(message.trim(), userId);
+      if (guardResult.blocked) {
+        return res.status(200).json({
+          success: true,
+          data: {
+            message: "I can only help with healthcare-related questions. How can I assist you with your health today?",
+            intent: 'GENERAL',
+            classification: null,
+            safetyPipelineTriggered: false,
+            validated: false,
+            availableDoctors: null,
+            bookingDetails: null,
+          }
+        });
+      }
+
+      // 2. Persist the user's message
       await ChatHistory.create({
         userId,
         role: 'user',
@@ -33,17 +52,18 @@ class ChatbotController {
         title: title || null
       });
 
-      // 2. Build conversation context for the LLM.
+      // 3. Build conversation context for the LLM.
       //    When a conversationId is present, load history from DB so context
       //    persists across page refreshes (client may not send history).
       //    Fall back to client-provided history (used by ChatbotWidget).
       let contextHistory = history || [];
       if (conversationId) {
         try {
+          const { Op } = require('sequelize');
           const dbHistory = await ChatHistory.findAll({
-            where: { userId, conversationId },
+            where: { userId, conversationId, role: { [Op.in]: ['user', 'assistant'] } },
             order: [['created_at', 'ASC']],
-            limit: 20, // last 20 rows = ~10 exchanges
+            limit: 20,
             attributes: ['role', 'content', 'availableDoctors', 'bookingDetails']
           });
           // Exclude the message we just persisted (last user msg)
@@ -61,8 +81,8 @@ class ChatbotController {
         }
       }
 
-      // 3. Run the full agentic reasoning pipeline
-      const aiResponse = await chatbotService.processMessage(req.user, message.trim(), contextHistory);
+      // 3. Run the full agentic reasoning pipeline (pass conversationId for summary injection)
+      const aiResponse = await chatbotService.processMessage(req.user, message.trim(), contextHistory, conversationId || null);
 
       // 4. If an emergency was truly triggered, augment the message with emergency contact info
       if (aiResponse.isEmergency) {
@@ -75,7 +95,7 @@ class ChatbotController {
       }
 
       // 5. Persist the assistant's response
-      await ChatHistory.create({
+      const savedAssistantMsg = await ChatHistory.create({
         userId,
         role: 'assistant',
         content: aiResponse.message,
@@ -87,14 +107,121 @@ class ChatbotController {
         title: title || null
       });
 
+      // 6. Fire-and-forget summarization check — never blocks the response
+      if (conversationId) {
+        maybeSummarize(userId, conversationId).catch((err) =>
+          console.error('[ChatbotController] maybeSummarize error:', err.message)
+        );
+      }
+
       return res.json({
         success: true,
-        data: aiResponse
+        data: { ...aiResponse, messageId: savedAssistantMsg.id }
       });
 
     } catch (error) {
       console.error('[ChatbotController] handleMessage error:', error.message);
       next(error);
+    }
+  }
+
+  /**
+   * POST /api/chatbot/message/stream
+   * SSE streaming endpoint — tokens arrive progressively instead of after a full 25s wait.
+   */
+  async handleStreamMessage(req, res, next) {
+    try {
+      const { message, history, conversationId, title } = req.body;
+      const userId = req.user.id;
+
+      if (!message || !message.trim()) {
+        return res.status(400).json({ success: false, message: 'Message cannot be empty' });
+      }
+
+      // Input guard
+      const guardResult = await scanInput(message.trim(), userId);
+      if (guardResult.blocked) {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.write(`data: ${JSON.stringify({ type: 'done', message: "I can only help with healthcare-related questions.", intent: 'GENERAL', isEmergency: false, classification: null, safetyPipelineTriggered: false, validated: false, availableDoctors: null, bookingDetails: null })}\n\n`);
+        return res.end();
+      }
+
+      // Persist user message
+      await ChatHistory.create({
+        userId, role: 'user', content: message.trim(),
+        conversationId: conversationId || null, title: title || null
+      });
+
+      // Build context history
+      let contextHistory = history || [];
+      if (conversationId) {
+        try {
+          const { Op } = require('sequelize');
+          const dbHistory = await ChatHistory.findAll({
+            where: { userId, conversationId, role: { [Op.in]: ['user', 'assistant'] } },
+            order: [['created_at', 'ASC']], limit: 20,
+            attributes: ['role', 'content', 'availableDoctors', 'bookingDetails']
+          });
+          const withoutLatest = dbHistory.slice(0, -1);
+          if (withoutLatest.length > 0) {
+            contextHistory = withoutLatest.map(h => ({ role: h.role, content: h.content }));
+          }
+        } catch (e) {
+          console.warn('[ChatbotController] Could not load DB history:', e.message);
+        }
+      }
+
+      // Set SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+
+      let finalAiResponse = null;
+
+      await chatbotService.processMessageStream(req.user, message.trim(), contextHistory, conversationId || null, {
+        onToken: (token) => {
+          res.write(`data: ${JSON.stringify({ type: 'token', token })}\n\n`);
+        },
+        onToolStart: (toolName) => {
+          res.write(`data: ${JSON.stringify({ type: 'tool', tool: toolName })}\n\n`);
+        },
+        onComplete: (aiResponse) => {
+          finalAiResponse = aiResponse;
+          // Don't write done or end yet — persist first to capture messageId
+        },
+      });
+
+      // Persist assistant response, include messageId in done event, then end stream
+      if (finalAiResponse) {
+        const savedStreamMsg = await ChatHistory.create({
+          userId, role: 'assistant', content: finalAiResponse.message,
+          intent: finalAiResponse.intent, context: null,
+          availableDoctors: finalAiResponse.availableDoctors || null,
+          bookingDetails: finalAiResponse.bookingDetails || null,
+          conversationId: conversationId || null, title: title || null
+        });
+
+        res.write(`data: ${JSON.stringify({ type: 'done', ...finalAiResponse, messageId: savedStreamMsg.id })}\n\n`);
+        res.end();
+
+        if (conversationId) {
+          maybeSummarize(userId, conversationId).catch((err) =>
+            console.error('[ChatbotController] maybeSummarize error:', err.message)
+          );
+        }
+      } else {
+        res.end();
+      }
+    } catch (error) {
+      console.error('[ChatbotController] handleStreamMessage error:', error.message);
+      if (!res.headersSent) return next(error);
+      try {
+        res.write(`data: ${JSON.stringify({ type: 'error', message: 'An error occurred.' })}\n\n`);
+        res.end();
+      } catch {}
     }
   }
 
@@ -115,7 +242,7 @@ class ChatbotController {
         where,
         order: [['created_at', 'ASC']],
         limit: 100,
-        attributes: ['id', 'role', 'content', 'intent', 'availableDoctors', 'bookingDetails', 'createdAt', 'conversationId']
+        attributes: ['id', 'role', 'content', 'intent', 'availableDoctors', 'bookingDetails', 'createdAt', 'conversationId', 'feedbackRating', 'feedbackFlagged']
       });
 
       return res.json({
@@ -193,6 +320,48 @@ class ChatbotController {
       );
 
       return res.json({ success: true, data: sessions });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/chatbot/feedback
+   * Records thumbs-up/down rating or a flag with reason on an assistant message.
+   */
+  async handleFeedback(req, res, next) {
+    try {
+      const { messageId, rating, flagged, flagReason } = req.body;
+      const userId = req.user.id;
+
+      if (!messageId) {
+        return res.status(400).json({ success: false, message: 'messageId is required' });
+      }
+      if (rating && !['thumbs_up', 'thumbs_down'].includes(rating)) {
+        return res.status(400).json({ success: false, message: 'rating must be thumbs_up or thumbs_down' });
+      }
+      if (flagReason && flagReason.length > 100) {
+        return res.status(400).json({ success: false, message: 'flagReason too long' });
+      }
+
+      const record = await ChatHistory.findOne({
+        where: { id: messageId, userId, role: 'assistant' }
+      });
+      if (!record) {
+        return res.status(404).json({ success: false, message: 'Message not found' });
+      }
+
+      await record.update({
+        feedbackRating: rating !== undefined ? rating : record.feedbackRating,
+        feedbackFlagged: flagged !== undefined ? flagged : record.feedbackFlagged,
+        feedbackFlagReason: flagReason !== undefined ? flagReason : record.feedbackFlagReason,
+      });
+
+      if (flagged) {
+        console.warn(`[AUDIT] NEGATIVE_FEEDBACK userId=${userId} messageId=${messageId} reason=${flagReason || 'none'}`);
+      }
+
+      return res.json({ success: true });
     } catch (error) {
       next(error);
     }

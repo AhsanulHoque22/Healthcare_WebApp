@@ -16,7 +16,7 @@ const ChatHistory = sequelize.define('ChatHistory', {
     }
   },
   role: {
-    type: DataTypes.ENUM('user', 'assistant'),
+    type: DataTypes.ENUM('user', 'assistant', 'summary'),
     allowNull: false
   },
   content: {
@@ -50,6 +50,24 @@ const ChatHistory = sequelize.define('ChatHistory', {
   title: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  feedbackRating: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    defaultValue: null,
+    field: 'feedback_rating'
+  },
+  feedbackFlagged: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'feedback_flagged'
+  },
+  feedbackFlagReason: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    defaultValue: null,
+    field: 'feedback_flag_reason'
   }
 }, {
   tableName: 'chat_histories',
