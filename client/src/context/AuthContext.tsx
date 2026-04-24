@@ -57,38 +57,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // Set up API interceptor for token
-  useEffect(() => {
-    if (token) {
-      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete API.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
+  // Token logic is now handled by API interceptor in api.ts
 
   // Load user on mount
   useEffect(() => {
+    let isMounted = true;
     const loadUser = async () => {
-      if (token) {
-        try {
-          const response = await API.get('/auth/profile');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('[AuthContext] Loading user profile...');
+        const response = await API.get('/auth/profile');
+        if (isMounted) {
           setUser(response.data.data.user);
-        } catch (error: any) {
-          console.error('Failed to load user:', error);
-          // Check if it's a token expiration error
+        }
+      } catch (error: any) {
+        console.error('[AuthContext] Failed to load user:', error);
+        if (isMounted) {
+          // Only clear session on 401 Unauthorized
           if (error.response?.status === 401) {
-            console.log('Token expired, clearing authentication');
+            console.warn('[AuthContext] Token invalid or expired, clearing session');
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
             toast.error('Session expired. Please log in again.');
+          } else {
+            // Other errors (500, network) - maybe keep the token but log the error
+            console.error('[AuthContext] Non-auth error during profile fetch');
+            toast.error('Unable to connect to server. Please check your connection.');
           }
         }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
     loadUser();
+    return () => { isMounted = false; };
   }, [token]);
 
   // Add API interceptor for automatic token refresh
