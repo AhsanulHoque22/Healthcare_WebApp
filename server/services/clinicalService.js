@@ -6,7 +6,7 @@
  */
 
 const { 
-  Patient, Prescription, LabTestOrder, LabTest, DocumentCache 
+  Patient, Prescription, LabTestOrder, LabTest, DocumentCache, Medicine 
 } = require('../models');
 const { Op } = require('sequelize');
 const crypto = require('crypto');
@@ -220,12 +220,23 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
         (typeof s === 'string' ? { symptom: s } : { ...s, symptom: s?.symptom || s?.description })
       ).map(s => ({ ...s, date: p.createdAt, source: 'Prescription' })));
     }
-    if (p.medicines && recentMedications.length === 0) {
-      recentMedications = parseFlexibleArray(p.medicines, m => 
-        (typeof m === 'string' ? { name: m, dosage: '', instructions: '', source: 'Prescription', status: 'active' } : { ...m, source: 'Prescription', status: m?.status || 'active' })
-      );
-    }
   });
+
+  // 3. Fetch Active Medications from the central 'medicines' table
+  // This ensures parity with the Medicine Tracker UI and captures manual additions.
+  const activeMeds = await Medicine.findAll({
+    where: { patientId, isActive: true },
+    order: [['createdAt', 'DESC']]
+  });
+
+  recentMedications = activeMeds.map(m => ({
+    name: m.medicineName,
+    dosage: m.dosage,
+    frequency: m.frequency,
+    instructions: m.instructions,
+    source: m.prescriptionId ? 'Prescription' : 'Manual Entry',
+    status: 'active'
+  }));
 
   // 3. Document Collection
   let allMedicalDocuments = [];
