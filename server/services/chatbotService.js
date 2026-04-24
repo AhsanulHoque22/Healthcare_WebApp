@@ -33,7 +33,7 @@ const INTENT_TOOL_MAP = {
   DOSAGE:           ['get_dosage_info', 'get_active_medicines'],
   MEDICAL_QA:       ['search_medical_knowledge'],
   DIAGNOSIS:        ['search_medical_knowledge', 'get_patient_profile', 'generate_medical_summary'],
-  GENERAL:          ['generate_medical_summary', 'get_patient_profile', 'get_appointments', 'search_doctors', 'search_medical_knowledge'],
+  GENERAL:          ['generate_medical_summary', 'get_patient_profile', 'get_appointments', 'search_doctors', 'search_medical_knowledge', 'get_active_medicines', 'get_prescriptions'],
 };
 
 const SYSTEM_PROMPT = `
