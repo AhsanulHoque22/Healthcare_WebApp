@@ -126,15 +126,17 @@ async function callStreaming(providerKey, messages, tools, { onToken, onToolStar
 /**
  * Standard (non-streaming) completion
  */
-async function callStandard(providerKey, messages, tools) {
+async function callStandard(providerKey, messages, tools, { temperature = 0.0, maxTokens, timeoutMs = 25000 } = {}) {
   const provider = PROVIDERS[providerKey];
   const apiKey = provider.key();
 
   const payload = {
     model: provider.model,
     messages,
-    temperature: 0.0,
+    temperature,
   };
+
+  if (maxTokens) payload.max_tokens = maxTokens;
 
   if (tools && tools.length > 0) {
     payload.tools = tools;
@@ -147,7 +149,7 @@ async function callStandard(providerKey, messages, tools) {
       'HTTP-Referer': 'https://livora.health',
       'X-Title': 'Livora Healthcare',
     },
-    timeout: 25000,
+    timeout: timeoutMs,
   });
 
   const choice = res.data.choices[0];
@@ -192,7 +194,7 @@ async function callWithFallback(messages, tools, options) {
   throw lastError || new Error("All LLM providers failed.");
 }
 
-async function callWithFallbackStandard(messages, tools) {
+async function callWithFallbackStandard(messages, tools, options = {}) {
   const chain = ['GROQ', 'GEMINI', 'OPENROUTER'];
   let lastError = null;
 
@@ -203,7 +205,7 @@ async function callWithFallbackStandard(messages, tools) {
         continue;
       }
       console.log(`[Dispatcher] Attempting ${p} (standard)...`);
-      return await callStandard(p, messages, tools);
+      return await callStandard(p, messages, tools, options);
     } catch (err) {
       lastError = err;
       const status = err.response?.status;

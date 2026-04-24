@@ -106,14 +106,17 @@ async function extractTextFromURL(url) {
       // Fallback to OCR could be added here if data.text is empty or unreadable
       return data.text;
     } 
-    // Image OCR with Tesseract
+    // Image OCR with Tesseract — use explicit worker lifecycle so WASM memory
+    // is freed immediately after each document instead of waiting for GC
     else {
       const processedBuffer = await preprocessImage(buffer);
-      const { data: { text } } = await Tesseract.recognize(processedBuffer, 'eng', {
-         // suppress logging for production
-         logger: () => {} 
-      });
-      return text;
+      const worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
+      try {
+        const { data: { text } } = await worker.recognize(processedBuffer);
+        return text;
+      } finally {
+        await worker.terminate();
+      }
     }
   } catch (err) {
     console.error(`[Pipeline Error] ${url}:`, err.message);

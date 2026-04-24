@@ -20,7 +20,6 @@ const {
   isLegacyGeminiModelVersion
 } = require('./groqLlamaService');
 
-const SUMMARY_MODEL_VERSION = MODEL_VERSIONS.patientInsight;
 const RECONCILIATION_MODEL_VERSION = MODEL_VERSIONS.documentExtraction;
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -273,14 +272,34 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   }
 
   // 4. Document Analysis
+  // Safety limits: prevent memory spikes on Render's free tier
+  // - Queue at most 20 documents (sort newest first, discard the rest)
+  // - Only run fresh OCR+LLM on 3 uncached docs per request; remaining
+  //   uncached docs are skipped and will be picked up on a subsequent load
+  // - Hard 45s timeout per document so one bad file can't hang the request
+  const MAX_DOCS_TO_QUEUE = 20;
+  const MAX_FRESH_EXTRACTIONS = 3;
+  const DOC_TIMEOUT_MS = 45_000;
+
+  const withDocTimeout = (promise) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Timed out after ${DOC_TIMEOUT_MS / 1000}s`)), DOC_TIMEOUT_MS)
+      ),
+    ]);
+
   let recentLabResults = [];
   let extraDiagnoses = [];
   let documentMedications = [];
   let documentEvidence = [];
   let upgradedCount = 0; let reusableCount = 0; let legacyCount = 0;
+  let freshExtractions = 0;
 
   allMedicalDocuments.sort((a,b) => new Date(b.date) - new Date(a.date));
-  for (const doc of allMedicalDocuments) {
+  const docsToProcess = allMedicalDocuments.slice(0, MAX_DOCS_TO_QUEUE);
+
+  for (const doc of docsToProcess) {
     try {
       const urlHash = crypto.createHash('sha256').update(doc.url).digest('hex');
       let docCache = await DocumentCache.findOne({ where: { urlHash } });
@@ -288,7 +307,21 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
       if (needsUpgrade) legacyCount++;
 
       if (!docCache || !docCache.extractedData || (reanalyze && needsUpgrade)) {
-        let data = await extractionService.extractDataFromDocument(doc.url);
+        if (freshExtractions >= MAX_FRESH_EXTRACTIONS) {
+          console.log(`[ClinicalService] Fresh extraction cap reached — deferring: ${doc.url}`);
+          continue;
+        }
+        freshExtractions++;
+        console.log(`[ClinicalService] Fresh extraction ${freshExtractions}/${MAX_FRESH_EXTRACTIONS}: ${doc.url}`);
+
+        let data;
+        try {
+          data = await withDocTimeout(extractionService.extractDataFromDocument(doc.url));
+        } catch (extractErr) {
+          console.error(`[ClinicalService] Extraction failed (${extractErr.message}): ${doc.url}`);
+          continue;
+        }
+
         if (data && !data.error) {
           if (!docCache) docCache = await DocumentCache.create({ url: doc.url, urlHash, extractedData: data, modelVersion: data.modelVersion || RECONCILIATION_MODEL_VERSION });
           else {
@@ -297,6 +330,9 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
           }
           if (needsUpgrade) upgradedCount++;
         }
+
+        // Let the GC breathe between heavy OCR+LLM operations
+        await new Promise(resolve => setTimeout(resolve, 300));
       } else reusableCount++;
 
       if (docCache && docCache.extractedData) {
@@ -313,8 +349,8 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   const reconciledMeds = dedupeMedications([...recentMedications, ...documentMedications]);
 
   // 5. Narrative & Insights
-  const aiClinicalNarrative = await generateFastPatientNarrative({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labCount: allLabOrders.length }).catch(e => 'Clinical analysis currently unavailable.');
-  const llamaClinicalInsight = await generateClinicalReconciliation({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labResults: recentLabResults, documentEvidence }).catch(e => buildFallbackClinicalInsight({ diagnoses: summarizedDiagnoses, medications: reconciledMeds, labResults: recentLabResults }));
+  const aiClinicalNarrative = await generateFastPatientNarrative({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labCount: allLabOrders.length }).catch(() => 'Clinical analysis currently unavailable.');
+  const llamaClinicalInsight = await generateClinicalReconciliation({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labResults: recentLabResults, documentEvidence }).catch(() => buildFallbackClinicalInsight({ diagnoses: summarizedDiagnoses, medications: reconciledMeds, labResults: recentLabResults }));
 
   return {
     aiClinicalNarrative,
