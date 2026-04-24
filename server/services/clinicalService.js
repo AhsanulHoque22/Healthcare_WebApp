@@ -267,7 +267,7 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
 
   if (patient.medicalDocuments && Array.isArray(patient.medicalDocuments)) {
     patient.medicalDocuments.forEach(doc => {
-      if (doc.url) allMedicalDocuments.push({ url: doc.url, source: 'MedVault', name: doc.name || 'Uploaded Document', date: doc.uploadedAt || doc.createdAt || new Date() });
+      if (doc.url) allMedicalDocuments.push({ url: doc.url, source: 'MedVault', name: doc.name || 'Uploaded Document', date: doc.uploadDate || doc.uploadedAt || doc.createdAt || new Date() });
     });
   }
 
@@ -309,19 +309,23 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
       if (!docCache || !docCache.extractedData || (reanalyze && needsUpgrade)) {
         if (freshExtractions >= MAX_FRESH_EXTRACTIONS) {
           deferredCount++;
-          console.log(`[ClinicalService] Fresh extraction cap reached — deferring (${deferredCount}): ${doc.url}`);
+          console.log(`[ClinicalService] Deferred (cap=${MAX_FRESH_EXTRACTIONS} reached): ${doc.url}`);
           continue;
         }
-        freshExtractions++;
-        console.log(`[ClinicalService] Fresh extraction ${freshExtractions}/${MAX_FRESH_EXTRACTIONS}: ${doc.url}`);
+
+        // Do NOT increment freshExtractions yet — only count successful extractions
+        // so a failing doc doesn't permanently block the remaining slots
+        console.log(`[ClinicalService] Extracting (success ${freshExtractions}/${MAX_FRESH_EXTRACTIONS}): ${doc.url}`);
 
         let data;
         try {
           data = await withDocTimeout(extractionService.extractDataFromDocument(doc.url));
         } catch (extractErr) {
-          console.error(`[ClinicalService] Extraction failed (${extractErr.message}): ${doc.url}`);
-          continue;
+          console.error(`[ClinicalService] Extraction failed — skipping slot (${extractErr.message}): ${doc.url}`);
+          continue; // don't count — next doc gets the slot
         }
+
+        freshExtractions++; // count only on success
 
         if (data && !data.error) {
           if (!docCache) docCache = await DocumentCache.create({ url: doc.url, urlHash, extractedData: data, modelVersion: data.modelVersion || RECONCILIATION_MODEL_VERSION });
