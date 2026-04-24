@@ -25,7 +25,7 @@ const APPOINTMENT_PATTERNS = [
 ];
 
 const PERSONAL_DATA_PATTERNS = [
-  /\b(medicine|medication|prescription|drug|vitals|blood pressure|lab report|test result|medical record|history|my profile)\b/i,
+  /\b(medicin|medication|prescription|drug|vitals|blood|lab|test|record|history|profile|summary|status)\b/i,
 ];
 
 const SYSTEM_PROMPT = `You are a medical query classifier. Classify the user message into exactly one intent and one risk level.
@@ -112,7 +112,7 @@ function _regexClassify(message) {
     return { intent: 'APPOINTMENT', riskLevel: 'LOW' };
   }
   if (PERSONAL_DATA_PATTERNS.some((p) => p.test(message))) {
-    return { intent: 'PERSONAL_DATA', riskLevel: 'MEDIUM' };
+    return { intent: 'PERSONAL_DATA', riskLevel: 'LOW' };
   }
   return null;
 }
