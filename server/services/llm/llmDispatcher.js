@@ -96,12 +96,13 @@ async function callStreaming(providerKey, messages, tools, { onToken, onToolStar
               const idx = tc.index;
               if (!toolCallMap[idx]) {
                 toolCallMap[idx] = { id: tc.id || '', function: { name: tc.function?.name || '', arguments: '' } };
-              }
-              if (tc.id) toolCallMap[idx].id = tc.id;
-              if (tc.function?.name) {
-                const oldName = toolCallMap[idx].function.name;
-                toolCallMap[idx].function.name += tc.function.name;
-                if (!oldName && toolCallMap[idx].function.name) onToolStart(toolCallMap[idx].function.name);
+                if (tc.function?.name) onToolStart(tc.function.name);
+              } else {
+                if (tc.id) toolCallMap[idx].id = tc.id;
+                if (tc.function?.name && !toolCallMap[idx].function.name) {
+                  toolCallMap[idx].function.name = tc.function.name;
+                  onToolStart(tc.function.name);
+                }
               }
               if (tc.function?.arguments) toolCallMap[idx].function.arguments += tc.function.arguments;
             }
@@ -147,7 +148,12 @@ async function callStandard(providerKey, messages, tools) {
   });
 
   const choice = res.data.choices[0];
-  return { ...choice, provider: provider.name };
+  return { 
+    ...choice,
+    content: choice.message.content,
+    toolCalls: choice.message.tool_calls || [],
+    provider: provider.name 
+  };
 }
 
 /**
