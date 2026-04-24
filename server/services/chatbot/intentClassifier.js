@@ -1,4 +1,4 @@
-const axios = require('axios');
+const { callWithFallbackStandard } = require('../llm/llmDispatcher');
 
 const CLASSIFIER_MODEL = 'llama-3.1-8b-instant';
 const CLASSIFIER_TIMEOUT_MS = 4000;
@@ -65,27 +65,13 @@ async function classifyIntent(message) {
 
   // Slow path: LLM classification for ambiguous messages
   try {
-    const response = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: CLASSIFIER_MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: message.slice(0, 500) }, // Cap input to 500 chars
-        ],
-        temperature: 0.0,
-        max_tokens: 60,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: CLASSIFIER_TIMEOUT_MS,
-      }
-    );
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: message.slice(0, 500) }, // Cap input to 500 chars
+    ];
 
-    const raw = response.data?.choices?.[0]?.message?.content?.trim() || '';
+    const result = await callWithFallbackStandard(messages, []);
+    const raw = result.content || '';
     const parsed = _parseClassifierResponse(raw);
     return { ...parsed, source: 'llm' };
   } catch (err) {

@@ -15,9 +15,8 @@
  *   If validator fails → return original response unchanged (fail open)
  */
 
-const axios = require('axios');
+const { callWithFallbackStandard } = require('../llm/llmDispatcher');
 
-const VALIDATOR_MODEL = 'llama-3.3-70b-versatile';
 const VALIDATOR_TIMEOUT_MS = 12000;
 
 const VALIDATOR_SYSTEM_PROMPT = `You are a medical response safety reviewer for a healthcare AI assistant.
@@ -54,27 +53,13 @@ async function validateResponse(userQuery, assistantResponse) {
 AI RESPONSE TO REVIEW:
 ${assistantResponse}`;
 
-    const res = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: VALIDATOR_MODEL,
-        messages: [
-          { role: 'system', content: VALIDATOR_SYSTEM_PROMPT },
-          { role: 'user', content: userContent },
-        ],
-        temperature: 0.1,
-        max_tokens: 1000,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: VALIDATOR_TIMEOUT_MS,
-      }
-    );
+    const messages = [
+      { role: 'system', content: VALIDATOR_SYSTEM_PROMPT },
+      { role: 'user', content: userContent },
+    ];
 
-    const raw = res.data?.choices?.[0]?.message?.content?.trim() || '';
+    const llmRes = await callWithFallbackStandard(messages, []);
+    const raw = llmRes.content || '';
     const result = _parseValidatorResponse(raw);
 
     if (!result.safe) {
