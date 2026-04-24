@@ -296,79 +296,76 @@ class ChatbotService {
   async processMessageStream(user, message, history = [], conversationId = null, callbacks = {}) {
     const { onToken = () => {}, onToolStart = () => {}, onComplete = () => {} } = callbacks;
 
-    if (!process.env.GROQ_API_KEY) {
-      onComplete({ message: '⚠️ AI service not configured.', isEmergency: false, intent: 'GENERAL', classification: null, safetyPipelineTriggered: false, validated: false, availableDoctors: null, bookingDetails: null });
-      return;
-    }
-
-    const trace = obs.startTrace({
-      userId: user.id,
-      sessionId: conversationId,
-      userMessage: message,
-      metadata: { streaming: true },
-    });
-
-    const classifyStart = Date.now();
-    const classification = await classifyIntent(message);
-    obs.logClassification(trace, { input: message, output: classification, durationMs: Date.now() - classifyStart });
-
-    const gateDecision = evaluateGate(classification);
-    obs.logGateDecision(trace, { classification, decision: gateDecision });
-
-    if (gateDecision.action === 'EMERGENCY_SHORTCIRCUIT') {
-      const context = { userId: user.id, role: user.role, classification };
-      const toolStart = Date.now();
-      let toolResult = null;
-      try { toolResult = await executeTool('trigger_emergency', { reason: message }, context); } catch {}
-      obs.logToolCall(trace, { toolName: 'trigger_emergency', args: { reason: message }, result: toolResult, durationMs: Date.now() - toolStart });
-      const emergencyMessage = "🆘 I've detected a potential emergency and have alerted your care team." + gateDecision.disclaimer;
-      const response = this._buildResponse(emergencyMessage, null, null, true, classification, gateDecision);
-      obs.finalizeTrace(trace, { output: emergencyMessage, metadata: { isEmergency: true } });
-      obs.flush();
-      onComplete(response);
-      return;
-    }
-
-    const [conversationSummary, patientContext] = await Promise.all([
-      getLatestSummary(user.id, conversationId),
-      getPatientContext(user.id),
-    ]);
-
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...(patientContext ? [{ role: 'system', content: patientContext }] : []),
-      ...(conversationSummary ? [{ role: 'system', content: `CONVERSATION CONTEXT:\n${conversationSummary}` }] : []),
-      ...this._formatHistory(history),
-      { role: 'user', content: message },
-    ];
-
-    const filteredTools = this._getToolsForIntent(classification.intent);
-    console.log(`[Tools] stream intent=${classification.intent} → ${filteredTools.length} tools`);
-
-    let rounds = 0;
-    let bookedAppointment = null;
-    let emergencyTriggered = false;
-    let availableDoctors = null;
-    let lastAssistantMessage = '';
-    const seenToolCalls = new Set();
-    const context = { userId: user.id, role: user.role, classification };
-
-    while (rounds < MAX_TOOL_ROUNDS) {
-      rounds++;
-
-      const isLastRound = rounds >= MAX_TOOL_ROUNDS;
-
-      // Inject reflection prompt on the penultimate round
-      if (rounds === MAX_TOOL_ROUNDS - 1) {
-        messages.push({
-          role: 'system',
-          content: 'You have used most available reasoning rounds. Based on all tool results collected so far, provide a complete and final answer to the user now. Only call another tool if absolutely critical.',
-        });
+    try {
+      if (!process.env.GROQ_API_KEY) {
+        onComplete({ message: '⚠️ AI service not configured.', isEmergency: false, intent: 'GENERAL', classification: null, safetyPipelineTriggered: false, validated: false, availableDoctors: null, bookingDetails: null });
+        return;
       }
 
-      const genStart = new Date();
+      const trace = obs.startTrace({
+        userId: user.id,
+        sessionId: conversationId,
+        userMessage: message,
+        metadata: { streaming: true },
+      });
 
-      try {
+      const classifyStart = Date.now();
+      const classification = await classifyIntent(message);
+      obs.logClassification(trace, { input: message, output: classification, durationMs: Date.now() - classifyStart });
+
+      const gateDecision = evaluateGate(classification);
+      obs.logGateDecision(trace, { classification, decision: gateDecision });
+
+      if (gateDecision.action === 'EMERGENCY_SHORTCIRCUIT') {
+        const context = { userId: user.id, role: user.role, classification };
+        const toolStart = Date.now();
+        let toolResult = null;
+        try { toolResult = await executeTool('trigger_emergency', { reason: message }, context); } catch {}
+        obs.logToolCall(trace, { toolName: 'trigger_emergency', args: { reason: message }, result: toolResult, durationMs: Date.now() - toolStart });
+        const emergencyMessage = "🆘 I've detected a potential emergency and have alerted your care team." + gateDecision.disclaimer;
+        const response = this._buildResponse(emergencyMessage, null, null, true, classification, gateDecision);
+        obs.finalizeTrace(trace, { output: emergencyMessage, metadata: { isEmergency: true } });
+        obs.flush();
+        onComplete(response);
+        return;
+      }
+
+      const [conversationSummary, patientContext] = await Promise.all([
+        getLatestSummary(user.id, conversationId),
+        getPatientContext(user.id),
+      ]);
+
+      const messages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...(patientContext ? [{ role: 'system', content: patientContext }] : []),
+        ...(conversationSummary ? [{ role: 'system', content: `CONVERSATION CONTEXT:\n${conversationSummary}` }] : []),
+        ...this._formatHistory(history),
+        { role: 'user', content: message },
+      ];
+
+      const filteredTools = this._getToolsForIntent(classification.intent);
+      console.log(`[Tools] stream intent=${classification.intent} → ${filteredTools.length} tools`);
+
+      let rounds = 0;
+      let bookedAppointment = null;
+      let emergencyTriggered = false;
+      let availableDoctors = null;
+      let lastAssistantMessage = '';
+      const seenToolCalls = new Set();
+      const context = { userId: user.id, role: user.role, classification };
+
+      while (rounds < MAX_TOOL_ROUNDS) {
+        rounds++;
+        const isLastRound = rounds >= MAX_TOOL_ROUNDS;
+
+        if (rounds === MAX_TOOL_ROUNDS - 1) {
+          messages.push({
+            role: 'system',
+            content: 'You have used most available reasoning rounds. Based on all tool results collected so far, provide a complete and final answer to the user now. Only call another tool if absolutely critical.',
+          });
+        }
+
+        const genStart = new Date();
         const result = await this._callGroqStreaming(messages, filteredTools, {
           onToken: (token) => onToken(token),
           onToolStart: (toolName) => onToolStart(toolName),
@@ -392,7 +389,6 @@ class ChatbotService {
               let args = {};
               try { args = JSON.parse(tc.function.arguments); } catch {}
 
-              // Loop detection
               const callKey = `${tc.function.name}:${tc.function.arguments}`;
               if (seenToolCalls.has(callKey)) {
                 console.warn(`[LoopDetect] Skipping duplicate stream call: ${tc.function.name}`);
@@ -418,50 +414,77 @@ class ChatbotService {
 
         lastAssistantMessage = result.content || "I'm sorry, I couldn't process that. Could you rephrase?";
         break;
-      } catch (err) {
-        console.error('[LLM-STREAM-ERROR]', err.message);
-        lastAssistantMessage = "I'm sorry, the AI service is temporarily unavailable. Please try again in a moment.";
-        break;
       }
-    }
 
-    // Fire-and-forget: persist any new medical facts for future sessions
-    updatePatientContext(user.id, messages).catch(err => console.warn('[PatientMemory]', err.message));
+      updatePatientContext(user.id, messages).catch(err => console.warn('[PatientMemory]', err.message));
 
-    lastAssistantMessage = detectSensitiveLeak(lastAssistantMessage);
-    lastAssistantMessage = applyOutputConstraints(lastAssistantMessage, classification);
+      lastAssistantMessage = detectSensitiveLeak(lastAssistantMessage);
+      lastAssistantMessage = applyOutputConstraints(lastAssistantMessage, classification);
 
-    let validationResult = null;
-    if (gateDecision.safetyPipelineTriggered) {
-      const preValidation = lastAssistantMessage;
-      validationResult = await validateResponse(message, lastAssistantMessage);
-      lastAssistantMessage = validationResult.finalResponse;
-      obs.logValidation(trace, {
-        input: preValidation,
-        output: validationResult.finalResponse,
-        safe: validationResult.safe,
-        issues: validationResult.issues,
+      let validationResult = null;
+      if (gateDecision.safetyPipelineTriggered) {
+        const preValidation = lastAssistantMessage;
+        validationResult = await validateResponse(message, lastAssistantMessage);
+        lastAssistantMessage = validationResult.finalResponse;
+        obs.logValidation(trace, {
+          input: preValidation,
+          output: validationResult.finalResponse,
+          safe: validationResult.safe,
+          issues: validationResult.issues,
+        });
+      }
+      if (gateDecision.disclaimer) lastAssistantMessage += gateDecision.disclaimer;
+
+      const finalResponse = this._buildResponse(lastAssistantMessage, bookedAppointment, availableDoctors, emergencyTriggered, classification, gateDecision, validationResult);
+      obs.finalizeTrace(trace, {
+        output: lastAssistantMessage,
+        metadata: { intent: finalResponse.intent, safetyPipelineTriggered: finalResponse.safetyPipelineTriggered, rounds },
       });
-    }
-    if (gateDecision.disclaimer) lastAssistantMessage += gateDecision.disclaimer;
+      obs.flush();
+      onComplete(finalResponse);
 
-    const finalResponse = this._buildResponse(lastAssistantMessage, bookedAppointment, availableDoctors, emergencyTriggered, classification, gateDecision, validationResult);
-    obs.finalizeTrace(trace, {
-      output: lastAssistantMessage,
-      metadata: { intent: finalResponse.intent, safetyPipelineTriggered: finalResponse.safetyPipelineTriggered, rounds },
-    });
-    obs.flush();
-    onComplete(finalResponse);
+    } catch (error) {
+      if (error.response?.data) {
+        try {
+          if (typeof error.response.data.on === 'function') {
+            console.error('[LLM-STREAM-ERROR] Status:', error.response.status);
+            error.response.data.on('data', chunk => {
+              console.error('[LLM-STREAM-ERROR] Response body chunk:', chunk.toString());
+            });
+          } else {
+            console.error('[LLM-STREAM-ERROR] Status:', error.response.status, 'Data:', JSON.stringify(error.response.data, null, 2));
+          }
+        } catch (e) {
+          console.error('[LLM-STREAM-ERROR] Could not log error response:', e.message);
+        }
+      } else {
+        console.error('[LLM-STREAM-ERROR]', error.message);
+      }
+      const lastAssistantMessage = "I'm sorry, the AI service is temporarily unavailable. Please try again in a moment.";
+      onComplete({ ...this._buildResponse(lastAssistantMessage, null, null, false), error: true });
+    }
   }
 
   // ─── STREAMING GROQ CALL ─────────────────────────────────────────────────────
 
-  async _callGroqStreaming(messages, tools, { onToken }) {
+  async _callGroqStreaming(messages, tools, { onToken, onToolStart }) {
     const model = CHATBOT_MODEL;
+
+    const payload = {
+      model,
+      messages,
+      temperature: 0.0,
+      stream: true
+    };
+
+    if (tools && tools.length > 0) {
+      payload.tools = tools;
+      payload.tool_choice = 'auto';
+    }
 
     const res = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
-      { model, messages, tools, tool_choice: 'auto', temperature: 0.0, stream: true },
+      payload,
       {
         headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
         responseType: 'stream',
@@ -522,7 +545,11 @@ class ChatbotService {
 
   _formatHistory(history) {
     // MINIMAL HISTORY: Only the very last exchange to stay under TPM limits
-    return history.slice(-2).map(h => ({ role: h.role, content: h.content }));
+    // Ensure content is always a string to prevent LLM errors (e.g. if content was null in DB)
+    return history.slice(-2).map(h => ({
+      role: h.role,
+      content: typeof h.content === 'string' ? h.content : (h.content ? String(h.content) : '')
+    }));
   }
 
   _getToolsForIntent(intent) {
@@ -535,14 +562,19 @@ class ChatbotService {
     let useFallback = false;
     for (let i = 0; i <= retries; i++) {
       const model = useFallback ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL;
+      const payload = {
+        model,
+        messages,
+        temperature: 0.0,
+      };
+
+      if (tools && tools.length > 0) {
+        payload.tools = tools;
+        payload.tool_choice = 'auto';
+      }
+
       try {
-        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-          model,
-          messages,
-          tools,
-          tool_choice: 'auto',
-          temperature: 0.0,
-        }, {
+        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
           headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
           timeout: 25000,
         });
