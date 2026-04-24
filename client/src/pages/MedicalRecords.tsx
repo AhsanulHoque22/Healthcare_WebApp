@@ -199,7 +199,7 @@ const MedicalRecords: React.FC = () => {
   });
 
   // Fetch Medical Summary
-  const { data: medicalSummary, isLoading: isLoadingSummary, refetch: refetchSummary } = useQuery<MedicalSummary>({
+  const { data: medicalSummary, isLoading: isLoadingSummary, isFetching: isFetchingSummary, refetch: refetchSummary } = useQuery<MedicalSummary>({
     queryKey: ['patient-medical-summary', patientProfile?.id],
     queryFn: async () => {
       const response = await API.get(`/patients/${patientProfile.id}/medical-summary`);
@@ -464,11 +464,11 @@ const MedicalRecords: React.FC = () => {
                 </div>
                 <button
                   onClick={() => refetchSummary()}
-                  disabled={isLoadingSummary}
+                  disabled={isFetchingSummary}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-200"
                 >
-                  <svg className={`h-4 w-4 ${isLoadingSummary ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                  {isLoadingSummary ? 'Refreshing...' : 'Refresh'}
+                  <svg className={`h-4 w-4 ${isFetchingSummary ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  {isFetchingSummary ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
               

@@ -304,33 +304,34 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
       const urlHash = crypto.createHash('sha256').update(doc.url).digest('hex');
       let docCache = await DocumentCache.findOne({ where: { urlHash } });
       const needsUpgrade = docCache && isLegacyGeminiModelVersion(docCache.modelVersion);
+      const hasError = docCache && docCache.extractedData && docCache.extractedData.error;
       if (needsUpgrade) legacyCount++;
 
-      if (!docCache || !docCache.extractedData || (reanalyze && needsUpgrade)) {
+      if (!docCache || !docCache.extractedData || (reanalyze && (needsUpgrade || hasError))) {
         if (freshExtractions >= MAX_FRESH_EXTRACTIONS) {
           deferredCount++;
           console.log(`[ClinicalService] Deferred (cap=${MAX_FRESH_EXTRACTIONS} reached): ${doc.url}`);
           continue;
         }
 
-        // Do NOT increment freshExtractions yet — only count successful extractions
-        // so a failing doc doesn't permanently block the remaining slots
-        console.log(`[ClinicalService] Extracting (success ${freshExtractions}/${MAX_FRESH_EXTRACTIONS}): ${doc.url}`);
+        console.log(`[ClinicalService] Extracting (${freshExtractions + 1}/${MAX_FRESH_EXTRACTIONS}): ${doc.url}`);
 
         let data;
         try {
           data = await withDocTimeout(extractionService.extractDataFromDocument(doc.url));
         } catch (extractErr) {
-          console.error(`[ClinicalService] Extraction failed — skipping slot (${extractErr.message}): ${doc.url}`);
-          continue; // don't count — next doc gets the slot
+          console.error(`[ClinicalService] Extraction failed (${extractErr.message}): ${doc.url}`);
+          data = { error: extractErr.message || 'Unknown error' };
         }
 
-        freshExtractions++; // count only on success
+        freshExtractions++; // Count every attempt to prevent runaway processing
 
-        if (data && !data.error) {
-          if (!docCache) docCache = await DocumentCache.create({ url: doc.url, urlHash, extractedData: data, modelVersion: data.modelVersion || RECONCILIATION_MODEL_VERSION });
-          else {
-            await docCache.update({ extractedData: data, modelVersion: data.modelVersion || RECONCILIATION_MODEL_VERSION });
+        if (data) {
+          const modelVer = data.modelVersion || RECONCILIATION_MODEL_VERSION;
+          if (!docCache) {
+            docCache = await DocumentCache.create({ url: doc.url, urlHash, extractedData: data, modelVersion: modelVer });
+          } else {
+            await docCache.update({ extractedData: data, modelVersion: modelVer });
             await docCache.reload();
           }
           if (needsUpgrade) upgradedCount++;
@@ -338,9 +339,11 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
 
         // Let the GC breathe between heavy OCR+LLM operations
         await new Promise(resolve => setTimeout(resolve, 300));
-      } else reusableCount++;
+      } else {
+        reusableCount++;
+      }
 
-      if (docCache && docCache.extractedData) {
+      if (docCache && docCache.extractedData && !docCache.extractedData.error) {
         const data = docCache.extractedData;
         if (data.labResults?.length) recentLabResults.push({ orderId: doc.orderId || doc.name || 'Lab Report', date: doc.date, testNames: doc.testNames || data.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
         if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: `Extracted from ${doc.source}` })));
