@@ -372,15 +372,35 @@ class ChatbotService {
         }
 
         const genStart = new Date();
-        const result = await this._callGroqStreaming(messages, filteredTools, {
-          onToken: (token) => onToken(token),
-          onToolStart: (toolName) => onToolStart(toolName),
-        });
+        let result;
+        let useFallback = false;
+
+        try {
+          result = await this._callGroqStreaming(messages, filteredTools, {
+            onToken: (token) => onToken(token),
+            onToolStart: (toolName) => onToolStart(toolName),
+            model: CHATBOT_MODEL
+          });
+        } catch (err) {
+          const is429 = err.response?.status === 429;
+          if (is429) {
+            console.warn(`[Groq-Stream] 429 on ${CHATBOT_MODEL}, retrying with fallback ${CHATBOT_FALLBACK_MODEL}`);
+            result = await this._callGroqStreaming(messages, filteredTools, {
+              onToken: (token) => onToken(token),
+              onToolStart: (toolName) => onToolStart(toolName),
+              model: CHATBOT_FALLBACK_MODEL
+            });
+            useFallback = true;
+          } else {
+            throw err;
+          }
+        }
+
         const genEnd = new Date();
 
         obs.logGeneration(trace, {
           name: `groq-stream-round-${rounds}`,
-          model: CHATBOT_MODEL,
+          model: useFallback ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL,
           messages: messages.map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content.slice(0, 300) : '[structured]' })),
           output: result.content || '[tool_calls]',
           startTime: genStart,
@@ -473,8 +493,7 @@ class ChatbotService {
 
   // ─── STREAMING GROQ CALL ─────────────────────────────────────────────────────
 
-  async _callGroqStreaming(messages, tools, { onToken, onToolStart }) {
-    const model = CHATBOT_MODEL;
+  async _callGroqStreaming(messages, tools, { onToken, onToolStart, model = CHATBOT_MODEL }) {
 
     const payload = {
       model,
