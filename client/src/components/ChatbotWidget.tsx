@@ -17,6 +17,7 @@ import {
   HandThumbUpIcon,
   HandThumbDownIcon,
   FlagIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 import API from '../api/api';
@@ -34,6 +35,8 @@ interface Message {
   toolStatus?: string;
   feedbackRating?: 'thumbs_up' | 'thumbs_down' | null;
   feedbackFlagged?: boolean;
+  safetyPipelineTriggered?: boolean;
+  userMessage?: string;
 }
 
 const FLAG_REASONS = [
@@ -60,6 +63,7 @@ const ChatbotWidget: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [flagOpenForIndex, setFlagOpenForIndex] = useState<number | null>(null);
+  const [escalatedIds, setEscalatedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -242,6 +246,8 @@ const ChatbotWidget: React.FC = () => {
           availableDoctors: finalData.availableDoctors,
           bookingDetails: finalData.bookingDetails,
           isStreaming: false,
+          safetyPipelineTriggered: finalData.safetyPipelineTriggered ?? false,
+          userMessage: text,
         }]);
         if (finalData.isEmergency) toast.error('Emergency Alert Triggered!');
       }
@@ -274,6 +280,22 @@ const ChatbotWidget: React.FC = () => {
       toast.success(flagged ? 'Response flagged.' : 'Thanks for the feedback!');
     } catch {
       toast.error('Failed to submit feedback');
+    }
+  };
+
+  const handleEscalate = async (msg: Message) => {
+    if (!msg.id || escalatedIds.has(msg.id)) return;
+    try {
+      await API.post('/escalations', {
+        conversationId,
+        chatHistoryId: msg.id,
+        userMessage: msg.userMessage || '(not available)',
+        aiResponse: msg.content,
+      });
+      setEscalatedIds(prev => new Set(prev).add(msg.id!));
+      toast.success('A healthcare professional has been notified to review your query.');
+    } catch {
+      toast.error('Failed to request review. Please try again.');
     }
   };
 
@@ -505,6 +527,29 @@ const ChatbotWidget: React.FC = () => {
                               </button>
                             ))}
                           </div>
+                        )}
+                      </div>
+
+                      {/* Human review escalation */}
+                      <div className="ml-auto pl-1 border-l border-gray-100">
+                        {m.id && escalatedIds.has(m.id) ? (
+                          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-green-600 px-1">
+                            <UserGroupIcon className="h-3 w-3" />
+                            Requested
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleEscalate(m)}
+                            title="Request human review"
+                            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg text-[9px] font-semibold transition-all ${
+                              m.safetyPipelineTriggered
+                                ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                          >
+                            <UserGroupIcon className="h-3 w-3" />
+                            {m.safetyPipelineTriggered ? 'Get Human Help' : 'Ask Human'}
+                          </button>
                         )}
                       </div>
                     </div>

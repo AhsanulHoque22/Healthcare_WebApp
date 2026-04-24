@@ -95,6 +95,11 @@ const Patient = sequelize.define('Patient', {
   physicalActivity: {
     type: DataTypes.ENUM('sedentary', 'moderate', 'active'),
     allowNull: true
+  },
+  aiContext: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: null,
   }
 }, {
   tableName: 'patients'

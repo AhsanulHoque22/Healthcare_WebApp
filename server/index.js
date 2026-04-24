@@ -51,6 +51,7 @@ const medicineRoutes = require('./routes/medicine');
 const notificationRoutes = require('./routes/notifications');
 const websiteReviewRoutes = require('./routes/websiteReviews');
 const chatbotRoutes = require('./routes/chatbot');
+const escalationRoutes = require('./routes/escalations');
 const errorHandler = require('./middleware/errorHandler');
 const { setupVoiceToPrescription } = require('./services/voiceService');
 
@@ -167,6 +168,7 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/website-reviews', websiteReviewRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/escalations', escalationRoutes);
 
 // Health check endpoints
 app.get('/api/health', (req, res) => {
@@ -263,7 +265,7 @@ const startServer = async () => {
           }
        }
 
-       // 🛠️ Ensure ChatHistory table exists in production
+       // Ensure ChatHistory table exists in production
        try {
          const { ChatHistory, DocumentCache } = require('./models');
          await ChatHistory.sync({ alter: true });
@@ -271,6 +273,18 @@ const startServer = async () => {
          console.log("[Database] ChatHistory and DocumentCache tables verified/created/altered in production.");
        } catch (e) {
          console.error("[Database] Error sync ChatHistory/DocumentCache:", e.message);
+       }
+
+       // Add aiContext column to patients for long-term memory (Issue #4)
+       try {
+         await sequelize.query("ALTER TABLE patients ADD COLUMN aiContext JSON;");
+         console.log("[Database] Added aiContext column to patients.");
+       } catch (e) {
+         if (e.message && (e.message.includes("Duplicate column") || e.message.includes("already exists"))) {
+           console.log("[Database] Column 'aiContext' in 'patients' table: Verified");
+         } else {
+           console.error("[Database] Error adding aiContext:", e.message);
+         }
        }
      } else {
       try {

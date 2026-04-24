@@ -13,14 +13,28 @@ const { evaluate: evaluateGate } = require('./chatbot/criticalQuestionGate');
 const { validateResponse } = require('./chatbot/responseValidator');
 const { applyOutputConstraints } = require('./chatbot/outputConstraints');
 const { getLatestSummary } = require('./chatbot/conversationSummarizer');
+const { getPatientContext, updatePatientContext } = require('./chatbot/patientMemory');
 const obs = require('./chatbot/observability');
 
 // 70B for clinical reasoning accuracy; 8B fallback only when rate-limited
 const CHATBOT_MODEL = process.env.GROQ_CHATBOT_MODEL || 'llama-3.3-70b-versatile';
 const CHATBOT_FALLBACK_MODEL = 'llama-3.1-8b-instant';
-const MAX_TOOL_ROUNDS = 3;
-const MAX_TOOL_OUTPUT_LENGTH = 800; // Even tighter for TPM safety
+const MAX_TOOL_ROUNDS = 5;
+const MAX_TOOL_OUTPUT_LENGTH = 800;
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+// Intent → tool name allowlist. Keeps each Groq call to only the tools it needs,
+// cutting token usage from ~2,100 (all 16 tools) to ~200–600 per request.
+const INTENT_TOOL_MAP = {
+  EMERGENCY:        ['trigger_emergency'],
+  APPOINTMENT:      ['get_appointments', 'search_doctors', 'book_appointment', 'cancel_appointment', 'reschedule_appointment'],
+  PERSONAL_DATA:    ['get_patient_profile', 'generate_medical_summary', 'get_prescriptions', 'get_active_medicines', 'get_lab_orders', 'get_medical_records', 'analyze_medical_document'],
+  DRUG_INTERACTION: ['check_drug_interaction', 'get_active_medicines'],
+  DOSAGE:           ['get_dosage_info', 'get_active_medicines'],
+  MEDICAL_QA:       ['search_medical_knowledge'],
+  DIAGNOSIS:        ['search_medical_knowledge', 'get_patient_profile', 'generate_medical_summary'],
+  GENERAL:          ['generate_medical_summary', 'get_patient_profile', 'get_appointments', 'search_doctors', 'search_medical_knowledge'],
+};
 
 const SYSTEM_PROMPT = `
 You are **Livora AI**, a sophisticated, empathetic, and evidence-based healthcare assistant. Your goal is to simplify the user's healthcare journey by providing fast, accurate data retrieval and clinical guidance.
@@ -119,41 +133,56 @@ class ChatbotService {
       return response;
     }
 
-    // Inject rolling conversation summary so critical context (allergies,
-    // prior symptoms, booked appointments) survives beyond the 2-exchange window
-    const conversationSummary = await getLatestSummary(user.id, conversationId);
+    // Inject rolling conversation summary and long-term patient context so
+    // returning patients don't re-explain conditions, allergies, or medications
+    const [conversationSummary, patientContext] = await Promise.all([
+      getLatestSummary(user.id, conversationId),
+      getPatientContext(user.id),
+    ]);
 
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...(patientContext ? [{ role: 'system', content: patientContext }] : []),
       ...(conversationSummary
-        ? [{ role: "system", content: `CONVERSATION CONTEXT (summary of earlier exchanges):\n${conversationSummary}` }]
+        ? [{ role: 'system', content: `CONVERSATION CONTEXT (summary of earlier exchanges):\n${conversationSummary}` }]
         : []),
       ...this._formatHistory(history),
-      { role: "user", content: message }
+      { role: 'user', content: message },
     ];
+
+    const filteredTools = this._getToolsForIntent(classification.intent);
+    console.log(`[Tools] intent=${classification.intent} → ${filteredTools.length} tools (was 16)`);
 
     let rounds = 0;
     let lastAssistantMessage = null;
     let bookedAppointment = null;
     let emergencyTriggered = false;
     let availableDoctors = null;
+    const seenToolCalls = new Set();
 
     const context = { userId: user.id, role: user.role, classification };
 
     while (rounds < MAX_TOOL_ROUNDS) {
-      if (rounds > 0) await sleep(2000); // Wait for rate limit refill
       rounds++;
+
+      // Inject reflection prompt on the penultimate round to push the model to answer
+      if (rounds === MAX_TOOL_ROUNDS - 1) {
+        messages.push({
+          role: 'system',
+          content: 'You have used most available reasoning rounds. Based on all tool results collected so far, provide a complete and final answer to the user now. Only call another tool if absolutely critical.',
+        });
+      }
 
       let llmResponse;
       const genStart = new Date();
       try {
-        llmResponse = await this._callGroqWithRetry(messages);
+        llmResponse = await this._callGroqWithRetry(messages, filteredTools);
       } catch (err) {
         console.error('[LLM-ERROR]', err.message);
         obs.finalizeTrace(trace, { output: null, metadata: { error: err.message } });
         obs.flush();
         return this._buildResponse(
-          "I'm experiencing high traffic. Please try again in a few moments.",
+          "I'm sorry, the AI service is temporarily unavailable. Please try again in a moment.",
           null, null, false
         );
       }
@@ -179,33 +208,40 @@ class ChatbotService {
             let args = {};
             try {
               args = JSON.parse(tc.function.arguments);
-              args = args || {}; // Catch null values
+              args = args || {};
             } catch (e) {
               args = {};
             }
+
+            // Loop detection: skip duplicate tool+args combinations
+            const callKey = `${toolName}:${tc.function.arguments}`;
+            if (seenToolCalls.has(callKey)) {
+              console.warn(`[LoopDetect] Skipping duplicate call: ${toolName}`);
+              return { role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ note: 'Already retrieved — use the previous result.' }) };
+            }
+            seenToolCalls.add(callKey);
 
             const toolStart = Date.now();
             let result = await executeTool(toolName, args, context);
             obs.logToolCall(trace, { toolName, args, result, durationMs: Date.now() - toolStart });
 
-            // SECURITY & PERFORMANCE: Hard Truncate Large Outputs
             let content = JSON.stringify(result);
             if (content.length > MAX_TOOL_OUTPUT_LENGTH) {
-              content = content.substring(0, MAX_TOOL_OUTPUT_LENGTH) + "... [Truncated]";
+              content = content.substring(0, MAX_TOOL_OUTPUT_LENGTH) + '... [Truncated]';
             }
 
             if (toolName === 'search_doctors' && result.length > 0) availableDoctors = result;
             if (toolName === 'book_appointment' && result.success) bookedAppointment = result;
             if (toolName === 'trigger_emergency' && result.triggered) emergencyTriggered = true;
 
-            return { role: "tool", tool_call_id: tc.id, content };
+            return { role: 'tool', tool_call_id: tc.id, content };
           })
         );
 
         messages.push(...toolResults);
 
         if (rounds >= MAX_TOOL_ROUNDS) {
-          lastAssistantMessage = choice.message.content || "I have reached my processing limit. Please be more specific with your request.";
+          lastAssistantMessage = choice.message.content || 'I have gathered all available information. Please ask a more specific question if you need further details.';
           break;
         }
         continue;
@@ -214,6 +250,9 @@ class ChatbotService {
       lastAssistantMessage = choice.message.content;
       break;
     }
+
+    // Fire-and-forget: persist any new medical facts for future sessions
+    updatePatientContext(user.id, messages).catch(err => console.warn('[PatientMemory]', err.message));
 
     if (!lastAssistantMessage || lastAssistantMessage.trim() === '') {
       lastAssistantMessage = "I'm sorry, I couldn't process that properly. Could you rephrase your question?";
@@ -290,30 +329,47 @@ class ChatbotService {
       return;
     }
 
-    const conversationSummary = await getLatestSummary(user.id, conversationId);
+    const [conversationSummary, patientContext] = await Promise.all([
+      getLatestSummary(user.id, conversationId),
+      getPatientContext(user.id),
+    ]);
+
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
+      ...(patientContext ? [{ role: 'system', content: patientContext }] : []),
       ...(conversationSummary ? [{ role: 'system', content: `CONVERSATION CONTEXT:\n${conversationSummary}` }] : []),
       ...this._formatHistory(history),
       { role: 'user', content: message },
     ];
+
+    const filteredTools = this._getToolsForIntent(classification.intent);
+    console.log(`[Tools] stream intent=${classification.intent} → ${filteredTools.length} tools`);
 
     let rounds = 0;
     let bookedAppointment = null;
     let emergencyTriggered = false;
     let availableDoctors = null;
     let lastAssistantMessage = '';
+    const seenToolCalls = new Set();
     const context = { userId: user.id, role: user.role, classification };
 
     while (rounds < MAX_TOOL_ROUNDS) {
-      if (rounds > 0) await sleep(2000);
       rounds++;
 
       const isLastRound = rounds >= MAX_TOOL_ROUNDS;
+
+      // Inject reflection prompt on the penultimate round
+      if (rounds === MAX_TOOL_ROUNDS - 1) {
+        messages.push({
+          role: 'system',
+          content: 'You have used most available reasoning rounds. Based on all tool results collected so far, provide a complete and final answer to the user now. Only call another tool if absolutely critical.',
+        });
+      }
+
       const genStart = new Date();
 
       try {
-        const result = await this._callGroqStreaming(messages, {
+        const result = await this._callGroqStreaming(messages, filteredTools, {
           onToken: (token) => onToken(token),
           onToolStart: (toolName) => onToolStart(toolName),
         });
@@ -335,6 +391,15 @@ class ChatbotService {
             result.toolCalls.map(async (tc) => {
               let args = {};
               try { args = JSON.parse(tc.function.arguments); } catch {}
+
+              // Loop detection
+              const callKey = `${tc.function.name}:${tc.function.arguments}`;
+              if (seenToolCalls.has(callKey)) {
+                console.warn(`[LoopDetect] Skipping duplicate stream call: ${tc.function.name}`);
+                return { role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ note: 'Already retrieved — use the previous result.' }) };
+              }
+              seenToolCalls.add(callKey);
+
               onToolStart(tc.function.name);
               const toolStart = Date.now();
               let toolResult = await executeTool(tc.function.name, args, context);
@@ -355,10 +420,13 @@ class ChatbotService {
         break;
       } catch (err) {
         console.error('[LLM-STREAM-ERROR]', err.message);
-        lastAssistantMessage = "I'm experiencing high traffic. Please try again in a few moments.";
+        lastAssistantMessage = "I'm sorry, the AI service is temporarily unavailable. Please try again in a moment.";
         break;
       }
     }
+
+    // Fire-and-forget: persist any new medical facts for future sessions
+    updatePatientContext(user.id, messages).catch(err => console.warn('[PatientMemory]', err.message));
 
     lastAssistantMessage = detectSensitiveLeak(lastAssistantMessage);
     lastAssistantMessage = applyOutputConstraints(lastAssistantMessage, classification);
@@ -388,12 +456,12 @@ class ChatbotService {
 
   // ─── STREAMING GROQ CALL ─────────────────────────────────────────────────────
 
-  async _callGroqStreaming(messages, { onToken }) {
+  async _callGroqStreaming(messages, tools, { onToken }) {
     const model = CHATBOT_MODEL;
 
     const res = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
-      { model, messages, tools: TOOL_DEFINITIONS, tool_choice: 'auto', temperature: 0.0, stream: true },
+      { model, messages, tools, tool_choice: 'auto', temperature: 0.0, stream: true },
       {
         headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
         responseType: 'stream',
@@ -457,31 +525,41 @@ class ChatbotService {
     return history.slice(-2).map(h => ({ role: h.role, content: h.content }));
   }
 
-  async _callGroqWithRetry(messages, retries = 2) {
+  _getToolsForIntent(intent) {
+    const names = INTENT_TOOL_MAP[intent] || INTENT_TOOL_MAP.GENERAL;
+    const nameSet = new Set(names);
+    return TOOL_DEFINITIONS.filter(t => nameSet.has(t.function.name));
+  }
+
+  async _callGroqWithRetry(messages, tools, retries = 3) {
+    let useFallback = false;
     for (let i = 0; i <= retries; i++) {
-      // On the final retry after a rate limit, fall back to the fast 8B model
-      const model = i === retries ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL;
-      if (i === retries) {
-        console.warn(`[Groq] Falling back to ${CHATBOT_FALLBACK_MODEL} after rate limit on ${CHATBOT_MODEL}`);
-      }
+      const model = useFallback ? CHATBOT_FALLBACK_MODEL : CHATBOT_MODEL;
       try {
         const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
           model,
           messages,
-          tools: TOOL_DEFINITIONS,
-          tool_choice: "auto",
-          temperature: 0.0
+          tools,
+          tool_choice: 'auto',
+          temperature: 0.0,
         }, {
-          headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-          timeout: 25000
+          headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+          timeout: 25000,
         });
         return res.data;
       } catch (err) {
         const is429 = err.response?.status === 429;
         if (is429 && i < retries) {
-          const wait = (i + 1) * 3000;
-          console.warn(`[Groq] 429 Rate Limit on ${model}. Retrying in ${wait}ms...`);
-          await sleep(wait);
+          // Switch to 8B immediately on first rate limit hit
+          if (!useFallback) {
+            console.warn(`[Groq] 429 on ${CHATBOT_MODEL}, switching to ${CHATBOT_FALLBACK_MODEL}`);
+            useFallback = true;
+          }
+          // Respect the retry-after header Groq sends; default to 15s
+          const retryAfter = parseInt(err.response?.headers?.['retry-after'] || '15', 10);
+          const waitMs = Math.min(retryAfter * 1000, 60000);
+          console.warn(`[Groq] Waiting ${waitMs}ms before retry (retry-after: ${retryAfter}s)`);
+          await sleep(waitMs);
           continue;
         }
         throw err;

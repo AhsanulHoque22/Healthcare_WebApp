@@ -16,6 +16,7 @@ import {
   HandThumbUpIcon,
   HandThumbDownIcon,
   FlagIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -31,6 +32,8 @@ interface Message {
   createdAt?: string;
   feedbackRating?: 'thumbs_up' | 'thumbs_down' | null;
   feedbackFlagged?: boolean;
+  safetyPipelineTriggered?: boolean;
+  userMessage?: string;
 }
 
 const FLAG_REASONS = [
@@ -63,6 +66,7 @@ const Assistant: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [flagOpenForIndex, setFlagOpenForIndex] = useState<number | null>(null);
+  const [escalatedIds, setEscalatedIds] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -178,6 +182,8 @@ const Assistant: React.FC = () => {
           availableDoctors: aiResponse.availableDoctors,
           bookingDetails: aiResponse.bookingDetails,
           createdAt: new Date().toISOString(),
+          safetyPipelineTriggered: aiResponse.safetyPipelineTriggered ?? false,
+          userMessage: text,
         },
       ]);
       await fetchSessions();
@@ -234,6 +240,22 @@ const Assistant: React.FC = () => {
       toast.success(flagged ? 'Response flagged — thank you.' : 'Feedback recorded.');
     } catch {
       toast.error('Failed to submit feedback');
+    }
+  };
+
+  const handleEscalate = async (msg: Message) => {
+    if (!msg.id || escalatedIds.has(msg.id)) return;
+    try {
+      await API.post('/escalations', {
+        conversationId: currentSessionId,
+        chatHistoryId: msg.id,
+        userMessage: msg.userMessage || '(not available)',
+        aiResponse: msg.content,
+      });
+      setEscalatedIds(prev => new Set(prev).add(msg.id!));
+      toast.success('A healthcare professional has been notified and will review your query.');
+    } catch {
+      toast.error('Failed to submit review request. Please try again.');
     }
   };
 
@@ -592,6 +614,29 @@ const Assistant: React.FC = () => {
                                 </button>
                               ))}
                             </div>
+                          )}
+                        </div>
+
+                        {/* Human review escalation button */}
+                        <div className="ml-1 pl-1 border-l border-gray-100">
+                          {m.id && escalatedIds.has(m.id) ? (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-green-600 px-1">
+                              <UserGroupIcon className="h-3 w-3" />
+                              Review Requested
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleEscalate(m)}
+                              title="Request human review"
+                              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-semibold transition-all ${
+                                m.safetyPipelineTriggered
+                                  ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                                  : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                              }`}
+                            >
+                              <UserGroupIcon className="h-3 w-3" />
+                              {m.safetyPipelineTriggered ? 'Get Human Review' : 'Ask a Human'}
+                            </button>
                           )}
                         </div>
                       </div>

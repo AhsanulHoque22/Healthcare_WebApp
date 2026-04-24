@@ -18,6 +18,7 @@ const WebsiteReview = require('./WebsiteReview');
 const MedicineLog = require('./MedicineLog');
 const ChatHistory = require('./ChatHistory');
 const DocumentCache = require('./DocumentCache');
+const EscalationRequest = require('./EscalationRequest');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
@@ -122,6 +123,10 @@ WebsiteReview.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 // Chat History associations
 ChatHistory.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Escalation Request associations
+EscalationRequest.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(EscalationRequest, { foreignKey: 'userId', as: 'escalationRequests' });
+
 module.exports = {
   User,
   Patient,
@@ -142,5 +147,6 @@ module.exports = {
   WebsiteReview,
   MedicineLog,
   ChatHistory,
-  DocumentCache
+  DocumentCache,
+  EscalationRequest,
 };
