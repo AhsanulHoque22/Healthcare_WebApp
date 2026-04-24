@@ -394,14 +394,24 @@ ${context}`;
 
   search_doctors: async (params) => {
     const where = { isVerified: true };
+
     if (params.department && typeof params.department === 'string') {
       where.department = { [Op.like]: `%${params.department.toLowerCase()}%` };
     }
+
     if (params.keyword && typeof params.keyword === 'string') {
-      where[Op.or] = [
-        { hospital: { [Op.like]: `%${params.keyword}%` } },
-        { department: { [Op.like]: `%${params.keyword}%` } }
+      const kw = params.keyword.toLowerCase();
+      // Strip common English specialist suffixes so "neurologist" matches "neurology",
+      // "cardiologist" matches "cardiology", "dentist" matches "dentistry", etc.
+      const kwRoot = kw.length > 7 ? kw.slice(0, -3) : kw;
+      const orConditions = [
+        { hospital: { [Op.like]: `%${kw}%` } },
+        { department: { [Op.like]: `%${kw}%` } },
       ];
+      if (kwRoot !== kw) {
+        orConditions.push({ department: { [Op.like]: `%${kwRoot}%` } });
+      }
+      where[Op.or] = orConditions;
     }
     
     const raw = await Doctor.findAll({

@@ -48,6 +48,42 @@ const EXISTING_REMINDER_PATTERNS = [
 ];
 
 /**
+ * Strips raw tool-call artifacts that LLMs (especially Gemini) emit as plain text
+ * when the function-calling mechanism fails or returns empty results.
+ *
+ * Handles:
+ *   - Gemini fallback format:  {"name": "tool_name", "parameters": {...}}
+ *   - Old XML format:          <function=name(args)></function>
+ *   - Meta-commentary phrases: "It seems the function call did not return..."
+ */
+function _stripToolCallLeakage(text) {
+  let result = text;
+
+  // Cut everything from the first raw JSON tool-call block onward
+  const jsonFuncIdx = result.search(/\n?\s*\{"name"\s*:\s*"/);
+  if (jsonFuncIdx !== -1) {
+    result = result.slice(0, jsonFuncIdx);
+  }
+
+  // Strip old XML-style tool call format
+  result = result.replace(/<function=[a-zA-Z_]+\([^)]*\)(<\/function>)?/g, '');
+
+  // Strip common meta-commentary phrases LLMs prepend to tool-call retries
+  result = result
+    .replace(/It seems (that )?(the )?function calls? did not return[^.]*\.\s*/gi, '')
+    .replace(/Let me try (again|a different approach)[^.]*\.\s*/gi, '')
+    .replace(/I (will|can) try (again|another approach)[^.]*\.\s*/gi, '');
+
+  result = result.trim();
+
+  if (!result) {
+    result = "I wasn't able to find results for that search right now. Could you try rephrasing, or use the search feature to browse directly?";
+  }
+
+  return result;
+}
+
+/**
  * Applies deterministic language constraints to a chatbot response.
  *
  * @param {string} text - The raw response text from the LLM
@@ -57,7 +93,7 @@ const EXISTING_REMINDER_PATTERNS = [
 function applyOutputConstraints(text, classification) {
   if (!text || typeof text !== 'string') return text;
 
-  let result = text;
+  let result = _stripToolCallLeakage(text);
 
   // 1. Replace overconfident language
   for (const { pattern, replacement } of HEDGING_REPLACEMENTS) {
