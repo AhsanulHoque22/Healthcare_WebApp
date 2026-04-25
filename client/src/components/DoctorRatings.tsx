@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import API from '../api/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   StarIcon, 
   UserIcon, 
   CalendarIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  SparklesIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 
@@ -36,11 +39,6 @@ interface Rating {
   };
 }
 
-interface RatingStats {
-  averageRating: string;
-  totalRatings: number;
-}
-
 const DoctorRatings: React.FC<DoctorRatingsProps> = ({ doctorId, showAll = false }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
 
@@ -59,13 +57,19 @@ const DoctorRatings: React.FC<DoctorRatingsProps> = ({ doctorId, showAll = false
 
   const renderStars = (rating: number) => {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
-          star <= rating ? (
-            <StarIconSolid key={star} className="h-4 w-4 text-yellow-400" />
-          ) : (
-            <StarIcon key={star} className="h-4 w-4 text-gray-300" />
-          )
+          <motion.div
+            key={star}
+            initial={false}
+            animate={{ scale: star <= rating ? 1 : 0.9 }}
+          >
+            {star <= rating ? (
+              <StarIconSolid className="h-4 w-4 text-amber-400" />
+            ) : (
+              <StarIcon className="h-4 w-4 text-slate-200" />
+            )}
+          </motion.div>
         ))}
       </div>
     );
@@ -73,37 +77,21 @@ const DoctorRatings: React.FC<DoctorRatingsProps> = ({ doctorId, showAll = false
 
   const getRatingLabel = (rating: number) => {
     switch (rating) {
-      case 1: return 'Poor';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Very Good';
-      case 5: return 'Excellent';
+      case 1: return 'Provisional';
+      case 2: return 'Standard';
+      case 3: return 'Accomplished';
+      case 4: return 'Exceptional';
+      case 5: return 'Distinguished';
       default: return '';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-        </div>
+      <div className="space-y-6">
+        <div className="h-32 bg-slate-50 rounded-[32px] animate-pulse" />
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="animate-pulse border border-gray-200 rounded-lg p-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-          </div>
+          <div key={i} className="h-40 bg-white rounded-[32px] border border-slate-100 animate-pulse" />
         ))}
       </div>
     );
@@ -111,111 +99,131 @@ const DoctorRatings: React.FC<DoctorRatingsProps> = ({ doctorId, showAll = false
 
   if (!ratings || ratings.length === 0) {
     return (
-      <div className="text-center py-8">
-        <StarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">No ratings available yet</p>
+      <div className="py-20 text-center bg-white rounded-[40px] border border-slate-100 border-dashed">
+        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <SparklesIcon className="h-8 w-8 text-slate-300" />
+        </div>
+        <p className="text-xl font-black text-slate-900 mb-2">Registry Empty</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No patient evaluations recorded yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Rating Summary */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="space-y-10">
+      {/* ═══ ANALYTIC SUMMARY ═══ */}
+      <div className="relative group">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-violet-500/5 rounded-[40px] blur-2xl group-hover:opacity-100 transition-opacity opacity-0" />
+        <div className="relative bg-white/70 backdrop-blur-xl rounded-[40px] p-10 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="flex items-center gap-10">
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">{stats.averageRating}</div>
-              <div className="flex items-center justify-center gap-1 mt-1">
-                {renderStars(Math.round(parseFloat(stats.averageRating)))}
-              </div>
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] block mb-2">Composite Score</span>
+               <div className="text-6xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tighter">
+                {stats.averageRating}
+               </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">
-                Based on {stats.totalRatings} rating{stats.totalRatings !== 1 ? 's' : ''}
-              </p>
+            <div className="h-16 w-px bg-slate-100 hidden md:block" />
+            <div className="space-y-2">
+               <div className="flex items-center gap-3">
+                 {renderStars(Math.round(parseFloat(stats.averageRating)))}
+                 <span className="text-xs font-black text-slate-900">QUALITY INDEX</span>
+               </div>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Validated against {stats.totalRatings} clinical encounters
+               </p>
             </div>
           </div>
+          
           {ratings.length > 5 && (
             <button
               onClick={() => setShowAllReviews(!showAllReviews)}
-              className="flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm"
+              className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 flex items-center gap-3"
             >
               {showAllReviews ? (
-                <>
-                  <EyeSlashIcon className="h-4 w-4" />
-                  Show Less
-                </>
+                <><EyeSlashIcon className="h-4 w-4" /> COMPRESS REGISTRY</>
               ) : (
-                <>
-                  <EyeIcon className="h-4 w-4" />
-                  Show All ({ratings.length})
-                </>
+                <><EyeIcon className="h-4 w-4" /> EXPAND REGISTRY ({ratings.length})</>
               )}
             </button>
           )}
         </div>
       </div>
 
-      {/* Ratings List */}
-      <div className="space-y-4">
-        {(showAllReviews ? ratings : ratings.slice(0, 5)).map((rating: Rating) => (
-          <div key={rating.id} className="border border-gray-200 rounded-lg p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <UserIcon className="h-4 w-4 text-primary-600" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900">
-                      {rating.isAnonymous ? 'Anonymous Patient' : 
-                       `${rating.patient.user.firstName} ${rating.patient.user.lastName}`}
-                    </p>
-                    {rating.status !== 'approved' && (
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(rating.status)}`}>
-                        {rating.status}
-                      </span>
-                    )}
+      {/* ═══ EVALUATION REGISTRY ═══ */}
+      <div className="grid grid-cols-1 gap-6">
+        <AnimatePresence mode="popLayout">
+          {(showAllReviews ? ratings : ratings.slice(0, 5)).map((rating: Rating, idx: number) => (
+            <motion.div
+              layout
+              key={rating.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-white rounded-[32px] p-8 border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl transition-transform group-hover:rotate-6">
+                    <UserIcon className="h-6 w-6" />
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    {renderStars(rating.rating)}
-                    <span className="text-gray-500">•</span>
-                    <span>{getRatingLabel(rating.rating)}</span>
-                    <span className="text-gray-500">•</span>
-                    <div className="flex items-center gap-1">
-                      <CalendarIcon className="h-3 w-3" />
-                      {new Date(rating.appointment.appointmentDate).toLocaleDateString()}
+                  <div>
+                    <h4 className="text-lg font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">
+                      {rating.isAnonymous ? 'Verified Anonymous' : 
+                       `${rating.patient.user.firstName} ${rating.patient.user.lastName}`}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                       <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                         rating.rating >= 4 ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'
+                       }`}>
+                         {getRatingLabel(rating.rating)}
+                       </span>
+                       <span className="w-1 h-1 bg-slate-100 rounded-full" />
+                       <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                         <CalendarIcon className="h-3 w-3" />
+                         {new Date(rating.appointment.appointmentDate).toLocaleDateString()}
+                       </div>
                     </div>
                   </div>
                 </div>
+                <div className="flex flex-col items-end gap-2">
+                   {renderStars(rating.rating)}
+                   <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{rating.status}</span>
+                </div>
               </div>
-            </div>
 
-            {rating.review && (
-              <div className="mb-3">
-                <p className="text-gray-700">{rating.review}</p>
-              </div>
-            )}
+              {rating.review && (
+                <div className="relative pl-6 border-l-2 border-slate-50">
+                  <ChatBubbleLeftRightIcon className="absolute -left-3 top-0 h-5 w-5 text-slate-100 -scale-x-100" />
+                  <p className="text-sm font-bold text-slate-600 leading-relaxed italic">
+                    "{rating.review}"
+                  </p>
+                </div>
+              )}
 
-            {rating.feedback && (
-              <div className="bg-blue-50 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">Feedback:</span> {rating.feedback}
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
+              {rating.feedback && (
+                <div className="mt-6 bg-indigo-50/50 rounded-2xl p-6 border border-indigo-50 flex items-start gap-4">
+                  <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-indigo-500 shadow-sm shrink-0">
+                    <SparklesIcon className="h-4 w-4" />
+                  </div>
+                  <p className="text-[11px] font-bold text-indigo-900 leading-relaxed">
+                    <span className="font-black uppercase tracking-widest block mb-1 opacity-50">Clinical Feedback:</span>
+                    {rating.feedback}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {!showAllReviews && ratings.length > 5 && (
-        <div className="text-center">
+        <div className="text-center pt-10">
           <button
             onClick={() => setShowAllReviews(true)}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            className="text-[10px] font-black text-slate-400 hover:text-slate-900 uppercase tracking-[0.3em] transition-all"
           >
-            View all {ratings.length} reviews
+            Archive Access: View All {ratings.length} Records
           </button>
         </div>
       )}

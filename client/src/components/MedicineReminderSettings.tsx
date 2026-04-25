@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -9,7 +10,10 @@ import {
   MoonIcon,
   DevicePhoneMobileIcon,
   XMarkIcon,
-  CheckIcon
+  CheckIcon,
+  SparklesIcon,
+  AdjustmentsHorizontalIcon,
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 
@@ -46,32 +50,21 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
 
   const queryClient = useQueryClient();
 
-  // Fetch existing reminder settings
-  const { data: existingSettings, isLoading, error } = useQuery<ReminderSettings>({
+  const { data: existingSettings, isLoading } = useQuery<ReminderSettings>({
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
-      try {
-        const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
-          params: { _t: Date.now() } // Cache-busting parameter
-        });
-        return response.data.data;
-      } catch (error: any) {
-        throw error;
-      }
+      const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
+        params: { _t: Date.now() }
+      });
+      return response.data.data;
     },
     enabled: !!patientId && !!user,
-    retry: 1,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache the data (replaces cacheTime)
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnMount: true // Always refetch on mount
+    staleTime: 0,
   });
 
-  // Update settings when data is fetched
   useEffect(() => {
     if (existingSettings && typeof existingSettings === 'object') {
-      // Ensure all required properties exist
-      const updatedSettings: ReminderSettings = {
+      setSettings({
         patientId: existingSettings.patientId || patientId,
         morningTime: existingSettings.morningTime || '08:00',
         lunchTime: existingSettings.lunchTime || '12:00',
@@ -79,521 +72,212 @@ const MedicineReminderSettings: React.FC<MedicineReminderSettingsProps> = ({
         enabled: existingSettings.enabled !== undefined ? existingSettings.enabled : true,
         notificationEnabled: existingSettings.notificationEnabled !== undefined ? existingSettings.notificationEnabled : true,
         reminderMinutesBefore: existingSettings.reminderMinutesBefore || 15
-      };
-      setSettings(updatedSettings);
+      });
     }
   }, [existingSettings, patientId]);
 
-  // Debug: Log current settings state
-  useEffect(() => {
-    // Settings state updated
-  }, [settings]);
-
-  // Debug: Log query error
-  useEffect(() => {
-    if (error) {
-      // Query error occurred
-    }
-  }, [error]);
-
-  // Force 24-hour format for time inputs
-  useEffect(() => {
-    const timeInputs = document.querySelectorAll('input[type="time"]');
-    timeInputs.forEach((input: any) => {
-      // Set additional attributes to force 24-hour format
-      input.setAttribute('data-format', '24');
-      input.setAttribute('lang', 'en-GB');
-      
-      // Ensure the value is in 24-hour format
-      if (input.value) {
-        const time = input.value;
-        const [hours, minutes] = time.split(':');
-        const hour24 = parseInt(hours);
-        
-        // If it's in 12-hour format, convert to 24-hour
-        if (hour24 > 12) {
-          input.value = `${hour24.toString().padStart(2, '0')}:${minutes}`;
-        } else if (hour24 === 0) {
-          input.value = `00:${minutes}`;
-        }
-      }
-    });
-  }, [settings.morningTime, settings.lunchTime, settings.dinnerTime]);
-
-  // Save reminder settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (reminderSettings: ReminderSettings) => {
-      // Validate patient ID
-      if (!patientId || patientId <= 0) {
-        throw new Error(`Invalid patient ID: ${patientId}`);
-      }
-      
-      try {
-        const response = await API.post(`/medicines/patients/${patientId}/reminder-settings`, reminderSettings);
-        return response.data;
-      } catch (error: any) {
-        throw error;
-      }
+      const response = await API.post(`/medicines/patients/${patientId}/reminder-settings`, reminderSettings);
+      return response.data;
     },
     onSuccess: (data) => {
-      toast.success('Reminder settings saved successfully! 🔔');
-      
-      // Close modal first
+      toast.success('Clinical sync complete. Reminders updated.');
       if (onClose) onClose();
-      
-      // Invalidate and refetch with a small delay to ensure settings are saved
       setTimeout(() => {
-        // Invalidate and refetch reminder settings
         queryClient.invalidateQueries({ queryKey: ['medicine-reminder-settings', patientId] });
-        
-        // Invalidate and refetch medicine matrix with all variations
-        queryClient.invalidateQueries({ queryKey: ['medicine-matrix'] });
-        queryClient.invalidateQueries({ queryKey: ['medicine-schedule-range'] });
-        
-        // Also refetch dashboard medicine tracker
         queryClient.invalidateQueries({ queryKey: ['today-medicine-schedule'] });
-        
-        // Force refetch of all queries
-        queryClient.refetchQueries({ queryKey: ['medicine-reminder-settings', patientId] });
-        queryClient.refetchQueries({ queryKey: ['medicine-matrix'] });
-        
-        // Also update the local state with the saved data
-        if (data && data.data) {
-          setSettings(data.data);
-        }
       }, 100);
     },
     onError: (error: any) => {
-      let errorMessage = 'Failed to save reminder settings';
-      
-      if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error.response?.status === 401) {
-        errorMessage = 'Please log in to save reminder settings';
-      } else if (error.response?.status === 403) {
-        errorMessage = 'Access denied. Please check your permissions';
-      } else if (error.response?.status === 404) {
-        errorMessage = 'Patient not found. Please refresh the page and try again.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
-    }
-  });
-
-  // Test notification mutation
-  const testNotificationMutation = useMutation({
-    mutationFn: async () => {
-      const response = await API.post(`/medicines/patients/${patientId}/test-reminder`);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success('Test notification sent! 📱');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to send test notification');
+      toast.error(error.response?.data?.message || 'Sync failed');
     }
   });
 
   const handleSave = () => {
-    if (!user) {
-      toast.error('Please log in to save reminder settings');
-      return;
-    }
-
-    // Validate settings before saving
     if (!settings.morningTime || !settings.lunchTime || !settings.dinnerTime) {
-      toast.error('Please set all reminder times');
+      toast.error('Protocol incomplete: Set all time windows');
       return;
     }
-
-    // Validate time format (HH:MM)
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(settings.morningTime) || 
-        !timeRegex.test(settings.lunchTime) || 
-        !timeRegex.test(settings.dinnerTime)) {
-      toast.error('Please enter valid time format (HH:MM)');
-      return;
-    }
-
-    // Validate reminder minutes
-    if (settings.reminderMinutesBefore < 1 || settings.reminderMinutesBefore > 120) {
-      toast.error('Reminder minutes must be between 1 and 120');
-      return;
-    }
-    
     saveSettingsMutation.mutate(settings);
   };
 
-  const handleTestNotification = async () => {
-    // Check if browser supports notifications
-    if (!('Notification' in window)) {
-      toast.error('This browser does not support notifications');
-      return;
-    }
-
-    // Request permission if not already granted
-    if (Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        toast.error('Notification permission denied');
-        return;
-      }
-    }
-
-    if (Notification.permission === 'denied') {
-      toast.error('Notification permission denied. Please enable notifications in your browser settings.');
-      return;
-    }
-
-    // Send test notification via API
-    testNotificationMutation.mutate();
-
-    // Also show a browser notification
-    if (Notification.permission === 'granted') {
-      new Notification('Medicine Reminder Test', {
-        body: 'This is a test notification for your medicine reminder settings.',
-        icon: '/favicon.ico',
-        tag: 'medicine-reminder-test'
-      });
-    }
-  };
-
-  // Helper function to ensure 24-hour format
-  const formatTo24Hour = (timeString: string): string => {
-    if (!timeString) return timeString;
-    
-    // If already in 24-hour format (HH:MM), return as is
-    if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeString)) {
-      return timeString;
-    }
-    
-    // If in 12-hour format with AM/PM, convert to 24-hour
-    const match = timeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (match) {
-      let hours = parseInt(match[1]);
-      const minutes = match[2];
-      const period = match[3].toUpperCase();
-      
-      if (period === 'AM') {
-        if (hours === 12) hours = 0;
-      } else { // PM
-        if (hours !== 12) hours += 12;
-      }
-      
-      return `${hours.toString().padStart(2, '0')}:${minutes}`;
-    }
-    
-    return timeString;
-  };
-
-  const handleTimeChange = (timeType: 'morningTime' | 'lunchTime' | 'dinnerTime', value: string) => {
-    const formattedTime = formatTo24Hour(value);
-    setSettings(prev => ({
-      ...prev,
-      [timeType]: formattedTime
-    }));
-  };
-
   const handleToggle = (field: 'enabled' | 'notificationEnabled') => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
+    setSettings(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading reminder settings...</span>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 max-w-md mx-auto">
-        <div className="text-center">
-          <BellIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Authentication Required</h3>
-          <p className="text-gray-600 mb-4">Please log in to access medicine reminder settings.</p>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Close
-            </button>
-          )}
-        </div>
+      <div className="flex flex-col items-center justify-center p-20 space-y-4">
+        <motion.div 
+           animate={{ rotate: 360 }}
+           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+           className="w-10 h-10 border-2 border-slate-100 border-t-indigo-500 rounded-full" 
+        />
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Accessing Registry...</span>
       </div>
     );
   }
 
   return (
-    <>
-      <style>
-        {`
-          /* Force 24-hour format for time inputs */
-          input[type="time"] {
-            -webkit-appearance: none;
-            -moz-appearance: textfield;
-            direction: ltr;
-            text-align: left;
-          }
-          
-          /* Chrome/Safari - Hide AM/PM indicator */
-          input[type="time"]::-webkit-datetime-edit-ampm-field {
-            display: none !important;
-          }
-          
-          input[type="time"]::-webkit-datetime-edit-text {
-            color: transparent;
-          }
-          
-          input[type="time"]::-webkit-datetime-edit-hour-field {
-            color: black !important;
-          }
-          
-          input[type="time"]::-webkit-datetime-edit-minute-field {
-            color: black !important;
-          }
-          
-          /* Firefox specific */
-          input[type="time"]::-moz-placeholder {
-            color: transparent;
-          }
-          
-          /* Force 24-hour format display */
-          input[type="time"][lang="en-GB"] {
-            -webkit-appearance: none;
-            -moz-appearance: textfield;
-          }
-          
-          /* Additional browser-specific overrides */
-          input[type="time"]::-webkit-calendar-picker-indicator {
-            display: none;
-          }
-        `}
-      </style>
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 p-6 md:p-8 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto transform transition-all duration-500 ease-out animate-fade-in-up mt-4 sm:mt-0 pb-12 sm:pb-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 sticky top-0 bg-white/95 backdrop-blur-xl z-10 pb-2 pt-2 border-b border-gray-100">
-        <div className="flex items-center">
-          <BellIcon className="h-6 w-6 text-blue-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Medicine Reminders</h3>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.1)] border border-white/60 p-10 w-full max-w-xl mx-auto overflow-hidden relative"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -mr-10 -mt-10" />
+      
+      {/* ═══ HEADER ═══ */}
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center gap-5">
+           <div className="w-14 h-14 bg-slate-900 rounded-[22px] flex items-center justify-center text-white shadow-2xl">
+              <BellIcon className="h-7 w-7" />
+           </div>
+           <div>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Pharma-Sync</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Clinical Adherence Protocols</p>
+           </div>
         </div>
         {onClose && (
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+          <button onClick={onClose} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all"><XMarkIcon className="h-5 w-5 text-slate-400" /></button>
         )}
       </div>
 
-      {/* Enable/Disable Toggle */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900">Enable Reminders</h4>
-            <p className="text-xs text-gray-500">Turn on/off all medicine reminders</p>
-          </div>
-          <button
+      <div className="space-y-8">
+        {/* ═══ TOP-LEVEL TOGGLE ═══ */}
+        <div className="bg-slate-50/50 rounded-[32px] p-6 border border-slate-100 flex items-center justify-between group">
+           <div className="flex items-center gap-5">
+              <div className={`p-3 rounded-xl transition-colors ${settings.enabled ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                 <AdjustmentsHorizontalIcon className="h-5 w-5" />
+              </div>
+              <div>
+                 <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Global Reminders</span>
+                 <p className="text-[10px] font-bold text-slate-400">Enable automated clinical alerts</p>
+              </div>
+           </div>
+           <button
             onClick={() => handleToggle('enabled')}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings.enabled ? 'bg-blue-600' : 'bg-gray-200'
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all ${
+              settings.enabled ? 'bg-indigo-600' : 'bg-slate-200'
             }`}
           >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                settings.enabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+            <motion.span
+              animate={{ x: settings.enabled ? 24 : 4 }}
+              className="inline-block h-5 w-5 rounded-full bg-white shadow-sm"
             />
           </button>
         </div>
-      </div>
 
-      {settings.enabled && (
-        <>
-          {/* Time Settings */}
-          <div className="space-y-4 mb-6">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-900">Reminder Times</h4>
-              <span className="text-xs text-gray-500">24-hour format</span>
-            </div>
-            
-            {/* Morning */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <SunIcon className="h-5 w-5 text-yellow-500 mr-2" />
-                <span className="text-sm text-gray-700">Morning</span>
-              </div>
-              <input
-                type="time"
-                value={settings.morningTime}
-                onChange={(e) => handleTimeChange('morningTime', e.target.value)}
-                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
-                min="00:00"
-                max="23:59"
-                step="300"
-                data-format="24"
-                lang="en-GB"
-                style={{ fontFamily: 'monospace' }}
-              />
-            </div>
-
-            {/* Lunch */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <ClockIcon className="h-5 w-5 text-orange-500 mr-2" />
-                <span className="text-sm text-gray-700">Lunch</span>
-              </div>
-              <input
-                type="time"
-                value={settings.lunchTime}
-                onChange={(e) => handleTimeChange('lunchTime', e.target.value)}
-                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
-                min="00:00"
-                max="23:59"
-                step="300"
-                data-format="24"
-                lang="en-GB"
-                style={{ fontFamily: 'monospace' }}
-              />
-            </div>
-
-            {/* Dinner */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <MoonIcon className="h-5 w-5 text-purple-500 mr-2" />
-                <span className="text-sm text-gray-700">Dinner</span>
-              </div>
-              <input
-                type="time"
-                value={settings.dinnerTime}
-                onChange={(e) => handleTimeChange('dinnerTime', e.target.value)}
-                className="px-4 py-2 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm w-36"
-                min="00:00"
-                max="23:59"
-                step="300"
-                data-format="24"
-                lang="en-GB"
-                style={{ fontFamily: 'monospace' }}
-              />
-            </div>
-          </div>
-
-          {/* Notification Settings */}
-          <div className="space-y-4 mb-6">
-            <h4 className="text-sm font-medium text-gray-900">Notification Settings</h4>
-            
-            {/* Browser Notifications */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <DevicePhoneMobileIcon className="h-5 w-5 text-blue-500 mr-2" />
-                <div>
-                  <span className="text-sm text-gray-700">Browser Notifications</span>
-                  <p className="text-xs text-gray-500">Receive notifications in your browser</p>
+        <AnimatePresence>
+          {settings.enabled && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-10"
+            >
+              {/* ═══ TIME SLOTS ═══ */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between px-2">
+                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Temporal Windows (24H)</h4>
+                   <SparklesIcon className="h-4 w-4 text-indigo-400 animate-pulse" />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Morning', field: 'morningTime' as const, icon: SunIcon, color: 'text-amber-500', bg: 'bg-amber-50' },
+                    { label: 'Lunch', field: 'lunchTime' as const, icon: ClockIcon, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+                    { label: 'Dinner', field: 'dinnerTime' as const, icon: MoonIcon, color: 'text-violet-500', bg: 'bg-violet-50' }
+                  ].map((slot) => (
+                    <div key={slot.field} className="relative group">
+                       <div className={`absolute inset-0 ${slot.bg} rounded-[24px] opacity-0 group-hover:opacity-100 transition-opacity blur-xl`} />
+                       <div className="relative bg-white border border-slate-100 p-5 rounded-[24px] shadow-sm hover:border-slate-200 transition-all flex md:flex-col items-center justify-between gap-4">
+                          <slot.icon className={`h-6 w-6 ${slot.color}`} />
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{slot.label}</span>
+                          <input
+                            type="time"
+                            value={settings[slot.field]}
+                            onChange={(e) => setSettings(prev => ({ ...prev, [slot.field]: e.target.value }))}
+                            className="bg-slate-50/50 border-none rounded-xl px-3 py-2 text-xs font-black text-slate-900 focus:ring-2 focus:ring-indigo-500/10 w-full text-center"
+                          />
+                       </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <button
-                onClick={() => handleToggle('notificationEnabled')}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.notificationEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    settings.notificationEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
 
-            {/* Reminder Minutes Before */}
-            <div>
-              <label className="block text-sm text-gray-700 mb-2">
-                Remind me (minutes before)
-              </label>
-              <select
-                value={settings.reminderMinutesBefore}
-                onChange={(e) => {
-                  setSettings(prev => ({
-                    ...prev,
-                    reminderMinutesBefore: parseInt(e.target.value)
-                  }));
-                }}
-                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
-              >
-                <option value={5}>5 minutes before</option>
-                <option value={10}>10 minutes before</option>
-                <option value={15}>15 minutes before</option>
-                <option value={30}>30 minutes before</option>
-                <option value={60}>1 hour before</option>
-              </select>
-            </div>
-          </div>
+              {/* ═══ NOTIFICATION CONFIG ═══ */}
+              <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                   <DevicePhoneMobileIcon className="h-20 w-20" />
+                </div>
+                <div className="relative z-10 space-y-6">
+                   <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                            <BellIcon className="h-5 w-5" />
+                         </div>
+                         <div>
+                            <span className="text-xs font-black uppercase tracking-widest opacity-80">Sync Delivery</span>
+                            <h5 className="text-[10px] font-bold text-white/50">Push to primary device</h5>
+                         </div>
+                      </div>
+                      <button
+                        onClick={() => handleToggle('notificationEnabled')}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${
+                          settings.notificationEnabled ? 'bg-indigo-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <motion.span
+                          animate={{ x: settings.notificationEnabled ? 22 : 4 }}
+                          className="inline-block h-4 w-4 rounded-full bg-white shadow-sm"
+                        />
+                      </button>
+                   </div>
 
-          {/* Test Notification */}
-          {settings.notificationEnabled && (
-            <div className="mb-6">
-              <button
-                onClick={handleTestNotification}
-                className="w-full flex items-center justify-center px-4 py-3 border-2 border-blue-100 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-300 font-medium tracking-wide disabled:opacity-50"
-              >
-                <BellIcon className="h-4 w-4 mr-2" />
-                {testNotificationMutation.isPending ? 'Sending...' : 'Send Test Notification'}
-              </button>
-            </div>
+                   <div className="flex flex-col gap-3">
+                      <label className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">Pre-Check Buffer</label>
+                      <select
+                        value={settings.reminderMinutesBefore}
+                        onChange={(e) => setSettings(prev => ({ ...prev, reminderMinutesBefore: parseInt(e.target.value) }))}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-black text-white focus:ring-2 focus:ring-indigo-500 uppercase tracking-widest"
+                      >
+                        <option className="bg-slate-900" value={5}>5m Pre-alert</option>
+                        <option className="bg-slate-900" value={15}>15m Pre-alert</option>
+                        <option className="bg-slate-900" value={30}>30m Pre-alert</option>
+                        <option className="bg-slate-900" value={60}>1h Pre-alert</option>
+                      </select>
+                   </div>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </>
-      )}
+        </AnimatePresence>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saveSettingsMutation.isPending}
-          className="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg.5 transition-all duration-300 font-medium tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saveSettingsMutation.isPending ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Saving...
-            </>
-          ) : (
-            <>
-              <CheckIcon className="h-4 w-4 mr-2" />
-              Save Settings
-            </>
-          )}
-        </button>
-        {onClose && (
+        {/* ═══ ACTIONS ═══ */}
+        <div className="flex flex-col gap-4 mt-10">
           <button
-            onClick={onClose}
-            className="px-6 py-3 border border-gray-200 bg-white text-gray-700 rounded-xl shadow-sm hover:bg-gray-50.5 transition-all duration-300 font-medium"
+            onClick={handleSave}
+            disabled={saveSettingsMutation.isPending}
+            className="w-full py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-indigo-200 transition-all hover:bg-indigo-600 flex items-center justify-center gap-4 disabled:opacity-50"
           >
-            Cancel
+            {saveSettingsMutation.isPending ? "Updating Protocol..." : "Activate Clinical Sync"}
+            {!saveSettingsMutation.isPending && <CheckIcon className="h-4 w-4" />}
           </button>
-        )}
+          
+          <button onClick={onClose} className="text-[9px] font-black text-slate-300 hover:text-slate-900 uppercase tracking-[0.4em] transition-all py-2">
+             Decline Changes
+          </button>
+        </div>
       </div>
 
-      {/* Help Text */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-md">
-        <p className="text-xs text-blue-800">
-          <strong>Note:</strong> Make sure to allow notifications in your browser settings for the best experience.
-        </p>
+      <div className="mt-8 p-6 bg-indigo-50/50 rounded-[28px] border border-indigo-50 flex items-start gap-4">
+          <AcademicCapIcon className="h-5 w-5 text-indigo-500 mt-1 shrink-0" />
+          <p className="text-[10px] font-bold text-indigo-900 leading-relaxed uppercase tracking-wider">
+             Ensure notification permissions are active on the host OS for neural synchronization.
+          </p>
       </div>
-    </div>
-    </>
+    </motion.div>
   );
 };
 

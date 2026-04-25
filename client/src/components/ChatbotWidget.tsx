@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChatBubbleLeftRightIcon,
   XMarkIcon,
@@ -18,6 +19,8 @@ import {
   HandThumbDownIcon,
   FlagIcon,
   UserGroupIcon,
+  ArchiveBoxIcon,
+  CommandLineIcon
 } from '@heroicons/react/24/outline';
 
 import API from '../api/api';
@@ -51,7 +54,7 @@ const ChatbotWidget: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I'm Livora AI. How can I help you today? You can describe your symptoms or ask for an appointment." }
+    { role: 'assistant', content: "Protocol initiated. I am Livora AI, your clinical intelligence interface. How may I assist you with your health data or appointments today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -71,14 +74,11 @@ const ChatbotWidget: React.FC = () => {
     }
   }, [messages, isOpen]);
 
-  // Load history on mount (Isolated to account)
+  // Load history on mount
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        // Try to get existing session from localStorage
         let activeId = localStorage.getItem('lastChatbotSessionId');
-        
-        // If none in storage, try to fetch the most recent one from API
         if (!activeId) {
           const sessionsResp = await API.get('/chatbot/sessions');
           if (sessionsResp.data.data && sessionsResp.data.data.length > 0) {
@@ -225,7 +225,7 @@ const ChatbotWidget: React.FC = () => {
             } else if (parsed.type === 'tool') {
               setMessages(prev => {
                 const updated = [...prev];
-                updated[updated.length - 1] = { ...updated[updated.length - 1], toolStatus: `Running: ${parsed.tool}…` };
+                updated[updated.length - 1] = { ...updated[updated.length - 1], toolStatus: `Syncing: ${parsed.tool}…` };
                 return updated;
               });
             } else if (parsed.type === 'done') {
@@ -254,7 +254,7 @@ const ChatbotWidget: React.FC = () => {
 
     } catch (error: any) {
       console.error('[Chatbot] Stream error:', error);
-      toast.error('Failed to connect to AI server');
+      toast.error('Neural sync interrupted');
       setMessages(messages);
       setInput(text);
     } finally {
@@ -277,9 +277,9 @@ const ChatbotWidget: React.FC = () => {
           ? { ...m, feedbackRating: rating ?? m.feedbackRating, feedbackFlagged: flagged ?? m.feedbackFlagged }
           : m
       ));
-      toast.success(flagged ? 'Response flagged.' : 'Thanks for the feedback!');
+      toast.success(flagged ? 'Protocol flagged.' : 'Optimization feedback received.');
     } catch {
-      toast.error('Failed to submit feedback');
+      toast.error('Feedback failed');
     }
   };
 
@@ -293,30 +293,30 @@ const ChatbotWidget: React.FC = () => {
         aiResponse: msg.content,
       });
       setEscalatedIds(prev => new Set(prev).add(msg.id!));
-      toast.success('A healthcare professional has been notified to review your query.');
+      toast.success('Escalated to human medical reviewer.');
     } catch {
-      toast.error('Failed to request review. Please try again.');
+      toast.error('Escalation failed');
     }
   };
 
   const clearHistory = async () => {
-    if (!window.confirm("Are you sure you want to permanently delete your chat history?")) return;
+    if (!window.confirm("Purge all clinical chat history?")) return;
     try {
       await API.delete(`/chatbot/history?conversationId=${conversationId}`);
-      setMessages([{ role: 'assistant', content: "History deleted. I'm starting fresh!" }]);
+      setMessages([{ role: 'assistant', content: "Logic core wiped. Ready for fresh session." }]);
       setConversationId(null);
       localStorage.removeItem('lastChatbotSessionId');
-      toast.success('History wiped');
+      toast.success('History purged');
     } catch (e) {
-      toast.error('Could not clear history');
+      toast.error('Purge failed');
     }
   };
 
   const startNewChat = () => {
-    setMessages([{ role: 'assistant', content: "Starting a new conversation. What's on your mind?" }]);
+    setMessages([{ role: 'assistant', content: "Reinitializing conversation. Describe your clinical concern." }]);
     setConversationId(null);
     localStorage.removeItem('lastChatbotSessionId');
-    toast.success('New chat started');
+    toast.success('Session reset');
   };
 
   const toggleRecording = async () => {
@@ -330,271 +330,254 @@ const ChatbotWidget: React.FC = () => {
   const startVoice = async () => {
     try {
       cleanupMedia();
-      
-      if (!socketRef.current?.connected) {
-        socketRef.current?.connect();
-      }
-
+      if (!socketRef.current?.connected) socketRef.current?.connect();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-
       socketRef.current?.emit('start-transcription', { language: 'en' });
-
       mediaRecorder.ondataavailable = async (event) => {
         if (event.data.size > 0 && socketRef.current?.connected) {
           const buffer = await event.data.arrayBuffer();
           socketRef.current.emit('audio-chunk', buffer);
         }
       };
-
       mediaRecorder.start(250);
       setIsRecording(true);
-      toast.success("Listening...");
+      toast.success("Voice monitoring active");
     } catch (e) {
-      console.error("[Chatbot] Microphone error:", e);
-      toast.error("Microphone access failed");
+      toast.error("Microphone linkage failed");
     }
   };
 
   const stopVoice = () => {
     try {
       cleanupMedia();
-      if (socketRef.current?.connected) {
-        socketRef.current.emit('stop-transcription');
-      }
-    } catch (e) {
-      console.warn('[Chatbot] stopVoice error:', e);
+      if (socketRef.current?.connected) socketRef.current.emit('stop-transcription');
     } finally {
       setIsRecording(false);
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999]">
-      {!isOpen ? (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl transition-all group relative"
-        >
-          <SparklesIcon className="h-4 w-4 absolute -top-1 -right-1 text-yellow-300 animate-pulse" />
-          <ChatBubbleLeftRightIcon className="h-8 w-8" />
-        </button>
-      ) : (
-        <div className="bg-white w-[400px] h-[600px] rounded-3xl shadow-3xl border border-gray-100 flex flex-col overflow-hidden animate-fade-in-up">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <SparklesIcon className="h-5 w-5" />
+    <div className="fixed bottom-8 right-8 z-[9999]">
+      <AnimatePresence>
+        {!isOpen ? (
+          <motion.button
+            layoutId="chatbot-window"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsOpen(true)}
+            className="w-16 h-16 bg-slate-900 text-white rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center justify-center relative overflow-hidden group border border-white/10"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <SparklesIcon className="h-4 w-4 absolute top-2 right-2 text-indigo-400 animate-pulse z-10" />
+            <ChatBubbleLeftRightIcon className="h-8 w-8 relative z-10" />
+          </motion.button>
+        ) : (
+          <motion.div
+            layoutId="chatbot-window"
+            initial={{ opacity: 0, y: 100, scale: 0.8, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
+            className="bg-white rounded-[44px] shadow-[0_40px_100px_rgba(0,0,0,0.15)] border border-slate-100 w-[420px] h-[680px] flex flex-col overflow-hidden origin-bottom-right"
+          >
+            {/* ═══ PREMIUM HEADER ═══ */}
+            <div className="px-8 py-7 bg-slate-900 text-white relative">
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-[60px]" />
               </div>
-              <div>
-                <h3 className="font-bold">Livora AI</h3>
-                <p className="text-[10px] opacity-80 uppercase tracking-widest flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
-                  {isLoading ? 'Processing...' : 'Online'}
-                </p>
+              
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-[20px] border border-white/10 flex items-center justify-center shadow-lg">
+                    <SparklesIcon className="h-6 w-6 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Intelligence Hub</h3>
+                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.25em] flex items-center gap-2 mt-0.5">
+                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isLoading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                       {isLoading ? 'Processing' : 'Neural Core Active'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 bg-white/5 p-1.5 rounded-2xl border border-white/5">
+                  <button onClick={() => { setIsOpen(false); navigate(`/app/assistant?sessionId=${conversationId || ''}`); }} className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Expand View"><ArrowTopRightOnSquareIcon className="h-4 w-4" /></button>
+                  <button onClick={startNewChat} className="p-2 hover:bg-white/10 rounded-xl transition-all" title="New Logic Session"><PlusCircleIcon className="h-4 w-4" /></button>
+                  <button onClick={clearHistory} className="p-2 hover:bg-white/10 rounded-xl transition-all text-slate-500 hover:text-rose-400" title="Purge Records"><TrashIcon className="h-4 w-4" /></button>
+                  <button onClick={() => setIsOpen(false)} className="ml-1 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"><XMarkIcon className="h-4 w-4" /></button>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate(`/app/assistant?sessionId=${conversationId || ''}`);
-                }} 
-                className="hover:bg-white/20 p-2 rounded-full transition-all" 
-                title="Full screen history"
-              >
-                <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-              </button>
-              <button onClick={startNewChat} className="hover:bg-white/20 p-2 rounded-full transition-all" title="New conversation">
-                <PlusCircleIcon className="h-5 w-5" />
-              </button>
-              <button onClick={clearHistory} className="hover:bg-white/20 p-2 rounded-full transition-all" title="Delete history">
-                <TrashIcon className="h-5 w-5" />
-              </button>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-all">
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm ${
-                  m.role === 'user' 
-                    ? 'bg-blue-600 text-white rounded-tr-none' 
-                    : m.isEmergency 
-                      ? 'bg-red-50 border-2 border-red-200 text-red-900 rounded-tl-none'
-                      : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
-                }`}>
-                  {m.toolStatus && m.isStreaming && (
-                    <p className="text-[10px] text-blue-400 italic mb-1 animate-pulse">{m.toolStatus}</p>
-                  )}
-                  <p className="text-sm whitespace-pre-wrap">
-                    {m.content}
-                    {m.isStreaming && m.content && <span className="inline-block w-1.5 h-3.5 bg-blue-400 ml-0.5 animate-pulse rounded-sm" />}
-                  </p>
-                  
-                  {/* Emergency Warning */}
-                  {m.isEmergency && (
-                    <div className="mt-3 bg-red-600 text-white p-2 rounded-xl text-[11px] flex items-center gap-2 animate-pulse">
-                      <ExclamationTriangleIcon className="h-4 w-4" />
-                      STAY CALM: Emergency services are being alerted.
-                    </div>
-                  )}
+            {/* ═══ CONVERSATION FIELD ═══ */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 custom-scrollbar">
+              <AnimatePresence mode="popLayout">
+                {messages.map((m, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: m.role === 'user' ? 20 : -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[88%] relative ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      <div className={`p-5 rounded-[28px] text-sm leading-relaxed shadow-sm transition-all ${
+                        m.role === 'user' 
+                          ? 'bg-slate-900 text-white rounded-tr-none' 
+                          : m.isEmergency 
+                            ? 'bg-rose-50 border border-rose-100 text-rose-900 rounded-tl-none'
+                            : 'bg-white border border-slate-100 text-slate-700/80 rounded-tl-none font-bold'
+                      }`}>
+                        {m.toolStatus && m.isStreaming && (
+                          <div className="flex items-center gap-2 text-[9px] text-indigo-500 font-black uppercase tracking-widest mb-2 animate-pulse">
+                             <CommandLineIcon className="h-3 w-3" />
+                             {m.toolStatus}
+                          </div>
+                        )}
+                        <p className="whitespace-pre-wrap">
+                          {m.content}
+                          {m.isStreaming && <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-2 h-4 bg-indigo-500 ml-1 rounded-sm align-middle" />}
+                        </p>
 
-                  {/* Doctor Matchmaking Results */}
-                  {m.availableDoctors && m.availableDoctors.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                       {m.availableDoctors.map((doc: any) => (
-                         <div key={doc.id} className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center justify-between group hover:bg-white transition-all">
-                           <div className="flex items-center gap-3">
-                             <div className="bg-blue-600/10 p-2 rounded-lg text-blue-600">
-                               <UserIcon className="h-4 w-4" />
+                        {/* EMERGENCY OVERLAY */}
+                        {m.isEmergency && (
+                           <div className="mt-4 p-4 bg-rose-600 text-white rounded-2xl flex flex-col gap-3 animate-pulse shadow-xl shadow-rose-200">
+                             <div className="flex items-center gap-3">
+                               <ExclamationTriangleIcon className="h-6 w-6" />
+                               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Priority Alert Triggered</span>
                              </div>
-                             <div>
-                               <p className="font-bold text-xs text-blue-900">{doc.doctorName || doc.name}</p>
-                               <p className="text-[10px] text-blue-700">{doc.department} · {doc.hospital}</p>
-                             </div>
+                             <p className="text-[11px] font-bold opacity-90 leading-tight">Emergency protocols initiated. Response teams notified.</p>
                            </div>
-                           {/* Navigate to booking page — do NOT auto-submit a booking message */}
-                           <button
-                             onClick={() => {
-                               setIsOpen(false);
-                               navigate(`/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(doc.doctorName || doc.name)}`);
-                             }}
-                             className="bg-blue-600 text-white text-[10px] px-3 py-1 rounded-lg hover:bg-blue-700 transition-all font-bold"
-                           >
-                             Book
-                           </button>
-                         </div>
-                       ))}
-                    </div>
-                  )}
+                        )}
 
-                  {/* Booking Confirmation */}
-                  {m.bookingDetails && (
-                    <div className="mt-4 bg-green-50 border-2 border-green-200 p-3 rounded-xl flex items-center gap-3">
-                      <div className="bg-green-600 text-white p-2 rounded-lg">
-                        <CalendarIcon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-green-900">Appointment Confirmed!</p>
-                        <p className="text-[10px] text-green-700">Serial #{m.bookingDetails.serialNumber}</p>
-                      </div>
-                    </div>
-                  )}
+                        {/* MATCHMAKING LIST */}
+                        {m.availableDoctors && m.availableDoctors.length > 0 && (
+                          <div className="mt-6 space-y-2">
+                             <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em] block ml-1 mb-3">Optimal Matches Found</span>
+                             {m.availableDoctors.map((doc: any) => (
+                               <div key={doc.id} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center justify-between group hover:bg-indigo-600 transition-all">
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-sm group-hover:bg-white/20 group-hover:text-white transition-all">
+                                      <UserIcon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                      <p className="font-black text-xs text-slate-900 group-hover:text-white transition-colors">{doc.doctorName || doc.name}</p>
+                                      <p className="text-[9px] font-black text-slate-400 group-hover:text-white/70 uppercase tracking-widest transition-colors">{doc.department}</p>
+                                    </div>
+                                 </div>
+                                 <button
+                                   onClick={() => { setIsOpen(false); navigate(`/app/appointments?doctorId=${doc.id}&doctorName=${encodeURIComponent(doc.doctorName || doc.name)}`); }}
+                                   className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-white hover:text-indigo-600 transition-all shadow-lg"
+                                 >
+                                   Secure
+                                 </button>
+                               </div>
+                             ))}
+                          </div>
+                        )}
 
-                  {/* Feedback bar — assistant messages with a persisted id only */}
-                  {m.role === 'assistant' && m.id && !m.isStreaming && (
-                    <div className="flex items-center gap-0.5 mt-2 pt-2 border-t border-gray-100">
-                      <button
-                        onClick={() => submitFeedback(i, 'thumbs_up')}
-                        title="Good response"
-                        className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_up' ? 'text-green-600 bg-green-50' : 'text-gray-300 hover:text-green-500 hover:bg-green-50'}`}
-                      >
-                        <HandThumbUpIcon className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => submitFeedback(i, 'thumbs_down')}
-                        title="Bad response"
-                        className={`p-1 rounded-lg transition-all ${m.feedbackRating === 'thumbs_down' ? 'text-red-500 bg-red-50' : 'text-gray-300 hover:text-red-400 hover:bg-red-50'}`}
-                      >
-                        <HandThumbDownIcon className="h-3.5 w-3.5" />
-                      </button>
-                      <div className="relative">
-                        <button
-                          onClick={() => setFlagOpenForIndex(flagOpenForIndex === i ? null : i)}
-                          title="Flag response"
-                          className={`p-1 rounded-lg transition-all ${m.feedbackFlagged ? 'text-orange-500 bg-orange-50' : 'text-gray-300 hover:text-orange-400 hover:bg-orange-50'}`}
-                        >
-                          <FlagIcon className="h-3.5 w-3.5" />
-                        </button>
-                        {flagOpenForIndex === i && (
-                          <div className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[170px] z-10">
-                            {FLAG_REASONS.map(reason => (
-                              <button
-                                key={reason}
-                                onClick={() => { submitFeedback(i, undefined, true, reason); setFlagOpenForIndex(null); }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all"
-                              >
-                                {reason}
-                              </button>
-                            ))}
+                        {/* BOOKING SUCCESS */}
+                        {m.bookingDetails && (
+                          <div className="mt-6 bg-emerald-50 rounded-2xl p-5 border border-emerald-100 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
+                               <CalendarIcon className="h-6 w-6" />
+                            </div>
+                            <div>
+                               <p className="text-xs font-black text-emerald-900 uppercase tracking-widest">Protocol Confirmed</p>
+                               <p className="text-[10px] font-bold text-emerald-600 mt-1">Serial Registry: #{m.bookingDetails.serialNumber}</p>
+                            </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Human review escalation */}
-                      <div className="ml-auto pl-1 border-l border-gray-100">
-                        {m.id && escalatedIds.has(m.id) ? (
-                          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-green-600 px-1">
-                            <UserGroupIcon className="h-3 w-3" />
-                            Requested
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleEscalate(m)}
-                            title="Request human review"
-                            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg text-[9px] font-semibold transition-all ${
-                              m.safetyPipelineTriggered
-                                ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
-                                : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
-                            }`}
-                          >
-                            <UserGroupIcon className="h-3 w-3" />
-                            {m.safetyPipelineTriggered ? 'Get Human Help' : 'Ask Human'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start animate-pulse">
-                <div className="bg-white border border-gray-100 px-4 py-2 rounded-2xl rounded-tl-none flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full delay-150"></div>
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full delay-300"></div>
-                </div>
-              </div>
-            )}
-            <div ref={scrollRef} />
-          </div>
+                      {/* QUALITY ASSURANCE BAR */}
+                      {m.role === 'assistant' && m.id && !m.isStreaming && (
+                        <div className="flex items-center gap-3 mt-3 px-2">
+                           <div className="flex bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-slate-100 shadow-sm">
+                             <button onClick={() => submitFeedback(i, 'thumbs_up')} className={`p-1.5 rounded-lg transition-all ${m.feedbackRating === 'thumbs_up' ? 'text-emerald-500 bg-emerald-50' : 'text-slate-300 hover:text-emerald-400'}`}><HandThumbUpIcon className="h-3.5 w-3.5" /></button>
+                             <button onClick={() => submitFeedback(i, 'thumbs_down')} className={`p-1.5 rounded-lg transition-all ${m.feedbackRating === 'thumbs_down' ? 'text-rose-500 bg-rose-50' : 'text-slate-300 hover:text-rose-400'}`}><HandThumbDownIcon className="h-3.5 w-3.5" /></button>
+                           </div>
+                           
+                           <div className="relative group/flag">
+                             <button onClick={() => setFlagOpenForIndex(flagOpenForIndex === i ? null : i)} className={`p-1.5 rounded-lg border border-slate-100 transition-all ${m.feedbackFlagged ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-amber-400'}`}><FlagIcon className="h-3.5 w-3.5" /></button>
+                             {flagOpenForIndex === i && (
+                               <div className="absolute bottom-full left-0 mb-3 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl py-2 min-w-[200px] z-50 overflow-hidden">
+                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] px-4 py-2 block border-b border-white/5">Report Deviation</span>
+                                 {FLAG_REASONS.map(reason => (
+                                   <button key={reason} onClick={() => { submitFeedback(i, undefined, true, reason); setFlagOpenForIndex(null); }} className="w-full text-left px-4 py-2.5 text-[10px] font-black text-slate-300 hover:bg-rose-500 hover:text-white transition-all uppercase tracking-widest">{reason}</button>
+                                 ))}
+                               </div>
+                             )}
+                           </div>
 
-          {/* Input Area */}
-          <div className="p-4 bg-white border-t border-gray-100 flex items-center gap-2">
-            <button 
-              onClick={toggleRecording}
-              className={`p-3 rounded-2xl transition-all ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-              title={isRecording ? "Click to stop" : "Click to speak"}
-            >
-              {isRecording ? <StopIcon className="h-6 w-6" /> : <MicrophoneIcon className="h-6 w-6" />}
-            </button>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Type or click microphone..."
-              className="flex-1 bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-            />
-            <button 
-              onClick={() => handleSend()}
-              disabled={!input.trim()}
-              className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50 transition-all"
-            >
-              <PaperAirplaneIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      )}
+                           <div className="ml-auto">
+                              {m.id && escalatedIds.has(m.id) ? (
+                                <span className="flex items-center gap-1.5 text-[8px] font-black text-emerald-500 uppercase tracking-[0.2em] bg-emerald-50 px-3 py-1 rounded-full outline outline-1 outline-emerald-100">
+                                  <UserGroupIcon className="h-3 w-3" /> ESCALATED
+                                </span>
+                              ) : (
+                                <button onClick={() => handleEscalate(m)} className={`flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black tracking-[0.2em] transition-all uppercase ${m.safetyPipelineTriggered ? 'bg-amber-50 text-amber-600 outline outline-1 outline-amber-100 hover:bg-amber-100' : 'bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'}`}>
+                                  <UserGroupIcon className="h-3 w-3" /> Request Review
+                                </button>
+                              )}
+                           </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {isLoading && (
+                <div className="flex justify-start">
+                   <div className="bg-white border border-slate-100 px-5 py-3 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
+                      <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                      <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                      <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                   </div>
+                </div>
+              )}
+              <div ref={scrollRef} />
+            </div>
+
+            {/* ═══ COMMAND INPUT AREA ═══ */}
+            <div className="px-8 py-6 bg-white border-t border-slate-50 relative">
+               <div className="flex items-center gap-4">
+                  <motion.button 
+                    whileTap={{ scale: 0.9 }}
+                    onClick={toggleRecording}
+                    className={`p-4 rounded-[20px] transition-all relative group ${isRecording ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                  >
+                    {isRecording ? <div className="absolute inset-x-0 bottom-1 flex justify-center gap-0.5"><motion.div animate={{ height: [4, 8, 4] }} transition={{ repeat: Infinity }} className="w-[1px] bg-white rounded-full" /><motion.div animate={{ height: [6, 12, 6] }} transition={{ repeat: Infinity, delay: 0.1 }} className="w-[1px] bg-white rounded-full" /><motion.div animate={{ height: [4, 8, 4] }} transition={{ repeat: Infinity, delay: 0.2 }} className="w-[1px] bg-white rounded-full" /></div> : null}
+                    {isRecording ? <StopIcon className="h-6 w-6" /> : <MicrophoneIcon className="h-6 w-6" />}
+                  </motion.button>
+
+                  <div className="flex-1 relative">
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                      placeholder="Enter clinical query..."
+                      className="w-full bg-slate-50 border-none rounded-[20px] px-6 py-4 text-sm font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-black placeholder:uppercase placeholder:tracking-widest focus:ring-2 focus:ring-indigo-600/10 transition-all"
+                    />
+                  </div>
+
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleSend()}
+                    disabled={!input.trim()}
+                    className="p-4 bg-slate-900 text-white rounded-[20px] shadow-2xl shadow-slate-200 disabled:opacity-30 transition-all flex items-center justify-center border border-white/5"
+                  >
+                    <PaperAirplaneIcon className="h-6 w-6" />
+                  </motion.button>
+               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
