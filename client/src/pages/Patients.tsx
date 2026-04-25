@@ -650,11 +650,11 @@ const Patients: React.FC = () => {
               <p className="text-sm font-black text-slate-400 uppercase tracking-widest max-w-xs mx-auto">Zero clinical files detected matching your search parameters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
               <AnimatePresence>
                 {filteredPatients.map((patient, index) => (
-                  <Reveal key={patient.id} delay={index * 0.05} variant="fadeUp">
-                    <div className="group relative bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden">
+                  <Reveal key={patient.id} delay={index * 0.05} variant="fadeUp" className="h-full">
+                    <div className="group relative bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden h-full">
                       {/* Hover Backdrop Shine */}
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-violet-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
                       
@@ -674,7 +674,7 @@ const Patients: React.FC = () => {
                         )
                       })()}
 
-                      <div className="relative z-10">
+                      <div className="relative z-10 h-full flex flex-col">
                         {/* Profile Section */}
                         <div className="flex flex-col items-center text-center mb-8">
                           <div className="relative mb-6">
@@ -707,7 +707,7 @@ const Patients: React.FC = () => {
                         </div>
 
                         {/* Interactive Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mt-auto">
                            <button
                             onClick={() => handleViewPatient(patient)}
                             className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-2"
