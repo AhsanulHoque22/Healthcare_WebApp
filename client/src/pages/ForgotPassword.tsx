@@ -4,54 +4,44 @@ import { useForm } from 'react-hook-form';
 import API from '../api/api';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeftIcon,
-  HeartIcon,
-  SparklesIcon,
-  CheckCircleIcon,
-  ArrowRightIcon
+  ArrowLeftIcon, SparklesIcon, CheckCircleIcon, ArrowRightIcon,
+  ShieldCheckIcon, EnvelopeIcon, KeyIcon, LockClosedIcon,
 } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 interface ForgotPasswordFormData {
   email: string;
 }
 
+const fieldCls = (err: boolean) =>
+  `w-full px-4 py-3 rounded-xl border text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-white outline-none transition-all duration-200 focus:ring-2 ${
+    err ? 'border-rose-300 bg-rose-50/30 focus:border-rose-400 focus:ring-rose-500/10'
+        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-500/10'
+  }`;
+
+const STEPS = [
+  { icon: EnvelopeIcon, label: 'Enter your email address',       color: 'text-indigo-400', bg: 'bg-indigo-400/10'  },
+  { icon: KeyIcon,      label: 'Receive a secure reset link',    color: 'text-violet-400', bg: 'bg-violet-400/10'  },
+  { icon: LockClosedIcon, label: 'Create a new strong password', color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+];
+
 const ForgotPassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [pageLoaded, setPageLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Page load animation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoaded(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle scroll effect for navigation transparency
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      setScrolled(isScrolled);
-    };
-
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues
-  } = useForm<ForgotPasswordFormData>();
+  const { register, handleSubmit, formState: { errors }, getValues } = useForm<ForgotPasswordFormData>();
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
-    setErrorMessage(''); // Clear previous errors
-
+    setErrorMessage('');
     try {
       await API.post('/auth/forgot-password', { email: data.email });
       setEmailSent(true);
@@ -60,251 +50,296 @@ const ForgotPassword: React.FC = () => {
       const message = error.response?.data?.message || 'Failed to send reset email';
       setErrorMessage(message);
       toast.error(message);
-      console.error('Forgot password error:', error.response?.data || error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const SharedBackground = () => (
+    <>
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
+        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-500/[0.04] rounded-full blur-[130px]" />
+        <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] bg-violet-500/[0.04] rounded-full blur-[110px]" />
+      </div>
+      <header className={`fixed top-0 inset-x-0 z-50 h-14 flex items-center px-5 sm:px-8 border-b transition-all duration-300 ${
+        scrolled ? 'bg-[#fafbff]/95 backdrop-blur-xl border-slate-100 shadow-sm' : 'bg-[#fafbff]/70 backdrop-blur-lg border-transparent'
+      }`}>
+        <Link to="/" className="flex items-center gap-2.5 group mr-auto">
+          <img src="/logo.png" className="h-8 w-8 object-contain" alt="Livora" />
+          <span className="text-base font-black text-slate-900 group-hover:text-indigo-700 transition-colors tracking-tight">Livora</span>
+        </Link>
+        <Link to="/" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors">
+          Back to Home <ArrowRightIcon className="h-3.5 w-3.5" />
+        </Link>
+      </header>
+    </>
+  );
+
+  const RightPanel = () => (
+    <div className="hidden lg:flex lg:w-[52%] bg-slate-900 relative overflow-hidden items-center justify-center flex-shrink-0">
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-violet-500/8 pointer-events-none" />
+      <div className="absolute top-[-15%] right-[-10%] w-[380px] h-[380px] bg-indigo-500/20 rounded-full blur-[90px]" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[320px] h-[320px] bg-violet-500/15 rounded-full blur-[80px]" />
+      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(#fff 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+
+      <motion.div
+        initial={{ opacity: 0, x: 30, filter: 'blur(10px)' }}
+        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 max-w-md px-10 py-12 text-white"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/15 text-[9px] font-black uppercase tracking-[0.2em] mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Account Recovery
+        </div>
+
+        <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.05] mb-5 heading-display">
+          Regain<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift italic">
+            Secure Access.
+          </span>
+        </h2>
+
+        <p className="text-slate-400 font-medium mb-10 leading-relaxed">
+          Resetting your password is quick and easy. Follow the simple steps to get back into your account securely.
+        </p>
+
+        {/* Steps */}
+        <div className="space-y-4 mb-10">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">How it works</p>
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + i * 0.1, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-4 p-4 bg-white/[0.05] border border-white/[0.08] rounded-2xl"
+            >
+              <div className={`w-9 h-9 rounded-xl ${step.bg} flex items-center justify-center flex-shrink-0`}>
+                <step.icon className={`h-5 w-5 ${step.color}`} />
+              </div>
+              <div className="flex items-center gap-3 flex-1">
+                <span className="text-[9px] font-black text-slate-600 bg-white/10 rounded-lg px-2 py-1 flex-shrink-0">0{i + 1}</span>
+                <p className="text-sm font-medium text-slate-300">{step.label}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Security note */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="p-5 bg-white/[0.05] border border-white/[0.08] rounded-2xl flex items-start gap-4"
+        >
+          <div className="w-9 h-9 rounded-xl bg-emerald-400/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <ShieldCheckIcon className="h-5 w-5 text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-sm font-black text-white mb-1">Secure Reset Process</p>
+            <p className="text-xs font-medium text-slate-400 leading-relaxed">
+              The reset link expires in 1 hour and can only be used once. Your account security is our top priority.
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+
+  /* ── Success State ── */
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-400/10 to-blue-600/10 rounded-full blur-3xl"></div>
-        </div>
+      <div className="min-h-screen bg-[#fafbff] font-sans noise-overlay">
+        <SharedBackground />
+        <div className="flex h-screen overflow-hidden pt-14">
+          <div className="flex-1 flex items-center justify-center py-10 px-5 sm:px-8 lg:px-14 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-[420px]"
+            >
+              <div className="bg-white rounded-[28px] border border-slate-100 shadow-xl shadow-indigo-500/[0.04] p-8 md:p-10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/[0.03] rounded-full blur-3xl pointer-events-none" />
 
-        {/* Header */}
-        <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 hover:bg-white/60 ${
-          scrolled
-            ? 'bg-white/60 backdrop-blur-xl shadow-xl border-b border-white/30'
-            : 'bg-white/40 backdrop-blur-lg shadow-lg border-b border-white/20'
-        } ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link to="/" className="flex items-center group">
-                <div className="relative group">
-                  <img src="/logo.png" className="h-16 w-16 transition-transform duration-300" alt="Livora Logo" />
-                </div>
-                <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300">Livora</span>
-              </Link>
-              <Link
-                to="/"
-                className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group"
-              >
-                <span>Back to Home</span>
-                <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
-              </Link>
-            </div>
-          </div>
-        </div>
+                {/* Success icon */}
+                <div className="flex flex-col items-center text-center">
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/25"
+                  >
+                    <CheckCircleIcon className="h-8 w-8 text-white" />
+                  </motion.div>
 
-        <div className="flex min-h-screen pt-16 items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className={`max-w-md w-full ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
-            {/* Success Card */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/30 to-green-200/30 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500">
-                {/* Card Background Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-green-50/30 to-blue-50/50 rounded-3xl"></div>
-
-                <div className="relative z-10">
-                  <div className="text-center">
-                    <div className="relative group mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/40 to-green-200/40 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                      <div className="relative w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg transition-transform duration-300">
-                        <CheckCircleIcon className="h-8 w-8 text-white" />
-                        <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                      </div>
-                    </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                      Check your email
-                    </h2>
-                    <p className="text-gray-600 mb-2">
-                      We've sent password reset instructions to
-                    </p>
-                    <p className="font-semibold text-indigo-600 mb-6">
-                      {getValues('email')}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-8">
-                      Didn't receive the email? Check your spam folder or{' '}
-                      <button
-                        onClick={() => setEmailSent(false)}
-                        className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-300 inline-block"
-                      >
-                        try again
-                      </button>
-                    </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-700 mb-5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Email Sent
                   </div>
 
-                  <div className="space-y-4">
-                    <Link
-                      to="/login"
-                      className="group relative w-full flex justify-center items-center py-4 px-6 border-2 border-indigo-200 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 hover:shadow-lg"
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-3 heading-display">
+                    Check your email
+                  </h2>
+                  <p className="text-sm font-medium text-slate-500 mb-2 leading-relaxed">
+                    We've sent password reset instructions to
+                  </p>
+                  <p className="text-sm font-bold text-indigo-600 mb-6 px-4 py-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                    {getValues('email')}
+                  </p>
+                  <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+                    Didn't receive the email? Check your spam folder or{' '}
+                    <button
+                      onClick={() => setEmailSent(false)}
+                      className="font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
                     >
-                      <ArrowLeftIcon className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-                      Back to sign in
-                    </Link>
-                  </div>
+                      try again
+                    </button>
+                  </p>
                 </div>
+
+                <Link
+                  to="/login"
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl border-2 border-slate-200 text-sm font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+                >
+                  <ArrowLeftIcon className="h-4 w-4" />
+                  Back to sign in
+                </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
+          <RightPanel />
         </div>
       </div>
     );
   }
 
+  /* ── Default: Forgot Password Form ── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-400/10 to-blue-600/10 rounded-full blur-3xl"></div>
-      </div>
+    <div className="min-h-screen bg-[#fafbff] font-sans noise-overlay">
+      <SharedBackground />
 
-      {/* Header */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 hover:bg-white/60 ${
-        scrolled
-          ? 'bg-white/60 backdrop-blur-xl shadow-xl border-b border-white/30'
-          : 'bg-white/40 backdrop-blur-lg shadow-lg border-b border-white/20'
-      } ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center group">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <img src="/logo.png" className="h-16 w-16 transition-transform duration-300" alt="Livora Logo" />
-              </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-all duration-300">Livora</span>
-            </Link>
-            <Link
-              to="/"
-              className="text-gray-600 hover:text-indigo-600 transition-all duration-300 font-medium flex items-center gap-2 group"
-            >
-              <span>Back to Home</span>
-              <ArrowRightIcon className="h-4 w-4 transition-transform duration-300" />
-            </Link>
-          </div>
-        </div>
-      </div>
+      <div className="flex h-screen overflow-hidden pt-14">
 
-      <div className="flex min-h-screen pt-16 items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className={`max-w-md w-full ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
-          {/* Forgot Password Card */}
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 overflow-hidden hover:shadow-3xl transition-all duration-500">
-              {/* Card Background Effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 rounded-3xl"></div>
+        {/* LEFT — Form */}
+        <div className="flex-1 overflow-y-auto landing-scroll flex items-center justify-center py-10 px-5 sm:px-8 lg:px-14 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 28, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-[420px]"
+          >
+            <div className="bg-white rounded-[28px] border border-slate-100 shadow-xl shadow-indigo-500/[0.04] p-8 md:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/[0.03] rounded-full blur-3xl pointer-events-none" />
 
-              <div className="relative z-10">
-                <div className="text-center mb-8">
-                  <div className="relative group">
-                    <img src="/logo.png" className="h-24 w-24 mx-auto mb-4 transition-transform duration-300 transform group-hover:rotate-12" alt="Livora Logo" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    Forgot your password?
-                  </h2>
-                  <p className="text-gray-600">
-                    Enter your email address and we'll send you instructions to reset your password.
-                  </p>
+              {/* Brand mark */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/10 flex-shrink-0">
+                  <SparklesIcon className="h-5 w-5 text-indigo-400" />
                 </div>
-                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                  <div className="space-y-5">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <input
-                          {...register('email', {
-                            required: 'Email is required',
-                            pattern: {
-                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                              message: 'Invalid email address'
-                            }
-                          })}
-                          type="email"
-                          autoComplete="email"
-                          className={`w-full px-4 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/70 backdrop-blur-sm hover:shadow-lg focus:shadow-xl ${
-                            errors.email ? 'border-red-400 bg-red-50/70' : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          placeholder="Enter your email address"
-                        />
-                      </div>
-                      {errors.email && (
-                        <p className="mt-3 text-sm text-red-600 flex items-center bg-red-50/70 rounded-lg px-3 py-2">
-                          <span className="mr-2">⚠️</span>
-                          {errors.email.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-          {/* Server Error Message */}
-                  {errorMessage && (
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-200/30 to-pink-200/30 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                      <div className="relative bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-200/50 p-4 hover:shadow-lg transition-all duration-300">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                              <svg className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-semibold text-red-800 mb-1">
-                              Error
-                            </h3>
-                            <p className="text-sm text-red-700">
-                              {errorMessage}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="group relative w-full flex justify-center items-center py-4 px-6 border border-transparent text-white font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-xl  disabled:hover:translate-y-0"
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                          <span>Sending...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <span>Send reset instructions</span>
-                          <ArrowRightIcon className="h-5 w-5 ml-2 transition-transform duration-300" />
-                        </>
-                      )}
-                    </button>
-
-                    <div className="text-center">
-                      <Link
-                        to="/login"
-                        className="font-medium text-indigo-600 hover:text-indigo-500 flex items-center justify-center transition-all duration-300 group"
-                      >
-                        <ArrowLeftIcon className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-                        Back to sign in
-                      </Link>
-                    </div>
-                  </div>
-                </form>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mb-0.5">Livora Health</p>
+                  <p className="text-sm font-bold text-slate-900">Account Recovery</p>
+                </div>
               </div>
+
+              <div className="mb-7">
+                <h1 className="text-2xl md:text-[1.875rem] font-black text-slate-900 tracking-tight leading-tight mb-2 heading-display">
+                  Forgot your password?
+                </h1>
+                <p className="text-sm font-medium text-slate-500 leading-relaxed">
+                  Enter your email address and we'll send you instructions to reset your password.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+                {/* Email */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    {...register('email', {
+                      required: 'Email is required',
+                      pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email address' },
+                    })}
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Enter your email address"
+                    className={fieldCls(!!errors.email)}
+                  />
+                  {errors.email && (
+                    <p className="mt-1.5 text-xs font-semibold text-rose-500 flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-rose-500 flex-shrink-0" />
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Server error */}
+                {errorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-3 p-4 bg-rose-50 rounded-2xl border border-rose-100"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="h-4 w-4 text-rose-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-rose-700 uppercase tracking-wider mb-0.5">Error</p>
+                      <p className="text-sm text-rose-600">{errorMessage}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Submit */}
+                <motion.button
+                  type="submit"
+                  disabled={isLoading}
+                  whileHover={!isLoading ? { scale: 1.02 } : {}}
+                  whileTap={!isLoading ? { scale: 0.97 } : {}}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  className={`w-full py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-lg transition-colors duration-200 ${
+                    isLoading
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                      : 'bg-slate-900 text-white hover:bg-indigo-700 shadow-indigo-500/10 hover:shadow-indigo-500/20'
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send reset instructions
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </>
+                  )}
+                </motion.button>
+
+                {/* Back link */}
+                <div className="pt-1">
+                  <Link
+                    to="/login"
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors group"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
+                    Back to sign in
+                  </Link>
+                </div>
+              </form>
             </div>
-          </div>
+          </motion.div>
         </div>
+
+        {/* RIGHT — Dark Panel */}
+        <RightPanel />
       </div>
     </div>
   );
