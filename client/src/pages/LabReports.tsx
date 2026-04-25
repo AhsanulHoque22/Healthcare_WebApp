@@ -1097,7 +1097,7 @@ const LabReports: React.FC = () => {
             )}
           </AnimatePresence>
         </div>
-}
+
 
         <AnimatePresence>
           {showPaymentModal && selectedOrder && (
