@@ -2377,7 +2377,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           </div>
         )}
       </form>
-    </div>
+    </motion.div>
   );
 };
 
