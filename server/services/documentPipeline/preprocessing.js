@@ -7,6 +7,8 @@ const sharp = require('sharp');
 async function preprocessImage(buffer) {
   try {
     const processedBuffer = await sharp(buffer)
+      // Auto-rotate using EXIF orientation tag — fixes phone photos taken sideways
+      .rotate()
       // Resize for clarity constraint (scale up without enlargement)
       .resize({ width: 2500, withoutEnlargement: true })
       // Grayscale

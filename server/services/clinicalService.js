@@ -348,9 +348,12 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
           failedCount++;
         } else {
           const data = docCache.extractedData;
-          if (data.labResults?.length) recentLabResults.push({ orderId: doc.orderId || doc.name || 'Lab Report', date: doc.date, testNames: doc.testNames || data.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
-          if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: `Extracted from ${doc.source}` })));
-          if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: `Extracted from ${doc.source}`, status: m?.status || 'active' })));
+          // Prefer the title extracted from the document itself; fall back to
+          // the user-provided upload name only if the LLM found nothing
+          const displayName = data.reportTitle || doc.name || 'Lab Report';
+          if (data.labResults?.length) recentLabResults.push({ orderId: displayName, date: doc.date, testNames: data.reportTitle || doc.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
+          if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: displayName })));
+          if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: displayName, status: m?.status || 'active' })));
           documentEvidence.push({ documentType: data.documentType || 'other', source: doc.source, date: doc.date, diagnoses: (data.diagnoses || []).slice(0, 4), labResults: (data.labResults || []).slice(0, 6) });
         }
       }

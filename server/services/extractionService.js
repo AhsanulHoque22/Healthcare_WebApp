@@ -19,6 +19,7 @@ Do not infer diagnoses, medications, or interpretations that are not directly su
 const DOCUMENT_EXTRACTION_SCHEMA_PROMPT = `Return a JSON object with this exact top-level shape:
 {
   "documentType": "lab_report|prescription|medical_record|scan|other",
+  "reportTitle": "string — the exact title printed on this document (e.g. 'Echocardiography Report', 'CBC & Haematology Report', 'Urine R/ME Report', 'Chest X-Ray P/A View', 'Ultrasonogram Report'). Use the heading from the document, not a generic label.",
   "patientName": "string",
   "date": "YYYY-MM-DD|null",
   "diagnoses": [{"condition": "string", "status": "active|resolved|history|suspected|unknown", "notes": "string"}],
@@ -65,6 +66,7 @@ function normalizeStatus(status, fallback = 'unknown') {
 function normalizeExtractedDocument(data, metadata = {}) {
   const normalized = {
     documentType: normalizeDocumentType(data?.documentType),
+    reportTitle: typeof data?.reportTitle === 'string' ? data.reportTitle.trim() : '',
     patientName: typeof data?.patientName === 'string' ? data.patientName.trim() : '',
     date: normalizeDate(data?.date),
     diagnoses: normalizeArray(data?.diagnoses).map((diagnosis) => ({

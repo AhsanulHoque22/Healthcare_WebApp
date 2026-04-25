@@ -112,6 +112,9 @@ async function extractTextFromURL(url) {
       const processedBuffer = await preprocessImage(buffer);
       const worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
       try {
+        // PSM 1 = automatic page segmentation with OSD — detects and corrects
+        // rotated text (e.g. photos taken with camera turned sideways)
+        await worker.setParameters({ tessedit_pageseg_mode: '1' });
         const { data: { text } } = await worker.recognize(processedBuffer);
         return text;
       } finally {
