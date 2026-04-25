@@ -180,36 +180,93 @@ const generateFastPatientNarrative = async ({ patient, diagnoses, symptoms, medi
   });
 };
 
+const RECONCILIATION_SYSTEM_PROMPT = `You are a senior clinical reconciliation engine for a patient health portal.
+
+Analyse all provided medical data and return a single JSON object with exactly these keys:
+
+{
+  "overallStatus": "Normal" | "Caution" | "Critical",
+  "summary": "2-3 sentence plain-English overview of the patient's current health state",
+  "keyFindings": [
+    { "title": "finding name", "status": "Normal|Caution|Critical", "reason": "specific value or observation", "source": "document or system" }
+  ],
+  "improved":  ["condition or metric that has improved"],
+  "worsened":  ["condition or metric that has worsened or is newly flagged"],
+  "stable":    ["condition or metric that is unchanged and within normal range"],
+  "activeMedications": [{ "name": "...", "dosage": "...", "frequency": "...", "status": "active" }],
+  "specialistReferrals": [
+    { "specialist": "specialty name (e.g. Diabetologist, Cardiologist)", "reason": "specific finding driving this referral", "urgency": "Routine|Soon|Urgent" }
+  ],
+  "lifestyleRecommendations": [
+    { "category": "Diet|Exercise|Habits|Sleep|Monitoring", "action": "specific actionable advice", "reason": "which finding makes this relevant" }
+  ],
+  "attentionAreas": [
+    { "area": "short label", "detail": "why this needs attention and what the next step should be" }
+  ],
+  "followUpConsiderations": ["plain-text follow-up item"]
+}
+
+Rules:
+- Base every recommendation on the actual lab values and diagnoses provided — do not invent findings.
+- For specialist referrals, name the specific sub-specialty when relevant (e.g. Hepatologist instead of Gastroenterologist for fatty liver).
+- For lifestyle, be concrete (e.g. "Limit refined carbohydrates to <150g/day" not just "eat healthy").
+- Mark overallStatus Critical only when a finding is immediately life-threatening.
+- Return valid JSON only — no markdown, no commentary.`;
+
 const generateClinicalReconciliation = async ({ patient, diagnoses, symptoms, medications, labResults, documentEvidence }) => {
   if (!hasGroqApiKey()) return buildFallbackClinicalInsight({ diagnoses, medications, labResults });
-  const prompt = `Reconcile medical records. 
-  Patient profile: ${JSON.stringify({chronicConditions: patient.chronicConditions, allergies: patient.allergies})}
-  Diagnoses: ${JSON.stringify(diagnoses.slice(0, 12))}
-  Symptoms: ${JSON.stringify(symptoms.slice(0, 12))}
-  Medication candidates: ${JSON.stringify(medications.slice(0, 15))}
-  Lab report findings: ${JSON.stringify(labResults.slice(0, 8))}
-  Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}`;
+
+  const prompt = `Patient profile: ${JSON.stringify({ chronicConditions: patient.chronicConditions, allergies: patient.allergies })}
+Diagnoses: ${JSON.stringify(diagnoses.slice(0, 12))}
+Symptoms: ${JSON.stringify(symptoms.slice(0, 12))}
+Active medications: ${JSON.stringify(medications.slice(0, 15))}
+Lab findings: ${JSON.stringify(labResults.slice(0, 8))}
+Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}`;
 
   const insight = await requestStructuredJson({
     name: 'clinical_reconciliation',
     model: LLAMA_MODELS.documentExtraction,
-    systemPrompt: 'You are a careful clinical reconciliation engine. Return JSON only.',
+    systemPrompt: RECONCILIATION_SYSTEM_PROMPT,
     userPrompt: prompt,
-    temperature: 0.1, maxTokens: 2200, timeoutMs: 25000, fallbackModel: LLAMA_MODELS.documentExtractionSmall
+    temperature: 0.1, maxTokens: 3000, timeoutMs: 30000, fallbackModel: LLAMA_MODELS.documentExtractionSmall
   });
 
   const normalizedKeyFindings = Array.isArray(insight?.keyFindings) ? insight.keyFindings.map(f => ({
-    title: f?.title || 'Clinical finding', status: normalizeUiStatus(f?.status), reason: f?.reason || '', source: f?.source || 'Clinical reconciliation', date: f?.date || null
+    title: f?.title || 'Clinical finding',
+    status: normalizeUiStatus(f?.status),
+    reason: f?.reason || '',
+    source: f?.source || 'Clinical reconciliation',
+    date: f?.date || null
+  })) : [];
+
+  const normalizeReferrals = (arr) => Array.isArray(arr) ? arr.filter(r => r?.specialist).map(r => ({
+    specialist: r.specialist,
+    reason: r.reason || '',
+    urgency: ['Routine', 'Soon', 'Urgent'].includes(r.urgency) ? r.urgency : 'Routine'
+  })) : [];
+
+  const normalizeLifestyle = (arr) => Array.isArray(arr) ? arr.filter(r => r?.action).map(r => ({
+    category: r.category || 'General',
+    action: r.action,
+    reason: r.reason || ''
+  })) : [];
+
+  const normalizeAttention = (arr) => Array.isArray(arr) ? arr.filter(r => r?.area).map(r => ({
+    area: r.area,
+    detail: r.detail || ''
   })) : [];
 
   return {
     overallStatus: insight?.overallStatus || getOverallInsightStatus(normalizedKeyFindings),
     summary: insight?.summary || 'Concise summary not returned.',
+    keyFindings: normalizedKeyFindings,
     improved: Array.isArray(insight?.improved) ? insight.improved : [],
     worsened: Array.isArray(insight?.worsened) ? insight.worsened : [],
     stable: Array.isArray(insight?.stable) ? insight.stable : [],
     activeMedications: dedupeMedications(Array.isArray(insight?.activeMedications) ? insight.activeMedications : medications).slice(0, 10),
-    keyFindings: normalizedKeyFindings,
+    specialistReferrals: normalizeReferrals(insight?.specialistReferrals),
+    lifestyleRecommendations: normalizeLifestyle(insight?.lifestyleRecommendations),
+    attentionAreas: normalizeAttention(insight?.attentionAreas),
     followUpConsiderations: Array.isArray(insight?.followUpConsiderations) ? insight.followUpConsiderations : []
   };
 };
@@ -450,7 +507,16 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
     recentMedications: reconciledMeds,
     recentLabResults: recentLabResults,
     allLabResultsSummary: buildLabResultsSummary(recentLabResults),
-    cacheMeta: { analyzedDocuments: allMedicalDocuments.length, reusableCount, legacyCount, upgradedCount, deferredCount, failedCount }
+    cacheMeta: {
+      analyzedDocuments: allMedicalDocuments.length,
+      analyzedCount: reusableCount + freshExtractions - failedCount, // docs with actual data
+      freshlyExtracted: freshExtractions,
+      reusableCount,
+      legacyCount,
+      upgradedCount,
+      deferredCount,
+      failedCount
+    }
   };
 };
 

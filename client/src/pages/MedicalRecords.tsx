@@ -114,6 +114,23 @@ interface ClinicalMedication {
   status?: string;
 }
 
+interface SpecialistReferral {
+  specialist: string;
+  reason: string;
+  urgency: 'Routine' | 'Soon' | 'Urgent';
+}
+
+interface LifestyleRecommendation {
+  category: string;
+  action: string;
+  reason: string;
+}
+
+interface AttentionArea {
+  area: string;
+  detail: string;
+}
+
 interface LlamaClinicalInsight {
   overallStatus: 'Normal' | 'Caution' | 'Critical';
   summary: string;
@@ -122,6 +139,9 @@ interface LlamaClinicalInsight {
   stable: string[];
   activeMedications: ClinicalMedication[];
   keyFindings: ClinicalFinding[];
+  specialistReferrals?: SpecialistReferral[];
+  lifestyleRecommendations?: LifestyleRecommendation[];
+  attentionAreas?: AttentionArea[];
   followUpConsiderations: string[];
 }
 
@@ -132,6 +152,8 @@ interface MedicalSummary {
   llamaReasoningModel?: string;
   cacheMeta?: {
     analyzedDocuments?: number;
+    analyzedCount?: number;
+    freshlyExtracted?: number;
     reusableCount?: number;
     legacyCount?: number;
     upgradedCount?: number;
@@ -536,25 +558,28 @@ const MedicalRecords: React.FC = () => {
                     </div>
                   ) : null}
 
-                  {/* Document Analysis Transparency */}
-                  {medicalSummary?.cacheMeta && medicalSummary.cacheMeta.analyzedDocuments !== undefined && (
+                  {/* Document Analysis Transparency — always visible when cacheMeta exists */}
+                  {medicalSummary?.cacheMeta && (
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-2">
-                        <div className="rounded-xl bg-white border border-gray-100 p-3 text-center shadow-sm">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Vault Docs</p>
-                          <p className="text-lg font-bold text-gray-900">{medicalSummary.cacheMeta.analyzedDocuments}</p>
-                        </div>
-                        <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center shadow-sm">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Successfully Scanned</p>
-                          <p className="text-lg font-bold text-indigo-900">{medicalSummary.cacheMeta.reusableCount || 0}</p>
-                        </div>
-                        <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center shadow-sm">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">Pending Background</p>
-                          <p className="text-lg font-bold text-amber-900">{medicalSummary.cacheMeta.deferredCount || 0}</p>
-                        </div>
-                        <div className="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center shadow-sm">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Failed / Unreadable</p>
-                          <p className="text-lg font-bold text-rose-900">{medicalSummary.cacheMeta.failedCount || 0}</p>
-                        </div>
+                      <div className="rounded-xl bg-white border border-gray-100 p-3 text-center shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Docs</p>
+                        <p className="text-lg font-bold text-gray-900">{medicalSummary.cacheMeta.analyzedDocuments ?? '—'}</p>
+                      </div>
+                      <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Analyzed</p>
+                        <p className="text-lg font-bold text-indigo-900">
+                          {medicalSummary.cacheMeta.analyzedCount ??
+                            (medicalSummary.cacheMeta.reusableCount ?? 0)}
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">Pending</p>
+                        <p className="text-lg font-bold text-amber-900">{medicalSummary.cacheMeta.deferredCount ?? 0}</p>
+                      </div>
+                      <div className="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Failed</p>
+                        <p className="text-lg font-bold text-rose-900">{medicalSummary.cacheMeta.failedCount ?? 0}</p>
+                      </div>
                     </div>
                   )}
 
@@ -607,6 +632,90 @@ const MedicalRecords: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Specialist Referrals */}
+                      {medicalSummary.llamaClinicalInsight.specialistReferrals?.length ? (
+                        <div className="mt-4 pt-4 border-t border-violet-100">
+                          <h5 className="text-sm font-bold text-violet-800 mb-3 flex items-center gap-1">
+                            <span>🩺</span> Recommended Specialists
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {medicalSummary.llamaClinicalInsight.specialistReferrals.map((ref, idx) => (
+                              <div key={idx} className={`rounded-lg border p-3 text-sm ${
+                                ref.urgency === 'Urgent' ? 'border-rose-200 bg-rose-50' :
+                                ref.urgency === 'Soon'   ? 'border-amber-200 bg-amber-50' :
+                                                            'border-blue-100 bg-blue-50'
+                              }`}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-semibold text-gray-900">{ref.specialist}</span>
+                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                    ref.urgency === 'Urgent' ? 'bg-rose-200 text-rose-800' :
+                                    ref.urgency === 'Soon'   ? 'bg-amber-200 text-amber-800' :
+                                                                'bg-blue-200 text-blue-800'
+                                  }`}>{ref.urgency}</span>
+                                </div>
+                                <p className="text-gray-600 text-xs">{ref.reason}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Lifestyle Recommendations */}
+                      {medicalSummary.llamaClinicalInsight.lifestyleRecommendations?.length ? (
+                        <div className="mt-4 pt-4 border-t border-violet-100">
+                          <h5 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-1">
+                            <span>🌿</span> Lifestyle Recommendations
+                          </h5>
+                          <div className="space-y-2">
+                            {medicalSummary.llamaClinicalInsight.lifestyleRecommendations.map((rec, idx) => (
+                              <div key={idx} className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm">
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5 text-xs font-bold uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded shrink-0">{rec.category}</span>
+                                  <div>
+                                    <p className="font-medium text-gray-900">{rec.action}</p>
+                                    {rec.reason && <p className="text-xs text-gray-500 mt-0.5">{rec.reason}</p>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Areas Needing Attention */}
+                      {medicalSummary.llamaClinicalInsight.attentionAreas?.length ? (
+                        <div className="mt-4 pt-4 border-t border-violet-100">
+                          <h5 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-1">
+                            <span>⚠️</span> Areas Needing Attention
+                          </h5>
+                          <div className="space-y-2">
+                            {medicalSummary.llamaClinicalInsight.attentionAreas.map((item, idx) => (
+                              <div key={idx} className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                                <p className="font-semibold text-amber-900">{item.area}</p>
+                                <p className="text-amber-700 text-xs mt-0.5">{item.detail}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Follow-Up Considerations */}
+                      {medicalSummary.llamaClinicalInsight.followUpConsiderations?.length ? (
+                        <div className="mt-4 pt-4 border-t border-violet-100">
+                          <h5 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                            <span>📋</span> Follow-Up Checklist
+                          </h5>
+                          <ul className="space-y-1">
+                            {medicalSummary.llamaClinicalInsight.followUpConsiderations.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
