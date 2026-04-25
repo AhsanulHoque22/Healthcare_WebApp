@@ -70,13 +70,12 @@ const Assistant: React.FC = () => {
     setIsLoadingHistory(true);
     try {
       const resp = await API.get(`/chatbot/history?conversationId=${sessionId}`);
-      if (resp.data.data) {
-        setMessages(resp.data.data.map((h: any) => ({
-          id: h.id, role: h.role, content: h.content, isEmergency: h.intent === 'EMERGENCY',
-          availableDoctors: h.availableDoctors, bookingDetails: h.bookingDetails, intent: h.intent,
-          createdAt: h.createdAt, feedbackRating: h.feedbackRating, feedbackFlagged: h.feedbackFlagged,
-        })));
-      }
+      const historyItems = resp.data.data || [];
+      setMessages(historyItems.map((h: any) => ({
+        id: h.id, role: h.role, content: h.content, isEmergency: h.intent === 'EMERGENCY',
+        availableDoctors: h.availableDoctors, bookingDetails: h.bookingDetails, intent: h.intent,
+        createdAt: h.createdAt, feedbackRating: h.feedbackRating, feedbackFlagged: h.feedbackFlagged,
+      })));
     } catch { toast.error('Failed to load conversation history'); } finally { setIsLoadingHistory(false); }
   };
 
@@ -263,7 +262,7 @@ const Assistant: React.FC = () => {
                                </div>
                             )}
 
-                            {m.availableDoctors?.length > 0 && (
+                            {m.availableDoctors && m.availableDoctors.length > 0 && (
                                <div className="mt-10 space-y-4">
                                   <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-4">Recommended Medical Officers</p>
                                   {m.availableDoctors.map((doc: any, di: number) => (

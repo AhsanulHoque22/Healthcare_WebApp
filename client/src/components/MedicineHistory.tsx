@@ -216,7 +216,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
                      </div>
                   )}
 
-                  {selectedMedicine.dosages?.length > 0 && (
+                  {selectedMedicine.dosages && selectedMedicine.dosages.length > 0 && (
                      <div className="space-y-4">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Ingestion Telemetry</h4>
                         <div className="grid gap-2">
@@ -233,7 +233,7 @@ const MedicineHistory: React.FC<{ patientId: number }> = ({ patientId }) => {
                      </div>
                   )}
 
-                  {selectedMedicine.reminders?.length > 0 && (
+                  {selectedMedicine.reminders && selectedMedicine.reminders.length > 0 && (
                      <div className="pt-6 border-t border-slate-100">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-4">Notification Array</h4>
                         <div className="flex flex-wrap gap-2">
