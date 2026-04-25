@@ -101,7 +101,7 @@ const Login: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 leading-none mb-0.5">Livora Health</p>
-                  <p className="text-sm font-bold text-slate-900">Patient Portal</p>
+                  <p className="text-sm font-bold text-slate-900">Healthcare Platform</p>
                 </div>
               </div>
 
