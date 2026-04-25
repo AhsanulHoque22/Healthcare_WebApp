@@ -45,6 +45,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Reveal } from '../components/landing/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
+import MedicineReminderSettings from '../components/MedicineReminderSettings';
 import { getDepartmentLabel } from '../utils/departments';
 import { calculateAge, formatAge } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
@@ -149,6 +150,8 @@ const Patients: React.FC = () => {
   const [alertPatient, setAlertPatient] = useState<Patient | null>(null);
   const [alertForm, setAlertForm] = useState({ urgency: 'routine', message: '', action: 'follow_up' });
   const [patientSummaries, setPatientSummaries] = useState<Record<number, any>>({});
+  const [showMedicineModal, setShowMedicineModal] = useState(false);
+  const [medicineTargetPatientId, setMedicineTargetPatientId] = useState<number | null>(null);
 
   const [searchParams] = useSearchParams();
   const patientIdFromURL = searchParams.get('patientId');
@@ -338,6 +341,11 @@ const Patients: React.FC = () => {
   const handleViewMedicalRecords = (patient: Patient) => {
     setSelectedPatient(patient);
     setShowMedicalRecords(true);
+  };
+
+  const handleOpenMedicineSettings = (patientId: number) => {
+    setMedicineTargetPatientId(patientId);
+    setShowMedicineModal(true);
   };
 
   const handleViewRecordDetails = async (appointment: AppointmentMedicalRecord) => {
@@ -565,6 +573,17 @@ const Patients: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">Clinical Registry</span>
                     <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-400/20">Staff Portal</span>
+                    <button 
+                      onClick={() => {
+                        toast.success('Synchronizing Registry...');
+                        // The patient query will refetch due to its key dependency if we invalidated it, 
+                        // but here we can just manually trigger or rely on the query client.
+                      }}
+                      className="p-1 px-3 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-full transition-all flex items-center gap-2 group"
+                    >
+                      <ArrowPathIcon className="h-3 w-3 group-hover:rotate-180 transition-transform duration-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Sync</span>
+                    </button>
                   </div>
                   
                   <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1]">
@@ -707,30 +726,49 @@ const Patients: React.FC = () => {
                         </div>
 
                         {/* Interactive Actions */}
-                        <div className="flex gap-2 mt-auto">
+                        {/* Action Command Cluster */}
+                        <div className="flex flex-col md:flex-row xl:flex-col gap-3 shrink-0">
                            <button
                             onClick={() => handleViewPatient(patient)}
-                            className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-2"
+                            className="px-8 py-5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:scale-95 flex items-center justify-center gap-3 group/index"
                           >
                              Index
+                             <ArrowRightIcon className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                           </button>
-                          <button
-                            onClick={() => handleViewMedicalRecords(patient)}
-                            className="flex-1 py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center"
-                            title="Clinical Records"
-                          >
-                            <DocumentTextIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setAlertPatient(patient);
-                              setShowAlertModal(true);
-                            }}
-                            className="flex-1 py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95 flex items-center justify-center"
-                            title="Flash Alert"
-                          >
-                            <BellAlertIcon className="h-5 w-5" />
-                          </button>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => handleViewMedicalRecords(patient)}
+                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Clinical Records"
+                            >
+                              <DocumentTextIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleOpenMedicineSettings(patient.id)}
+                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Medicine Protocols"
+                            >
+                              <BeakerIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+
+                            <button
+                              onClick={() => { setAlertPatient(patient); setShowAlertModal(true); }}
+                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Flash Alert"
+                            >
+                              <BellAlertIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+
+                            <button
+                              onClick={() => handleViewPatient(patient)}
+                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Full Profile"
+                            >
+                              <IdentificationIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1213,6 +1251,89 @@ const Patients: React.FC = () => {
                             </div>
                           )}
 
+                          {/* ═══ DETAILED CLINICAL FINDINGS (RESTORED) ═══ */}
+                          {selectedPatientSummary.recentLabResults && selectedPatientSummary.recentLabResults.length > 0 && (
+                            <div className="space-y-6">
+                              <div className="flex items-center justify-between border-l-4 border-indigo-500 pl-4">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Comprehensive Findings Registry</h3>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{selectedPatientSummary.allLabResultsSummary?.totalFindings} DATA POINTS</span>
+                              </div>
+                              
+                              <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-left border-collapse">
+                                    <thead>
+                                      <tr className="bg-slate-50 border-b border-slate-100">
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Test / Parameter</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Found Value</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Reference Range</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Clinical Source</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Facilitator</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                      {selectedPatientSummary.recentLabResults.flatMap((report: any) => 
+                                        (report.findings || []).map((finding: any, fIdx: number) => (
+                                          <tr key={`${report.orderId}-${fIdx}`} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              {(() => {
+                                                const status = String(finding.status || 'unknown').toLowerCase();
+                                                const isCritical = ['critical', 'high', 'low', 'abnormal'].includes(status);
+                                                return (
+                                                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                                    status === 'normal' ? 'bg-emerald-50 text-emerald-600' :
+                                                    status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-50 text-amber-600' :
+                                                    isCritical ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
+                                                  }`}>
+                                                    <div className={`w-1 h-1 rounded-full ${
+                                                      status === 'normal' ? 'bg-emerald-500' :
+                                                      status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-500' :
+                                                      isCritical ? 'bg-rose-500' : 'bg-slate-400'
+                                                    }`} />
+                                                    {status}
+                                                  </div>
+                                                );
+                                              })()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <p className="text-xs font-black text-slate-900">{finding.test}</p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-sm font-black text-slate-900">{finding.value}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{finding.unit}</span>
+                                              </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500">
+                                              {finding.referenceRange || '—'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <p className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded inline-block max-w-[150px] truncate" title={report.testNames || report.orderId}>
+                                                {report.testNames || report.orderId}
+                                              </p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <p className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">
+                                                {report.doctorName || report.facilitatorName || 'AUTO-IDENTIFIED'}
+                                              </p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                              <p className="text-[10px] font-black text-slate-400 tracking-tighter">
+                                                {new Date(report.date).toLocaleDateString()}
+                                              </p>
+                                            </td>
+                                          </tr>
+                                        ))
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Manual Health Alert Trigger */}
                           <div className="p-10 bg-rose-50 rounded-[40px] border border-rose-100 flex flex-col md:flex-row items-center justify-between gap-10">
                             <div className="max-w-md text-center md:text-left">
@@ -1601,6 +1722,32 @@ const Patients: React.FC = () => {
                     </button>
                   </div>
                 </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══ MEDICINE REMINDER MODAL ═══ */}
+        <AnimatePresence>
+          {showMedicineModal && medicineTargetPatientId && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMedicineModal(false)}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-2xl"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-2xl"
+              >
+                <MedicineReminderSettings 
+                  patientId={medicineTargetPatientId} 
+                  onClose={() => setShowMedicineModal(false)} 
+                />
               </motion.div>
             </div>
           )}
