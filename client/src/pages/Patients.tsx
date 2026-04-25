@@ -38,7 +38,8 @@ import {
   TagIcon,
   ShieldExclamationIcon,
   ChevronDownIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Reveal } from '../components/landing/AnimatedSection';
