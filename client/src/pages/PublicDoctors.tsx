@@ -181,25 +181,49 @@ const PublicDoctors: React.FC = () => {
 
       <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* SEO-friendly Section */}
+        {/* ═══ PREMIUM HEADER ═══ */}
         <Reveal variant="fadeUp" delay={0.1}>
-          <section className="mb-16 text-center">
-            <div className="inline-flex items-center px-4 py-2 bg-indigo-50/50 backdrop-blur-sm rounded-full text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mb-6 border border-indigo-100 shadow-sm">
-              <SparklesIcon className="h-4 w-4 mr-2" />
-              Verified Clinical Network
+          <div className="mb-12 relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-12 text-white shadow-2xl shadow-indigo-500/10">
+            <div className="absolute top-0 right-0 w-1/2 h-full">
+              <div className="absolute inset-0 bg-gradient-to-l from-indigo-500/20 via-transparent to-transparent opacity-60" />
+              <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-indigo-400/20 rounded-full blur-[80px]" />
             </div>
-            <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tighter leading-tight">
-              Connect With <br className="hidden md:block"/>
-              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 bg-clip-text text-transparent">Elite Specialists</span>
-            </h1>
-            <p className="max-w-2xl mx-auto text-lg text-slate-500 font-medium leading-relaxed">
-              Access our premier network of verified healthcare professionals. Experience seamless bookings, real-time availability, and uncompromising clinical excellence.
-            </p>
-            {!isLoading && doctors?.length > 0 && (
-              <p className="mt-8 text-slate-400 font-bold text-xs uppercase tracking-[0.2em]">
-                {doctors.length} Verified Experts Online
-              </p>
-            )}
-          </section>
+            
+            <div className="relative z-10 md:flex items-center justify-between gap-10">
+              <div className="space-y-4 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  Verified Clinical Network
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">
+                  Connect With <br className="hidden md:block"/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift">
+                    Elite Specialists
+                  </span>.
+                </h1>
+                <p className="text-slate-400 font-medium text-lg leading-relaxed">
+                  Access our premier network of verified healthcare professionals. Experience seamless bookings, real-time availability, and uncompromising clinical excellence.
+                </p>
+              </div>
+
+              <div className="hidden lg:flex flex-col items-end gap-4">
+                <div className="text-right">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Network Status</p>
+                  <p className="text-lg font-black text-emerald-400">
+                    {!isLoading && doctors?.length > 0 ? `${doctors.length} Experts Online` : 'Scanning Network'}
+                  </p>
+                </div>
+                <div className="w-px h-10 bg-white/10 my-1" />
+                <div className="flex -space-x-3 group cursor-pointer">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="w-12 h-12 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:translate-x-1 transition-transform">
+                      <UserGroupIcon className="h-5 w-5 text-indigo-400 opacity-50" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </Reveal>
 
         {/* Search and Filters */}
