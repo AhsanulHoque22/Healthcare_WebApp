@@ -432,7 +432,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* ─── Page Content ─── */}
         <main className={children ? 'pt-0' : 'pt-14 py-6'}>
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full h-full">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 w-full h-full">
             <div className="flex justify-center w-full h-full">
               <div className="w-full">
                 {children || <Outlet />}
