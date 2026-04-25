@@ -214,6 +214,11 @@ const generateClinicalReconciliation = async ({ patient, diagnoses, symptoms, me
   };
 };
 
+// ─── EXTRACTION LOCK ─────────────────────────────────────────────────────────
+// Prevents two concurrent requests from extracting the same document at the
+// same time, which wastes memory and CPU and causes duplicate Groq calls.
+const _extracting = new Set();
+
 // ─── MAIN SERVICE ────────────────────────────────────────────────────────────
 
 const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
@@ -343,7 +348,16 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
           continue;
         }
 
+        // If another concurrent request is already extracting this exact doc,
+        // defer rather than starting a second identical extraction in parallel.
+        if (_extracting.has(urlHash)) {
+          deferredCount++;
+          console.log(`[ClinicalService] Deferred (already in-flight): ${doc.url}`);
+          continue;
+        }
+
         console.log(`[ClinicalService] Extracting (${freshExtractions + 1}/${MAX_FRESH_EXTRACTIONS}): ${doc.url}`);
+        _extracting.add(urlHash);
 
         let data;
         try {
@@ -351,6 +365,8 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
         } catch (extractErr) {
           console.error(`[ClinicalService] Extraction failed (${extractErr.message}): ${doc.url}`);
           data = { error: extractErr.message || 'Unknown error' };
+        } finally {
+          _extracting.delete(urlHash);
         }
 
         freshExtractions++; // Count every attempt to prevent runaway processing

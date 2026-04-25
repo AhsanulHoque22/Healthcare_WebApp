@@ -40,7 +40,7 @@ async function _ocrScannedPDF(pdfBuffer) {
 
     const worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
     try {
-      await worker.setParameters({ tessedit_pageseg_mode: '1' });
+      await worker.setParameters({ tessedit_pageseg_mode: '6' });
       const { data: { text } } = await worker.recognize(processedBuffer);
       console.log(`[Extraction] Scanned PDF OCR extracted ${text.trim().length} chars`);
       return text;
@@ -179,9 +179,10 @@ async function extractTextFromURL(url) {
       const processedBuffer = await preprocessImage(buffer);
       const worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
       try {
-        // PSM 1 = automatic page segmentation with OSD — detects and corrects
-        // rotated text (e.g. photos taken with camera turned sideways)
-        await worker.setParameters({ tessedit_pageseg_mode: '1' });
+        // PSM 6 = assume a single uniform block of text — best for structured
+        // medical documents. Sharp's .rotate() already handles EXIF rotation,
+        // so we don't need PSM 1's OSD (which requires osd.traineddata).
+        await worker.setParameters({ tessedit_pageseg_mode: '6' });
         const { data: { text } } = await worker.recognize(processedBuffer);
         return text;
       } finally {
