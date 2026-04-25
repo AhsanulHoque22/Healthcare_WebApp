@@ -819,6 +819,38 @@ const PatientProfile: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {assessmentStatus?.latestAssessment && (
+                      <div className="mt-6 pt-6 border-t border-slate-800 relative z-10">
+                        <div className="flex justify-between items-center mb-4">
+                           <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Latest Check-In Results</h5>
+                           <span className="text-[10px] bg-slate-800 px-3 py-1 rounded-full text-emerald-400 font-bold border border-emerald-900">
+                             ✓ {assessmentStatus.history?.length || 1} Total Check-Ins
+                           </span>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                            <span className="block text-[10px] text-slate-400 mb-1 font-bold uppercase">Stress Level</span>
+                            <span className="text-base font-bold text-white">{assessmentStatus.latestAssessment.responses?.mental_health?.mental_stress || 'N/A'}/10</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                            <span className="block text-[10px] text-slate-400 mb-1 font-bold uppercase">Sleep Quality</span>
+                            <span className="text-base font-bold text-white">{assessmentStatus.latestAssessment.responses?.sleep?.sleep_quality || 'N/A'}</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                            <span className="block text-[10px] text-slate-400 mb-1 font-bold uppercase">Daily Water</span>
+                            <span className="text-base font-bold text-white">{assessmentStatus.latestAssessment.responses?.diet?.diet_water ? `${assessmentStatus.latestAssessment.responses.diet.diet_water} glasses` : 'N/A'}</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                            <span className="block text-[10px] text-slate-400 mb-1 font-bold uppercase">Energy</span>
+                            <span className="text-base font-bold text-white">{assessmentStatus.latestAssessment.responses?.general_health?.general_energy || 'N/A'}/10</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-4 text-center">
+                          Last submitted on {new Date(assessmentStatus.latestAssessment.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
