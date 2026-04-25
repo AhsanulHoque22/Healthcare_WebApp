@@ -255,6 +255,7 @@ const MedicalRecords: React.FC = () => {
                         </div>
 
                         <div className="space-y-6">
+                          {medicalSummary.llamaClinicalInsight.lifestyleRecommendations?.length ? (
                             <div className="pt-6 border-t border-slate-100">
                               <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> Lifestyle Remediation</h4>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -269,6 +270,7 @@ const MedicalRecords: React.FC = () => {
                                 ))}
                               </div>
                             </div>
+                          ) : null}
 
                           {medicalSummary.llamaClinicalInsight.attentionAreas?.length ? (
                             <div className="pt-6 border-t border-slate-100">
