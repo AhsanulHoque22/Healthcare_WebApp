@@ -659,7 +659,7 @@ const PatientProfile: React.FC = () => {
                 <button onClick={() => setIsAssessmentOpen(false)} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 transition-colors z-10">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
-                <WeeklyLifestyleAssessment patientId={patientId} onComplete={() => { setIsAssessmentOpen(false); fetchPatientData(); }} />
+                <WeeklyLifestyleAssessment isOpen={isAssessmentOpen} onClose={() => setIsAssessmentOpen(false)} patientId={patientId} onComplete={() => { setIsAssessmentOpen(false); fetchPatientData(); }} />
               </div>
             </motion.div>
           </motion.div>
