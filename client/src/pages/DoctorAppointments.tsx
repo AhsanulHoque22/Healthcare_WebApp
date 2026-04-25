@@ -617,36 +617,6 @@ Do you want to proceed?`;
               </div>
             </div>
           </Reveal>
-                    {filter.value !== 'all' && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className={`text-sm px-3 py-1 rounded-full ${
-                          selectedFilter === filter.value
-                            ? 'bg-white/20 text-white'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {appointments.filter(app => app.status === filter.value).length}
-                      </motion.span>
-                    )}
-                  </span>
-
-                  {/* Animated background effect */}
-                  {selectedFilter === filter.value && (
-                    <motion.div
-                      layoutId="activeFilter"
-                      className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl"
-                      initial={false}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </motion.button>
-              ))}
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
         <div className="grid grid-cols-1 gap-6">
           {isLoading ? (
             <div className="space-y-4">
@@ -1155,7 +1125,6 @@ Do you want to proceed?`;
             </div>
           )}
         </AnimatePresence>
-      </div>
     </div>
   );
 };
