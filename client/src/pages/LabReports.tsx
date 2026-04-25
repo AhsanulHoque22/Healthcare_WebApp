@@ -20,7 +20,8 @@ import {
   ArrowRightIcon,
   Bars3Icon,
   UserIcon,
-  BeakerIcon
+  BeakerIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1100,7 +1101,12 @@ const LabReports: React.FC = () => {
 
         <AnimatePresence>
           {showPaymentModal && selectedOrder && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10"
+            >
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1218,13 +1224,18 @@ const LabReports: React.FC = () => {
                   </div>
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {showPrescriptionPaymentModal && selectedPrescriptionTest && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10"
+            >
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -1342,10 +1353,9 @@ const LabReports: React.FC = () => {
                   </div>
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
-}
       </div>
     </div>
   );
