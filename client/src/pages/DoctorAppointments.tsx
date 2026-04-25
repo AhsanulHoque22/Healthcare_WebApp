@@ -446,20 +446,21 @@ Do you want to proceed?`;
   const stats = getAppointmentStats();
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="min-h-screen"
-      style={{
-        background: `
-          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.15) 0%, transparent 50%),
-          #fafbff
-        `
-      }}
-    >
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="min-h-screen"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.15) 0%, transparent 50%),
+            #fafbff
+          `
+        }}
+      >
       <div className="space-y-8 p-6 lg:p-8">
         {/* Premium Header */}
         <motion.div
@@ -1751,7 +1752,7 @@ Do you want to proceed?`;
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </>
   );
 };
