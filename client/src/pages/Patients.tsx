@@ -31,7 +31,14 @@ import {
   ClipboardDocumentListIcon,
   FunnelIcon,
   ArrowRightIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ChartBarIcon,
+  ExclamationCircleIcon,
+  ArrowPathIcon,
+  TagIcon,
+  ShieldExclamationIcon,
+  ChevronDownIcon,
+  PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Reveal } from '../components/landing/AnimatedSection';
@@ -259,7 +266,7 @@ const Patients: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const { data: medicalRecords, isLoading: recordsLoading } = useQuery<AppointmentMedicalRecord[]>({
+  const { data: medicalRecords, isLoading: medicalRecordsLoading } = useQuery<AppointmentMedicalRecord[]>({
     queryKey: ['patient-appointments', selectedPatient?.id],
     queryFn: async () => {
       const response = await API.get(`/patients/${selectedPatient?.id}/appointments`);
@@ -645,7 +652,7 @@ const Patients: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-20">
               <AnimatePresence>
                 {filteredPatients.map((patient, index) => (
-                  <Reveal key={patient.id} delay={index * 0.05} direction="up">
+                  <Reveal key={patient.id} delay={index * 0.05} variant="fadeUp">
                     <div className="group relative bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden">
                       {/* Hover Backdrop Shine */}
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-violet-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -954,7 +961,7 @@ const Patients: React.FC = () => {
                           <div className="animate-spin h-10 w-10 border-4 border-slate-900 border-t-transparent rounded-full mb-6" />
                           <p className="text-[10px] font-black uppercase tracking-[0.3em]">Synching Registry...</p>
                         </div>
-                      ) : medicalRecords?.length > 0 ? (
+                      ) : medicalRecords && medicalRecords.length > 0 ? (
                         medicalRecords.map((record, idx) => (
                           <motion.div
                             key={record.id}
@@ -1042,7 +1049,7 @@ const Patients: React.FC = () => {
                           <div className="animate-spin h-10 w-10 border-4 border-slate-900 border-t-transparent rounded-full mb-6" />
                           <p className="text-[10px] font-black uppercase tracking-[0.3em]">Querying Laboratory...</p>
                         </div>
-                      ) : labRecords?.length > 0 ? (
+                      ) : (labRecords && labRecords.length > 0) ? (
                         labRecords.map((test, idx) => (
                           <motion.div
                             key={`lab-${idx}`}
@@ -1171,7 +1178,7 @@ const Patients: React.FC = () => {
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{section.label}</p>
                                       </div>
                                       <ul className="space-y-2">
-                                        {section.data?.length > 0 ? section.data.map((item: string, i: number) => (
+                                        {section.data && section.data.length > 0 ? section.data.map((item: string, i: number) => (
                                           <li key={i} className="text-[11px] font-bold text-slate-200 leading-snug">• {item}</li>
                                         )) : <li className="text-[11px] font-bold text-slate-500 italic">No significant data detected.</li>}
                                       </ul>
