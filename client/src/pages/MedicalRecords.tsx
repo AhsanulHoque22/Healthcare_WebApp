@@ -168,14 +168,21 @@ const MedicalRecords: React.FC = () => {
 
         {/* PREMIUM TAB DISPATCHER */}
         <Reveal delay={0.1}>
-          <div className="bg-white rounded-[24px] border border-slate-100 p-2 shadow-sm flex items-center md:inline-flex w-full md:w-auto mx-auto overflow-x-auto scrollbar-none">
-            {tabs.map(({ key, label, icon: Icon }) => (
-              <button key={key} onClick={() => setActiveTab(key)}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-4 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all duration-300 shrink-0 ${activeTab === key ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
-                <Icon className={`h-5 w-5 ${activeTab === key ? 'text-violet-400' : ''}`} />
-                {label}
-              </button>
-            ))}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-1 p-1.5 bg-white/40 backdrop-blur-2xl border border-white/40 rounded-[28px] shadow-2xl shadow-indigo-500/5 relative">
+              {/* Dynamic Aurora behind nav */}
+              <div className="absolute -inset-10 bg-indigo-500/5 blur-[50px] -z-10 rounded-full" />
+              {tabs.map(({ key, label, icon: Icon }) => (
+                <button key={key} onClick={() => setActiveTab(key)}
+                  className={`relative flex items-center gap-2.5 px-6 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 shrink-0 ${activeTab === key ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/30' : 'text-slate-500 hover:bg-white/50 hover:text-slate-900'}`}>
+                  <Icon className={`h-5 w-5 ${activeTab === key ? 'text-indigo-400' : ''}`} />
+                  <span className="hidden sm:inline">{label}</span>
+                  {activeTab === key && (
+                    <motion.div layoutId="nav-pill" className="absolute inset-0 bg-slate-900 rounded-[22px] -z-10" transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }} />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </Reveal>
 
@@ -207,7 +214,10 @@ const MedicalRecords: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* CACHE & META ALERTS */}
-                <div className="col-span-full space-y-4">
+                <div className="col-span-full space-y-4 relative">
+                  {/* Subtle Aurora Blob */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-indigo-500/[0.03] to-transparent blur-[120px] -z-10 pointer-events-none" />
+                  
                   {(medicalSummary?.cacheMeta?.deferredCount ?? 0) > 0 && <AlertBanner color="amber" title={`${medicalSummary.cacheMeta!.deferredCount} Docs Pending Analysis`} body="Dossier queue optimization paused. Extract remaining semantics." action="Batch Extract" loading={isReanalyzing} onAction={() => reanalyzeWithLlama()} />}
                   {(medicalSummary?.cacheMeta?.deferredCount ?? 0) === 0 && (medicalSummary?.cacheMeta?.legacyCount ?? 0) > 0 && <AlertBanner color="indigo" title="Architecture Upgrade Available" body={`${medicalSummary.cacheMeta!.legacyCount} semantics isolated via legacy model. Update cache array.`} action="Re-Compile" loading={isReanalyzing} onAction={() => reanalyzeWithLlama()} />}
                   {(medicalSummary?.cacheMeta?.failedCount ?? 0) > 0 && <AlertBanner color="rose" title={`${medicalSummary.cacheMeta!.failedCount} Extraction Misses`} body="OCR parsing latency timed out on subset. Attempt recovery." action="Force Recovery" loading={isReanalyzing} onAction={() => reanalyzeWithLlama()} />}
@@ -217,6 +227,9 @@ const MedicalRecords: React.FC = () => {
                 <div className="col-span-1 lg:col-span-8 space-y-6">
                   {medicalSummary?.llamaClinicalInsight ? (
                     <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm shadow-violet-500/5 relative group">
+                      {/* Card Shine Effect */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-1000 bg-gradient-to-tr from-transparent via-white/[0.6] to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-[2.5s] z-20" />
+                      
                       <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-bl-full pointer-events-none group-hover:bg-violet-500/10 transition-colors duration-700" />
                       
                       <div className="p-8 md:p-10 relative z-10">
@@ -474,10 +487,13 @@ const MedicalRecords: React.FC = () => {
               <div className="grid grid-cols-1 gap-4">
                 {filteredAppointments.map((apt, i) => (
                   <Reveal key={apt.id} delay={i * 0.05}>
-                    <div className="bg-white border border-slate-100 rounded-[28px] p-6 sm:p-8 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50/50 rounded-bl-full pointer-events-none group-hover:bg-indigo-50 transition-colors" />
-                      
-                      <div className="flex gap-6 items-start md:items-center relative z-10 w-full md:w-auto">
+                      <div className="bg-white border border-slate-100 rounded-[28px] p-6 sm:p-8 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group">
+                        {/* Card Shine Effect */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-[1.5s] bg-gradient-to-tr from-transparent via-indigo-500/[0.05] to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-[1.5s] z-20" />
+                        
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50/50 rounded-bl-full pointer-events-none group-hover:bg-indigo-50 transition-colors duration-500" />
+                        
+                        <div className="flex gap-6 items-start md:items-center relative z-10 w-full md:w-auto">
                         <div className="w-20 h-20 rounded-[24px] bg-slate-50 border border-slate-100 flex flex-col items-center justify-center shrink-0 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{new Date(apt.appointmentDate).toLocaleDateString('en-US', { month: 'short' })}</span>
                           <span className="text-3xl font-black text-slate-900 leading-none">{new Date(apt.appointmentDate).getDate()}</span>
@@ -665,9 +681,9 @@ const StatTile: React.FC<StatTileProps> = ({ label, value, color }) => {
 };
 
 const InsightList: React.FC<{title: string; icon:string; items: string[]; colorClass: string; hColor:string}> = ({ title, icon, items, colorClass, hColor }) => (
-  <div className={`p-5 rounded-[24px] border border-slate-100 bg-white shadow-sm`}>
-    <h4 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${hColor}`}><span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">{icon}</span>{title}</h4>
-    {items?.length ? <ul className="space-y-2">{items.map((it, i) => <li key={i} className={`p-3 rounded-xl border text-xs font-medium leading-relaxed ${colorClass}`}>{it}</li>)}</ul> : <p className="text-xs text-slate-400 italic font-medium">No vectors flagged.</p>}
+  <div className={`p-5 rounded-[24px] border border-slate-100/50 bg-white/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-500`}>
+    <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 ${hColor}`}><span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">{icon}</span>{title}</h4>
+    {items?.length ? <ul className="space-y-2">{items.map((it, i) => <li key={i} className={`p-3 rounded-xl border text-xs font-semibold leading-relaxed ${colorClass} group-hover:translate-x-1 transition-transform duration-500`}>{it}</li>)}</ul> : <p className="text-xs text-slate-400 italic font-medium">No vectors flagged.</p>}
   </div>
 );
 
