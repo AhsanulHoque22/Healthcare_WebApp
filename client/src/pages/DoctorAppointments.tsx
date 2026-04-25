@@ -837,7 +837,7 @@ Do you want to proceed?`;
                         </h2>
                         <div className="flex items-center gap-3 mt-2">
                           <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                            Patient ID: {selectedAppointment.patient?.id?.slice(0, 8)}
+                            Patient ID: {selectedAppointment.patient?.id}
                           </span>
                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                             selectedAppointment.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
@@ -1088,7 +1088,7 @@ Do you want to proceed?`;
                                   toolbarButtons: ['microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection', 'hangup', 'invite', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'stats'],
                                 }}
                                 interfaceConfigOverwrite={{ ENFORCE_NOTIFICATION_AUTO_DISMISS_TIMEOUT: 5000 }}
-                                userInfo={{ displayName: `Dr. ${user?.firstName} ${user?.lastName}`, email: user?.email }}
+                                userInfo={{ displayName: `Dr. ${user?.firstName || ''} ${user?.lastName || ''}`, email: user?.email || '' }}
                                 getIFrameRef={(iframeRef) => { iframeRef.style.height = '100%'; iframeRef.style.width = '100%'; }}
                               />
                             </div>
