@@ -650,90 +650,91 @@ const Patients: React.FC = () => {
               <p className="text-sm font-black text-slate-400 uppercase tracking-widest max-w-xs mx-auto">Zero clinical files detected matching your search parameters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-20">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 pb-20">
               <AnimatePresence>
                 {filteredPatients.map((patient, index) => (
                   <Reveal key={patient.id} delay={index * 0.05} variant="fadeUp" className="h-full">
-                    <div className="group relative bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 overflow-hidden h-full">
+                    <div className="group relative bg-white rounded-[40px] p-10 border border-slate-100 shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 overflow-hidden h-full">
                       {/* Hover Backdrop Shine */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-violet-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.03] via-transparent to-violet-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity" />
                       
                       {/* Criticality Indicator Pill */}
                       {(() => {
                         const criticality = getPatientCriticality(patient.id);
                         if (!criticality || criticality === 'Normal') return null;
                         return (
-                          <div className={`absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
+                          <div className={`absolute top-6 right-6 flex items-center gap-2 px-4 py-1.5 rounded-full border shadow-sm ${
                             criticality === 'Critical' 
                               ? 'bg-rose-50 border-rose-100 text-rose-600' 
                               : 'bg-amber-50 border-amber-100 text-amber-600'
                           }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${criticality === 'Critical' ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                            <span className="text-[9px] font-black uppercase tracking-wider">{criticality}</span>
+                            <div className={`w-2 h-2 rounded-full animate-pulse ${criticality === 'Critical' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">{criticality} ALERT</span>
                           </div>
                         )
                       })()}
 
-                      <div className="relative z-10 h-full flex flex-col">
-                        {/* Profile Section */}
-                        {/* Profile Section - Horizontal Layout for Wide View */}
-                        <div className="flex items-center gap-6 mb-8 mt-2">
+                      <div className="relative z-10 h-full flex flex-col md:flex-row md:items-center gap-12">
+                        {/* Profile & Identification Section */}
+                        <div className="flex items-center gap-8 flex-1 min-w-0">
                           <div className="relative shrink-0">
-                            <div className="w-20 h-20 bg-slate-900 rounded-[24px] shadow-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
-                              <UserIcon className="h-10 w-10 text-white" />
+                            <div className="w-24 h-24 bg-slate-900 rounded-[32px] shadow-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-6 group-hover:scale-105">
+                              <UserIcon className="h-12 w-12 text-white" />
                             </div>
-                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-xl shadow-lg flex items-center justify-center border border-slate-100">
-                              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                            <div className="absolute -bottom-1 -right-1 w-10 h-10 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100">
+                              <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
                             </div>
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors leading-tight break-words">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-500 rounded-full text-[8px] font-black uppercase tracking-widest border border-indigo-100">Patient ID #{patient.id.toString().padStart(4, '0')}</span>
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors leading-tight truncate">
                               {patient.user.firstName} {patient.user.lastName}
                             </h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                            <p className="text-xs font-bold text-slate-400 truncate max-w-[250px]">
                                {patient.user.email}
                             </p>
                           </div>
                         </div>
 
-                        {/* Stats Matrix */}
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                          <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Blood Registry</p>
-                            <p className="text-sm font-black text-slate-900">{patient.bloodType || '—'}</p>
+                        {/* Stats Matrix Integration */}
+                        <div className="flex flex-wrap md:flex-nowrap gap-4 shrink-0">
+                          <div className="min-w-[140px] bg-slate-50/50 p-6 rounded-[28px] border border-slate-50 transition-all group-hover:bg-white group-hover:border-slate-100 text-center">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Blood Group</p>
+                            <p className="text-base font-black text-slate-900">{patient.bloodType || '—'}</p>
                           </div>
-                          <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Age / Cycle</p>
-                            <p className="text-sm font-black text-slate-900">{formatAge(calculateAge(patient.user.dateOfBirth))}</p>
+                          <div className="min-w-[140px] bg-slate-50/50 p-6 rounded-[28px] border border-slate-50 transition-all group-hover:bg-white group-hover:border-slate-100 text-center">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Demographic</p>
+                            <p className="text-base font-black text-slate-900">{formatAge(calculateAge(patient.user.dateOfBirth))}</p>
                           </div>
                         </div>
 
-                        {/* Interactive Actions */}
-                        <div className="flex gap-2 mt-auto">
+                        {/* Action Command Cluster */}
+                        <div className="flex md:flex-col gap-3 shrink-0">
                            <button
                             onClick={() => handleViewPatient(patient)}
-                            className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-2"
+                            className="px-8 py-5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-3"
                           >
                              Index
                           </button>
-                          <button
-                            onClick={() => handleViewMedicalRecords(patient)}
-                            className="flex-1 py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center"
-                            title="Clinical Records"
-                          >
-                            <DocumentTextIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setAlertPatient(patient);
-                              setShowAlertModal(true);
-                            }}
-                            className="flex-1 py-4 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95 flex items-center justify-center"
-                            title="Flash Alert"
-                          >
-                            <BellAlertIcon className="h-5 w-5" />
-                          </button>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => handleViewMedicalRecords(patient)}
+                              className="flex-1 p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Clinical Records"
+                            >
+                              <DocumentTextIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+                            <button
+                              onClick={() => { setAlertPatient(patient); setShowAlertModal(true); }}
+                              className="flex-1 p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              title="Flash Alert"
+                            >
+                              <BellAlertIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
