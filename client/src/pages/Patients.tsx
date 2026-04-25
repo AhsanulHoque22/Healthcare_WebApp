@@ -650,7 +650,7 @@ const Patients: React.FC = () => {
               <p className="text-sm font-black text-slate-400 uppercase tracking-widest max-w-xs mx-auto">Zero clinical files detected matching your search parameters.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-20">
               <AnimatePresence>
                 {filteredPatients.map((patient, index) => (
                   <Reveal key={patient.id} delay={index * 0.05} variant="fadeUp" className="h-full">
@@ -676,9 +676,10 @@ const Patients: React.FC = () => {
 
                       <div className="relative z-10 h-full flex flex-col">
                         {/* Profile Section */}
-                        <div className="flex flex-col items-center text-center mb-8">
-                          <div className="relative mb-6">
-                            <div className="w-20 h-20 bg-slate-900 rounded-[28px] shadow-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
+                        {/* Profile Section - Horizontal Layout for Wide View */}
+                        <div className="flex items-center gap-6 mb-8 mt-2">
+                          <div className="relative shrink-0">
+                            <div className="w-20 h-20 bg-slate-900 rounded-[24px] shadow-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
                               <UserIcon className="h-10 w-10 text-white" />
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-xl shadow-lg flex items-center justify-center border border-slate-100">
@@ -686,23 +687,25 @@ const Patients: React.FC = () => {
                             </div>
                           </div>
                           
-                          <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">
-                            {patient.user.firstName} {patient.user.lastName}
-                          </h3>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate w-full px-2">
-                             {patient.user.email}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors leading-tight break-words">
+                              {patient.user.firstName} {patient.user.lastName}
+                            </h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                               {patient.user.email}
+                            </p>
+                          </div>
                         </div>
 
                         {/* Stats Matrix */}
-                        <div className="grid grid-cols-2 gap-2 mb-8">
-                          <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1">Blood Registry</p>
-                            <p className="text-xs font-black text-slate-900">{patient.bloodType || '—'}</p>
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                          <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Blood Registry</p>
+                            <p className="text-sm font-black text-slate-900">{patient.bloodType || '—'}</p>
                           </div>
-                          <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1">Age / Cycle</p>
-                            <p className="text-xs font-black text-slate-900">{formatAge(calculateAge(patient.user.dateOfBirth))}</p>
+                          <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 transition-colors group-hover:bg-white group-hover:border-slate-100">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Age / Cycle</p>
+                            <p className="text-sm font-black text-slate-900">{formatAge(calculateAge(patient.user.dateOfBirth))}</p>
                           </div>
                         </div>
 
@@ -710,7 +713,7 @@ const Patients: React.FC = () => {
                         <div className="flex gap-2 mt-auto">
                            <button
                             onClick={() => handleViewPatient(patient)}
-                            className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-2"
+                            className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] shadow-xl shadow-slate-200 transition-all hover:bg-indigo-600 active:scale-95 flex items-center justify-center gap-2"
                           >
                              Index
                           </button>
@@ -1212,6 +1215,144 @@ const Patients: React.FC = () => {
                               </div>
                             </div>
                           )}
+
+                          {/* ═══ DETAILED CLINICAL FINDINGS (NEW) ═══ */}
+                          {selectedPatientSummary.recentLabResults && selectedPatientSummary.recentLabResults.length > 0 && (
+                            <div className="space-y-6">
+                              <div className="flex items-center justify-between border-l-4 border-indigo-500 pl-4">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Comprehensive Findings Registry</h3>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{selectedPatientSummary.allLabResultsSummary?.totalFindings} DATA POINTS</span>
+                              </div>
+                              
+                              <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-left border-collapse">
+                                    <thead>
+                                      <tr className="bg-slate-50 border-b border-slate-100">
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Test / Parameter</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Found Value</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Reference Range</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Clinical Source</th>
+                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Date</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                      {selectedPatientSummary.recentLabResults.flatMap((report: any) => 
+                                        (report.findings || []).map((finding: any, fIdx: number) => (
+                                          <tr key={`${report.orderId}-${fIdx}`} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              {(() => {
+                                                const status = String(finding.status || 'unknown').toLowerCase();
+                                                const isCritical = ['critical', 'high', 'low', 'abnormal'].includes(status);
+                                                return (
+                                                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                                    status === 'normal' ? 'bg-emerald-50 text-emerald-600' :
+                                                    status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-50 text-amber-600' :
+                                                    isCritical ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
+                                                  }`}>
+                                                    <div className={`w-1 h-1 rounded-full ${
+                                                      status === 'normal' ? 'bg-emerald-500' :
+                                                      status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-500' :
+                                                      isCritical ? 'bg-rose-500' : 'bg-slate-400'
+                                                    }`} />
+                                                    {status}
+                                                  </div>
+                                                );
+                                              })()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <p className="text-xs font-black text-slate-900">{finding.test}</p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-sm font-black text-slate-900">{finding.value}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{finding.unit}</span>
+                                              </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500">
+                                              {finding.referenceRange || '—'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                              <p className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded inline-block max-w-[150px] truncate" title={report.testNames || report.orderId}>
+                                                {report.testNames || report.orderId}
+                                              </p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                              <p className="text-[10px] font-black text-slate-400 tracking-tighter">
+                                                {new Date(report.date).toLocaleDateString()}
+                                              </p>
+                                            </td>
+                                          </tr>
+                                        ))
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ═══ ACTIVE MEDICAL PROFILE (diagnoses/meds/symptoms) ═══ */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            {/* Medication Registry */}
+                            <div className="space-y-6">
+                              <div className="flex items-center gap-3 border-l-4 border-emerald-500 pl-4">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Pharmaceutical Track</h3>
+                              </div>
+                              <div className="bg-white rounded-[32px] border border-slate-100 p-6 space-y-3">
+                                {selectedPatientSummary.recentMedications && selectedPatientSummary.recentMedications.length > 0 ? (
+                                  selectedPatientSummary.recentMedications.map((med: any, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                          <FireIcon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-black text-slate-900">{med.name}</p>
+                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{med.dosage} • {med.frequency}</p>
+                                        </div>
+                                      </div>
+                                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">{med.source}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-[10px] font-bold text-slate-400 italic text-center py-6">No pharmacological data extracted.</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Conditions & Diagnoses */}
+                            <div className="space-y-6">
+                              <div className="flex items-center gap-3 border-l-4 border-rose-500 pl-4">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Clinical Conditions</h3>
+                              </div>
+                              <div className="bg-white rounded-[32px] border border-slate-100 p-6 space-y-3">
+                                {selectedPatientSummary.summarizedDiagnoses && selectedPatientSummary.summarizedDiagnoses.length > 0 ? (
+                                  selectedPatientSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
+                                          <ShieldExclamationIcon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-black text-slate-900">{diag.condition}</p>
+                                          <div className="flex items-center gap-2">
+                                            <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest">{diag.status}</p>
+                                            <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase">{new Date(diag.date).toLocaleDateString()}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] truncate max-w-[80px]">{diag.source}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-[10px] font-bold text-slate-400 italic text-center py-6">No condition history detected.</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
                           {/* Manual Health Alert Trigger */}
                           <div className="p-10 bg-rose-50 rounded-[40px] border border-rose-100 flex flex-col md:flex-row items-center justify-between gap-10">
