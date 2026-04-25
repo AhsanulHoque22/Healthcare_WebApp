@@ -122,6 +122,35 @@ const extractPrescriptionTestArtifacts = (testsValue) => {
   return artifacts;
 };
 
+// ─── PATIENT NAME VALIDATION ─────────────────────────────────────────────────
+
+/**
+ * Returns true if the name extracted from a document plausibly belongs to
+ * the expected patient.  Uses word-level overlap so minor OCR errors,
+ * abbreviated first names, and middle-name omissions still pass.
+ *
+ * Returns true (pass) when extractedName is absent — we only block
+ * documents where a clearly different name is present.
+ */
+function _patientNameMatches(extractedName, patientFullName) {
+  if (!extractedName || !patientFullName) return true;
+
+  const tokenise = (s) =>
+    String(s)
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 2); // ignore very short tokens like "md", "dr"
+
+  const extracted = tokenise(extractedName);
+  const expected  = tokenise(patientFullName);
+
+  if (!extracted.length || !expected.length) return true;
+
+  return extracted.some((w) => expected.includes(w)) ||
+         expected.some((w) => extracted.includes(w));
+}
+
 // ─── AI REASONING ────────────────────────────────────────────────────────────
 
 const buildFallbackClinicalInsight = ({ diagnoses, medications, labResults }) => {
@@ -348,13 +377,21 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
           failedCount++;
         } else {
           const data = docCache.extractedData;
-          // Prefer the title extracted from the document itself; fall back to
-          // the user-provided upload name only if the LLM found nothing
-          const displayName = data.reportTitle || doc.name || 'Lab Report';
-          if (data.labResults?.length) recentLabResults.push({ orderId: displayName, date: doc.date, testNames: data.reportTitle || doc.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
-          if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: displayName })));
-          if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: displayName, status: m?.status || 'active' })));
-          documentEvidence.push({ documentType: data.documentType || 'other', source: doc.source, date: doc.date, diagnoses: (data.diagnoses || []).slice(0, 4), labResults: (data.labResults || []).slice(0, 6) });
+          const patientFullName = `${patient.user.firstName} ${patient.user.lastName}`;
+
+          // Skip documents where the extracted patient name clearly belongs to
+          // someone else — prevents another person's report from polluting the summary
+          if (data.patientName && !_patientNameMatches(data.patientName, patientFullName)) {
+            console.warn(`[ClinicalService] Name mismatch — doc says "${data.patientName}", expected "${patientFullName}". Skipping.`);
+          } else {
+            // Prefer the title extracted from the document itself; fall back to
+            // the user-provided upload name only if the LLM found nothing
+            const displayName = data.reportTitle || doc.name || 'Lab Report';
+            if (data.labResults?.length) recentLabResults.push({ orderId: displayName, date: doc.date, testNames: data.reportTitle || doc.testNames || data.labResults.map(l => l.test).join(', '), findings: data.labResults, source: doc.source });
+            if (data.diagnoses?.length) extraDiagnoses.push(...data.diagnoses.map(d => ({ condition: d.condition, status: d.status, date: doc.date, source: displayName })));
+            if (data.medications?.length) documentMedications.push(...data.medications.map(m => ({ ...m, source: displayName, status: m?.status || 'active' })));
+            documentEvidence.push({ documentType: data.documentType || 'other', source: doc.source, date: doc.date, diagnoses: (data.diagnoses || []).slice(0, 4), labResults: (data.labResults || []).slice(0, 6) });
+          }
         }
       }
     } catch (e) { console.error("[ClinicalService] Doc error:", e.message); }

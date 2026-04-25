@@ -2,7 +2,61 @@ const pdfParse = require('pdf-parse');
 const Tesseract = require('tesseract.js');
 const axios = require('axios');
 const cloudinary = require('cloudinary').v2;
+const { execFile } = require('child_process');
+const { promises: fsPromises } = require('fs');
+const path = require('path');
+const os = require('os');
 const { preprocessImage } = require('./preprocessing');
+
+/**
+ * Converts the first page of a PDF buffer to a JPEG image using pdftoppm,
+ * then runs Tesseract OCR on the result.
+ * Used when pdf-parse returns no text (scanned/image-based PDFs).
+ */
+async function _ocrScannedPDF(pdfBuffer) {
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const tmpPdf = path.join(os.tmpdir(), `livora_${id}.pdf`);
+  const tmpPrefix = path.join(os.tmpdir(), `livora_${id}_p`);
+
+  try {
+    await fsPromises.writeFile(tmpPdf, pdfBuffer);
+
+    // -r 300: 300 DPI  -jpeg: output format  -l 1: only first page
+    await new Promise((resolve, reject) => {
+      execFile('pdftoppm', ['-r', '300', '-jpeg', '-l', '1', tmpPdf, tmpPrefix], { timeout: 30000 }, (err) => {
+        if (err) reject(new Error(`pdftoppm failed: ${err.message}`));
+        else resolve();
+      });
+    });
+
+    // pdftoppm names output files like prefix-1.jpg or prefix-01.jpg
+    const tmpDir = os.tmpdir();
+    const allFiles = await fsPromises.readdir(tmpDir);
+    const outFile = allFiles.find(f => f.startsWith(path.basename(tmpPrefix)));
+    if (!outFile) throw new Error('pdftoppm produced no output image');
+
+    const imgBuffer = await fsPromises.readFile(path.join(tmpDir, outFile));
+    const processedBuffer = await preprocessImage(imgBuffer);
+
+    const worker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
+    try {
+      await worker.setParameters({ tessedit_pageseg_mode: '1' });
+      const { data: { text } } = await worker.recognize(processedBuffer);
+      console.log(`[Extraction] Scanned PDF OCR extracted ${text.trim().length} chars`);
+      return text;
+    } finally {
+      await worker.terminate();
+    }
+  } finally {
+    // Clean up temp files regardless of outcome
+    await fsPromises.unlink(tmpPdf).catch(() => {});
+    const tmpDir = os.tmpdir();
+    const allFiles = await fsPromises.readdir(tmpDir).catch(() => []);
+    for (const f of allFiles.filter(f => f.startsWith(`livora_${id}`))) {
+      await fsPromises.unlink(path.join(tmpDir, f)).catch(() => {});
+    }
+  }
+}
 
 // Ensure Cloudinary is configured (uses same config as cloudinaryService)
 cloudinary.config({
@@ -103,7 +157,20 @@ async function extractTextFromURL(url) {
     // Direct text extraction for PDFs
     if (contentType.includes('pdf') || url.toLowerCase().endsWith('.pdf')) {
       const data = await pdfParse(buffer);
-      // Fallback to OCR could be added here if data.text is empty or unreadable
+      const textLength = data.text.trim().length;
+
+      // If pdf-parse returns very little text the PDF is image-based (scanned).
+      // Fall back to pdftoppm → Tesseract OCR.
+      if (textLength < 100) {
+        console.log(`[Extraction] PDF text too short (${textLength} chars) — trying scanned-PDF OCR`);
+        try {
+          const ocrText = await _ocrScannedPDF(buffer);
+          if (ocrText.trim().length > textLength) return ocrText;
+        } catch (ocrErr) {
+          console.warn(`[Extraction] Scanned-PDF OCR failed: ${ocrErr.message}`);
+        }
+      }
+
       return data.text;
     } 
     // Image OCR with Tesseract — use explicit worker lifecycle so WASM memory
