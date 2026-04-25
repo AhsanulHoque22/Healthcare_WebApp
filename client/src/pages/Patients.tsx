@@ -45,7 +45,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Reveal } from '../components/landing/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
-import MedicineReminderSettings from '../components/MedicineReminderSettings';
 import { getDepartmentLabel } from '../utils/departments';
 import { calculateAge, formatAge } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
@@ -150,8 +149,7 @@ const Patients: React.FC = () => {
   const [alertPatient, setAlertPatient] = useState<Patient | null>(null);
   const [alertForm, setAlertForm] = useState({ urgency: 'routine', message: '', action: 'follow_up' });
   const [patientSummaries, setPatientSummaries] = useState<Record<number, any>>({});
-  const [showMedicineModal, setShowMedicineModal] = useState(false);
-  const [medicineTargetPatientId, setMedicineTargetPatientId] = useState<number | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const [searchParams] = useSearchParams();
   const patientIdFromURL = searchParams.get('patientId');
@@ -343,9 +341,13 @@ const Patients: React.FC = () => {
     setShowMedicalRecords(true);
   };
 
-  const handleOpenMedicineSettings = (patientId: number) => {
-    setMedicineTargetPatientId(patientId);
-    setShowMedicineModal(true);
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
   };
 
   const handleViewRecordDetails = async (appointment: AppointmentMedicalRecord) => {
@@ -746,14 +748,6 @@ const Patients: React.FC = () => {
                             </button>
                             
                             <button
-                              onClick={() => handleOpenMedicineSettings(patient.id)}
-                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-95 flex items-center justify-center group/btn"
-                              title="Medicine Protocols"
-                            >
-                              <BeakerIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
-                            </button>
-
-                            <button
                               onClick={() => { setAlertPatient(patient); setShowAlertModal(true); }}
                               className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95 flex items-center justify-center group/btn"
                               title="Flash Alert"
@@ -763,7 +757,7 @@ const Patients: React.FC = () => {
 
                             <button
                               onClick={() => handleViewPatient(patient)}
-                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 flex items-center justify-center group/btn"
+                              className="p-5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 flex items-center justify-center group/btn md:col-span-2 xl:col-span-1"
                               title="Full Profile"
                             >
                               <IdentificationIcon className="h-6 w-6 transition-transform group-hover/btn:scale-110" />
@@ -1274,59 +1268,117 @@ const Patients: React.FC = () => {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                      {selectedPatientSummary.recentLabResults.flatMap((report: any) => 
-                                        (report.findings || []).map((finding: any, fIdx: number) => (
-                                          <tr key={`${report.orderId}-${fIdx}`} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                              {(() => {
-                                                const status = String(finding.status || 'unknown').toLowerCase();
-                                                const isCritical = ['critical', 'high', 'low', 'abnormal'].includes(status);
-                                                return (
-                                                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                                                    status === 'normal' ? 'bg-emerald-50 text-emerald-600' :
-                                                    status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-50 text-amber-600' :
-                                                    isCritical ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
-                                                  }`}>
-                                                    <div className={`w-1 h-1 rounded-full ${
-                                                      status === 'normal' ? 'bg-emerald-500' :
-                                                      status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-500' :
-                                                      isCritical ? 'bg-rose-500' : 'bg-slate-400'
-                                                    }`} />
-                                                    {status}
+                                      {selectedPatientSummary.recentLabResults.map((report: any) => {
+                                        const groupId = report.orderId || report.testNames;
+                                        const isExpanded = expandedGroups.has(groupId);
+                                        
+                                        // Sort findings by criticality priority
+                                        const sortedFindings = [...(report.findings || [])].sort((a, b) => {
+                                          const getPriority = (status: string) => {
+                                            const s = String(status || '').toLowerCase();
+                                            if (['critical', 'danger', 'high', 'low', 'abnormal'].includes(s)) return 0;
+                                            if (['caution', 'warning'].includes(s)) return 1;
+                                            if (s === 'normal') return 2;
+                                            return 3;
+                                          };
+                                          return getPriority(a.status) - getPriority(b.status);
+                                        });
+
+                                        const displayFindings = isExpanded ? sortedFindings : sortedFindings.slice(0, 4);
+                                        const hasMore = sortedFindings.length > 4;
+
+                                        return (
+                                          <React.Fragment key={groupId}>
+                                            {/* Group Sub-header */}
+                                            <tr className="bg-slate-50/30 border-y border-slate-100/50">
+                                              <td colSpan={7} className="px-6 py-3">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-sm shadow-indigo-200" />
+                                                    <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest truncate max-w-md">
+                                                       Source: {report.testNames || report.orderId}
+                                                    </p>
+                                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black">
+                                                      {sortedFindings.length} DATA POINTS
+                                                    </span>
                                                   </div>
-                                                );
-                                              })()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                              <p className="text-xs font-black text-slate-900">{finding.test}</p>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                              <div className="flex items-baseline gap-1">
-                                                <span className="text-sm font-black text-slate-900">{finding.value}</span>
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">{finding.unit}</span>
-                                              </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500">
-                                              {finding.referenceRange || '—'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                              <p className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded inline-block max-w-[150px] truncate" title={report.testNames || report.orderId}>
-                                                {report.testNames || report.orderId}
-                                              </p>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                              <p className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">
-                                                {report.doctorName || report.facilitatorName || 'AUTO-IDENTIFIED'}
-                                              </p>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                                              <p className="text-[10px] font-black text-slate-400 tracking-tighter">
-                                                {new Date(report.date).toLocaleDateString()}
-                                              </p>
-                                            </td>
-                                          </tr>
-                                        ))
-                                      )}
+                                                  <p className="text-[9px] font-black text-slate-400 uppercase">
+                                                    Facilitator: {report.doctorName || report.facilitatorName || 'AUTH-IDENTIFIED'}
+                                                  </p>
+                                                </div>
+                                              </td>
+                                            </tr>
+
+                                            {/* Findings Rows */}
+                                            {displayFindings.map((finding: any, fIdx: number) => (
+                                              <tr key={`${groupId}-${fIdx}`} className="hover:bg-slate-50/50 transition-colors group">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                  {(() => {
+                                                    const status = String(finding.status || 'unknown').toLowerCase();
+                                                    const isCritical = ['critical', 'high', 'low', 'abnormal'].includes(status);
+                                                    return (
+                                                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                                        status === 'normal' ? 'bg-emerald-50 text-emerald-600' :
+                                                        status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-50 text-amber-600' :
+                                                        isCritical ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
+                                                      }`}>
+                                                        <div className={`w-1 h-1 rounded-full ${
+                                                          status === 'normal' ? 'bg-emerald-500' :
+                                                          status === 'caution' || status === 'high' || status === 'low' ? 'bg-amber-500' :
+                                                          isCritical ? 'bg-rose-500' : 'bg-slate-400'
+                                                        }`} />
+                                                        {status}
+                                                      </div>
+                                                    );
+                                                  })()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                  <p className="text-xs font-black text-slate-900">{finding.test}</p>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                  <div className="flex items-baseline gap-1">
+                                                    <span className="text-sm font-black text-slate-900">{finding.value}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase">{finding.unit}</span>
+                                                  </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                  {finding.referenceRange || '—'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                  <p className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded inline-block max-w-[150px] truncate" title={report.testNames || report.orderId}>
+                                                    {report.testNames || report.orderId}
+                                                  </p>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                  <p className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">
+                                                    {report.doctorName || report.facilitatorName || 'N/A'}
+                                                  </p>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                  <p className="text-[10px] font-black text-slate-400 tracking-tighter">
+                                                    {new Date(report.date).toLocaleDateString()}
+                                                  </p>
+                                                </td>
+                                              </tr>
+                                            ))}
+
+                                            {/* Show More Trigger */}
+                                            {hasMore && (
+                                              <tr>
+                                                <td colSpan={7} className="px-6 py-3 text-center bg-slate-50/20">
+                                                  <button
+                                                    onClick={() => toggleGroup(groupId)}
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
+                                                  >
+                                                    <ChevronDownIcon className={`h-3 w-3 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                    {isExpanded ? 'Show Less' : `Show ${sortedFindings.length - 4} More Findings`}
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            )}
+                                          </React.Fragment>
+                                        );
+                                      })}
                                     </tbody>
                                   </table>
                                 </div>
@@ -1722,32 +1774,6 @@ const Patients: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* ═══ MEDICINE REMINDER MODAL ═══ */}
-        <AnimatePresence>
-          {showMedicineModal && medicineTargetPatientId && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowMedicineModal(false)}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-2xl"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-2xl"
-              >
-                <MedicineReminderSettings 
-                  patientId={medicineTargetPatientId} 
-                  onClose={() => setShowMedicineModal(false)} 
-                />
               </motion.div>
             </div>
           )}
