@@ -6,7 +6,7 @@
  */
 
 const { 
-  Patient, Prescription, LabTestOrder, LabTest, DocumentCache, Medicine 
+  Patient, Prescription, LabTestOrder, LabTest, DocumentCache, Medicine, LifestyleAssessment 
 } = require('../models');
 const { Op } = require('sequelize');
 const crypto = require('crypto');
@@ -213,7 +213,7 @@ Rules:
 - Mark overallStatus Critical only when a finding is immediately life-threatening.
 - Return valid JSON only — no markdown, no commentary.`;
 
-const generateClinicalReconciliation = async ({ patient, diagnoses, symptoms, medications, labResults, documentEvidence }) => {
+const generateClinicalReconciliation = async ({ patient, diagnoses, symptoms, medications, labResults, documentEvidence, lifestyleAssessments }) => {
   if (!hasGroqApiKey()) return buildFallbackClinicalInsight({ diagnoses, medications, labResults });
 
   const prompt = `Patient profile: ${JSON.stringify({ chronicConditions: patient.chronicConditions, allergies: patient.allergies })}
@@ -221,7 +221,8 @@ Diagnoses: ${JSON.stringify(diagnoses.slice(0, 12))}
 Symptoms: ${JSON.stringify(symptoms.slice(0, 12))}
 Active medications: ${JSON.stringify(medications.slice(0, 15))}
 Lab findings: ${JSON.stringify(labResults.slice(0, 8))}
-Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}`;
+Document evidence: ${JSON.stringify(documentEvidence.slice(0, 8))}
+Recent Lifestyle Assessments (Habits, Sleep, Diet): ${JSON.stringify((lifestyleAssessments || []).slice(0, 2))}`;
 
   const insight = await requestStructuredJson({
     name: 'clinical_reconciliation',
@@ -488,9 +489,16 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   summarizedDiagnoses.push(...extraDiagnoses);
   const reconciledMeds = dedupeMedications([...recentMedications, ...documentMedications]);
 
+  // 4.b Fetch Lifestyle Assessments
+  const lifestyleAssessments = await LifestyleAssessment.findAll({
+    where: { patientId },
+    order: [['createdAt', 'DESC']],
+    limit: 2
+  });
+
   // 5. Narrative & Insights
   const aiClinicalNarrative = await generateFastPatientNarrative({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labCount: allLabOrders.length }).catch(() => 'Clinical analysis currently unavailable.');
-  const llamaClinicalInsight = await generateClinicalReconciliation({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labResults: recentLabResults, documentEvidence }).catch(() => buildFallbackClinicalInsight({ diagnoses: summarizedDiagnoses, medications: reconciledMeds, labResults: recentLabResults }));
+  const llamaClinicalInsight = await generateClinicalReconciliation({ patient, diagnoses: summarizedDiagnoses, symptoms: recentSymptoms, medications: reconciledMeds, labResults: recentLabResults, documentEvidence, lifestyleAssessments: lifestyleAssessments.map(l => l.responses) }).catch(() => buildFallbackClinicalInsight({ diagnoses: summarizedDiagnoses, medications: reconciledMeds, labResults: recentLabResults }));
 
   return {
     aiClinicalNarrative,
