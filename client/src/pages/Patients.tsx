@@ -34,7 +34,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Reveal } from '../components/Reveal';
+import { Reveal } from '../components/landing/AnimatedSection';
 import { useAuth } from '../context/AuthContext';
 import PrescriptionView from '../components/PrescriptionView';
 import { getDepartmentLabel } from '../utils/departments';
