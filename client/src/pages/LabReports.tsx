@@ -927,7 +927,7 @@ const LabReports: React.FC = () => {
                 const canPay = canMakePayment(test);
 
                 return (
-                  <Reveal key={test.id} delay={index * 0.05} variant="blurFade">
+                  <Reveal key={test.id} delay={index * 0.05} variant="fadeUp">
                     <div className="premium-card bg-white rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-700 overflow-hidden group">
                       {/* CARD HEADER STRIP */}
                       <div className="px-10 py-8 border-b border-slate-50 flex flex-wrap items-center justify-between gap-6 bg-slate-50/30">
