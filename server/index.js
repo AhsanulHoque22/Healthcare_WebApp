@@ -267,10 +267,11 @@ const startServer = async () => {
 
        // Ensure ChatHistory table exists in production
        try {
-         const { ChatHistory, DocumentCache } = require('./models');
+         const { ChatHistory, DocumentCache, LifestyleAssessment } = require('./models');
          await ChatHistory.sync({ alter: true });
          await DocumentCache.sync({ alter: true });
-         console.log("[Database] ChatHistory and DocumentCache tables verified/created/altered in production.");
+         await LifestyleAssessment.sync({ alter: true });
+         console.log("[Database] ChatHistory, DocumentCache and LifestyleAssessment tables verified/created/altered in production.");
        } catch (e) {
          console.error("[Database] Error sync ChatHistory/DocumentCache:", e.message);
        }
@@ -289,7 +290,7 @@ const startServer = async () => {
      } else {
       try {
         const models = require('./models');
-        const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog', 'ChatHistory', 'DocumentCache'];
+        const tablesToSync = ['User', 'Patient', 'Doctor', 'WebsiteReview', 'Appointment', 'LabTestOrder', 'Medicine', 'MedicineReminder', 'MedicineDosage', 'Prescription', 'MedicineLog', 'ChatHistory', 'DocumentCache', 'LifestyleAssessment'];
         
         for (const name of tablesToSync) {
           if (models[name]) {
