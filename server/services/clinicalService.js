@@ -373,11 +373,17 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
 
         if (data) {
           const modelVer = data.modelVersion || RECONCILIATION_MODEL_VERSION;
-          if (!docCache) {
-            docCache = await DocumentCache.create({ url: doc.url, urlHash, extractedData: data, modelVersion: modelVer });
-          } else {
-            await docCache.update({ extractedData: data, modelVersion: modelVer });
-            await docCache.reload();
+          try {
+            // upsert is atomic — safe when two concurrent requests extract the
+            // same doc simultaneously; create/update would throw a unique-constraint
+            // violation on the second writer
+            const [saved] = await DocumentCache.upsert(
+              { url: doc.url, urlHash, extractedData: data, modelVersion: modelVer },
+              { returning: true }
+            );
+            docCache = saved;
+          } catch (dbErr) {
+            console.error('[ClinicalService] Cache upsert failed:', dbErr.message);
           }
           if (needsUpgrade) upgradedCount++;
         }
