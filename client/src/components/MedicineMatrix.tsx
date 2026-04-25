@@ -11,8 +11,10 @@ import {
   BellIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import MedicineReminderSettings from './MedicineReminderSettings';
+import { Reveal } from './landing/AnimatedSection';
 
 interface MedicineDosage {
   id: number;
@@ -57,7 +59,6 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
   const [showReminderSettings, setShowReminderSettings] = useState(false);
   const queryClient = useQueryClient();
 
-  // Generate array of dates (7 days)
   const generateDateRange = (startDate: Date) => {
     const dates = [];
     for (let i = 0; i < 7; i++) {
@@ -70,101 +71,47 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
 
   const dates = generateDateRange(selectedDate);
 
-  // Function to generate custom time slots based on reminder settings
   const generateCustomTimeSlots = (medicine: any) => {
-    if (!reminderSettings || !reminderSettings?.enabled) {
-      // Fall back to original times if no reminder settings
-      return medicine.expectedTimes || [];
-    }
-
-    // Create custom time slots based on reminder settings
+    if (!reminderSettings || !reminderSettings?.enabled) return medicine.expectedTimes || [];
     const customTimes: TimeSlot[] = [];
-    
     if (medicine.expectedTimes) {
       medicine.expectedTimes.forEach((originalTime: TimeSlot) => {
-        // Map original time labels to reminder settings
         let customTime = null;
-        
-        if (originalTime.label?.toLowerCase().includes('morning') || 
-            originalTime.label?.toLowerCase().includes('breakfast')) {
-          customTime = {
-            ...originalTime,
-            time: reminderSettings?.morningTime || '08:00',
-            label: 'Morning'
-          };
+        if (originalTime.label?.toLowerCase().includes('morning') || originalTime.label?.toLowerCase().includes('breakfast')) {
+          customTime = { ...originalTime, time: reminderSettings?.morningTime || '08:00', label: 'Morning' };
         } else if (originalTime.label?.toLowerCase().includes('lunch')) {
-          customTime = {
-            ...originalTime,
-            time: reminderSettings?.lunchTime || '12:00',
-            label: 'Lunch'
-          };
-        } else if (originalTime.label?.toLowerCase().includes('dinner') || 
-                   originalTime.label?.toLowerCase().includes('evening')) {
-          customTime = {
-            ...originalTime,
-            time: reminderSettings?.dinnerTime || '19:00',
-            label: 'Dinner'
-          };
-        } else {
-          // Keep original time for other cases
-          customTime = originalTime;
-        }
-        
-        if (customTime) {
-          customTimes.push(customTime);
-        }
+          customTime = { ...originalTime, time: reminderSettings?.lunchTime || '12:00', label: 'Lunch' };
+        } else if (originalTime.label?.toLowerCase().includes('dinner') || originalTime.label?.toLowerCase().includes('evening')) {
+          customTime = { ...originalTime, time: reminderSettings?.dinnerTime || '19:00', label: 'Dinner' };
+        } else { customTime = originalTime; }
+        if (customTime) customTimes.push(customTime);
       });
     }
-    
     return customTimes;
   };
 
-  // Fetch reminder settings
   const { data: reminderSettings } = useQuery<ReminderSettings>({
     queryKey: ['medicine-reminder-settings', patientId],
     queryFn: async () => {
-      const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, {
-        params: { _t: Date.now() } // Cache-busting parameter
-      });
+      const response = await API.get(`/medicines/patients/${patientId}/reminder-settings`, { params: { _t: Date.now() } });
       return response.data.data;
     },
     enabled: !!patientId,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache the data (replaces cacheTime)
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnMount: true // Always refetch on mount
+    staleTime: 0, gcTime: 0, refetchOnWindowFocus: true, refetchOnMount: true
   });
 
-  // Debug reminder settings changes
-  useEffect(() => {
-    // Reminder settings updated
-  }, [reminderSettings]);
-
-  // Fetch medicines for the date range
   const { data: medicinesData, isLoading } = useQuery({
     queryKey: ['medicine-matrix', patientId, selectedDate.toISOString().split('T')[0], reminderSettings?.enabled || false, reminderSettings?.morningTime || '08:00', reminderSettings?.lunchTime || '12:00', reminderSettings?.dinnerTime || '19:00'],
     queryFn: async () => {
       const startDate = dates[0].toISOString().split('T')[0];
       const endDate = dates[6].toISOString().split('T')[0];
-      
-      const response = await API.get(`/medicines/patients/${patientId}/schedule/range`, {
-        params: { startDate, endDate, _t: Date.now() } // Cache-busting parameter
-      });
+      const response = await API.get(`/medicines/patients/${patientId}/schedule/range`, { params: { startDate, endDate, _t: Date.now() } });
       return response.data.data;
     },
   });
 
-  // Mutation for recording medicine dosage
   const recordDosageMutation = useMutation({
-    mutationFn: async ({ 
-      medicineId, 
-      date, 
-      timeSlot 
-    }: { 
-      medicineId: number; 
-      date: string; 
-      timeSlot: string; 
-    }) => {
+    mutationFn: async ({ medicineId, date, timeSlot }: { medicineId: number; date: string; timeSlot: string; }) => {
       const response = await API.post(`/medicines/dosage/${medicineId}`, {
         quantity: 1,
         notes: `Taken at ${timeSlot} on ${date}`,
@@ -174,133 +121,76 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
     },
     onSuccess: () => {
       toast.success('Medicine recorded! 💊');
-      // Invalidate all related queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['medicine-matrix', patientId] });
       queryClient.invalidateQueries({ queryKey: ['medicine-schedule'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-medicine-schedule'] });
       queryClient.invalidateQueries({ queryKey: ['medicine-stats', patientId] });
     },
     onMutate: async ({ medicineId, date, timeSlot }) => {
-      // Optimistically update the UI immediately
       const queryKey = ['medicine-matrix', patientId, selectedDate.toISOString().split('T')[0]];
       await queryClient.cancelQueries({ queryKey });
-      
       const previousData = queryClient.getQueryData(queryKey);
-      
-      // Optimistically update the data
       queryClient.setQueryData(queryKey, (old: any) => {
         if (!old) return old;
-        
         const newData = { ...old };
         if (newData.dosages) {
           newData.dosages = [...newData.dosages, {
-            id: Date.now(), // temporary ID
-            medicineId,
+            id: Date.now(), medicineId,
             takenAt: new Date(`${date}T${timeSlot.split(':')[0]}:${timeSlot.split(':')[1]}:00`),
-            quantity: 1,
-            notes: `Taken at ${timeSlot} on ${date}`
+            quantity: 1, notes: `Taken at ${timeSlot} on ${date}`
           }];
         }
         return newData;
       });
-      
       return { previousData, queryKey };
     },
-    onError: (error: any, variables, context) => {
-      // Revert optimistic update on error
-      if (context?.previousData) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
+    onError: (error: any, v, context) => {
+      if (context?.previousData) queryClient.setQueryData(context.queryKey, context.previousData);
       toast.error(error.response?.data?.message || 'Failed to record dose');
     }
   });
 
   const handleTakeDose = (medicineId: number, date: string, timeSlot: string) => {
-    // Prevent marking future medicines as taken
     const now = new Date();
     const currentDate = now.toISOString().split('T')[0];
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    
-    // Check if date is in the future
-    if (date > currentDate) {
-      toast.error('Cannot mark future medicine as taken');
-      return;
-    }
-    
-    // Check if time is in the future (only for today's medicines)
+    if (date > currentDate) { toast.error('Cannot mark future medicine as taken'); return; }
     if (date === currentDate) {
       const timeMatch = timeSlot.match(/(\d{1,2}):(\d{2})/);
       if (timeMatch) {
         const expectedHour = parseInt(timeMatch[1]);
         const expectedMinute = parseInt(timeMatch[2]);
-        
         const currentTimeMinutes = currentHour * 60 + currentMinute;
         const expectedTimeMinutes = expectedHour * 60 + expectedMinute;
-        
-        // Only allow taking medicine if it's the current time or past the expected time (with 30 min grace period)
-        if (currentTimeMinutes < expectedTimeMinutes - 30) {
-          toast.error('Cannot mark future medicine as taken');
-          return;
-        }
+        if (currentTimeMinutes < expectedTimeMinutes - 30) { toast.error('Cannot mark future medicine as taken'); return; }
       }
     }
-    
     recordDosageMutation.mutate({ medicineId, date, timeSlot });
-  };
-
-  // Check if a dose is being recorded for a specific medicine/date/time
-  const isRecordingDose = (medicineId: number, date: string, timeSlot: string) => {
-    return recordDosageMutation.isPending && 
-           recordDosageMutation.variables?.medicineId === medicineId &&
-           recordDosageMutation.variables?.date === date &&
-           recordDosageMutation.variables?.timeSlot === timeSlot;
   };
 
   const isDoseTaken = (medicineId: number, date: string, timeSlot: string) => {
     if (!medicinesData?.dosages) return false;
-    
     const targetDate = new Date(date);
-    const targetTime = timeSlot.split(':');
-    const targetHour = parseInt(targetTime[0]);
-    
+    const targetHour = parseInt(timeSlot.split(':')[0]);
     return medicinesData.dosages.some((dosage: MedicineDosage) => {
       const dosageDate = new Date(dosage.takenAt);
-      const dosageHour = dosageDate.getHours();
-      
-      return (
-        dosage.medicineId === medicineId &&
-        dosageDate.toDateString() === targetDate.toDateString() &&
-        Math.abs(dosageHour - targetHour) <= 2 // Within 2 hours
-      );
+      return dosage.medicineId === medicineId && dosageDate.toDateString() === targetDate.toDateString() && Math.abs(dosageDate.getHours() - targetHour) <= 2;
     });
   };
 
   const getActualIntakeTime = (medicineId: number, date: string, timeSlot: string) => {
     if (!medicinesData?.dosages) return null;
-    
     const targetDate = new Date(date);
-    const targetTime = timeSlot.split(':');
-    const targetHour = parseInt(targetTime[0]);
-    
+    const targetHour = parseInt(timeSlot.split(':')[0]);
     const matchingDosage = medicinesData.dosages.find((dosage: MedicineDosage) => {
       const dosageDate = new Date(dosage.takenAt);
-      const dosageHour = dosageDate.getHours();
-      
-      return (
-        dosage.medicineId === medicineId &&
-        dosageDate.toDateString() === targetDate.toDateString() &&
-        Math.abs(dosageHour - targetHour) <= 2 // Within 2 hours
-      );
+      return dosage.medicineId === medicineId && dosageDate.toDateString() === targetDate.toDateString() && Math.abs(dosageDate.getHours() - targetHour) <= 2;
     });
-    
     if (matchingDosage) {
       const intakeDate = new Date(matchingDosage.takenAt);
-      const hours = intakeDate.getHours().toString().padStart(2, '0');
-      const minutes = intakeDate.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
+      return `${intakeDate.getHours().toString().padStart(2, '0')}:${intakeDate.getMinutes().toString().padStart(2, '0')}`;
     }
-    
     return null;
   };
 
@@ -310,254 +200,140 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
     setSelectedDate(newDate);
   };
 
-  // Helper function to discontinue expired medicines
   const discontinueExpiredMedicine = async (medicineId: number) => {
     try {
-      await API.put(`/medicines/${medicineId}`, {
-        isActive: false,
-        endDate: new Date().toISOString().split('T')[0],
-        instructions: 'Medicine discontinued due to exceeding maximum duration limit (90 days)'
-      });
-      
-      toast.success('Medicine discontinued successfully');
+      await API.put(`/medicines/${medicineId}`, { isActive: false, endDate: new Date().toISOString().split('T')[0], instructions: 'Discontinued due to duration limit' });
+      toast.success('Discontinued successfully');
       queryClient.invalidateQueries({ queryKey: ['medicine-matrix', patientId] });
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to discontinue medicine');
-    }
+    } catch (error: any) { toast.error(error.response?.data?.message || 'Failed'); }
   };
 
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Loading medicine schedule...</span>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="p-12 text-center text-slate-400 font-medium animate-pulse">Scanning health matrix...</div>;
 
   if (!medicinesData?.medicines || medicinesData.medicines.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="text-center py-8">
-          <BeakerIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Medicines for This Week</h3>
-          <p className="text-gray-600">
-            You don't have any active medicines during this week. 
-            Try navigating to a different week or check your medicine history.
-          </p>
+      <div className="p-20 text-center space-y-6">
+        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100 shadow-sm">
+          <BeakerIcon className="h-8 w-8 text-slate-300" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">No Active Prescriptions</h3>
+          <p className="text-slate-400 font-medium text-sm">Your medicine schedule is currently empty for this period.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 p-6 transition-all duration-300 hover:shadow-md animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-2 rounded-lg bg-blue-50 mr-2">
-            <BeakerIcon className="h-6 w-6 text-blue-600 transition-transform duration-300 group-hover:rotate-6" />
+    <div className="w-full">
+      {/* ═══ Header ═══ */}
+      <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-px h-8 bg-indigo-500/30" />
+          <div>
+            <h3 className="text-lg font-black text-slate-900 tracking-tight">Weekly Logistics</h3>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{dates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} — {dates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 tracking-tight">Medicine Tracker</h3>
-          {(reminderSettings?.enabled || false) && (
-            <div className="ml-3 flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs rounded-full">
-              <BellIcon className="h-3 w-3 mr-1" />
-              Custom Times
-            </div>
-          )}
         </div>
-        
-        <div className="flex items-center space-x-4">
-          {/* Reminder Settings Button */}
-          <button
-            onClick={() => {
-              setShowReminderSettings(true);
-            }}
-            className="flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-          >
-            <BellIcon className="h-4 w-4 mr-1" />
-            Set Reminders
+
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowReminderSettings(true)}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+            <BellIcon className="h-3.5 w-3.5" /> Reminders
           </button>
           
-          {/* Week Navigation */}
-          <div className="flex items-center space-x-2">
-          <button
-            onClick={() => navigateWeek('prev')}
-            className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
-          >
-            <ChevronLeftIcon className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-medium text-gray-700 min-w-[120px] text-center">
-            {dates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {dates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-          <button
-            onClick={() => navigateWeek('next')}
-            className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
-          >
-            <ChevronRightIcon className="h-4 w-4" />
-          </button>
+          <div className="h-4 w-px bg-slate-100 mx-2" />
+
+          <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
+            <button onClick={() => navigateWeek('prev')} className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 hover:text-slate-900">
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            <button onClick={() => navigateWeek('next')} className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 hover:text-slate-900">
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Matrix Table */}
+      {/* ═══ The Matrix ═══ */}
       <div className="overflow-x-auto">
-        <table className="min-w-full">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-2 font-medium text-gray-700">Medicine</th>
-              {dates.map((date, index) => (
-                <th key={index} className={`text-center py-3 px-2 font-medium min-w-[100px] transition-all duration-300 ${date.toDateString() === new Date().toDateString() ? 'text-blue-700' : 'text-gray-700'}`} style={{ animationDelay: `${index * 60}ms` }}>
-                  <div className={`text-sm ${date.toDateString() === new Date().toDateString() ? 'animate-pulse-slow' : ''}`}>
+            <tr className="bg-slate-50/50">
+              <th className="text-left py-4 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 min-w-[240px]">Medicine Information</th>
+              {dates.map((date, i) => (
+                <th key={i} className={`py-4 px-4 text-center min-w-[120px] ${date.toDateString() === new Date().toDateString() ? 'relative' : ''}`}>
+                  <div className={`text-[10px] font-black uppercase tracking-widest ${date.toDateString() === new Date().toDateString() ? 'text-indigo-600' : 'text-slate-400'}`}>
                     {date.toLocaleDateString('en-US', { weekday: 'short' })}
                   </div>
-                  <div className={`text-xs ${date.toDateString() === new Date().toDateString() ? 'text-blue-600' : 'text-gray-500'}`}>
+                  <div className={`text-xs font-black mt-0.5 ${date.toDateString() === new Date().toDateString() ? 'text-indigo-900' : 'text-slate-900'}`}>
                     {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
+                  {date.toDateString() === new Date().toDateString() && (
+                    <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-indigo-500 rounded-full" />
+                  )}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
-            {medicinesData.medicines.map((medicine: Medicine, rowIndex: number) => (
-              <tr key={medicine.id} className="border-b border-gray-100 animate-slide-up" style={{ animationDelay: `${rowIndex * 80}ms` }}>
-                <td className="py-4 px-2">
-                  <div>
-                    <div className="font-medium text-gray-900 flex items-center">
-                      {medicine.name}
-                      {(() => {
-                        // Show warning for medicines without end date that are approaching limit
-                        if (!medicine.endDate) {
-                          const daysSinceStart = Math.floor((new Date().getTime() - new Date(medicine.startDate).getTime()) / (1000 * 60 * 60 * 24));
-                          const maxDuration = 90;
-                          if (daysSinceStart > maxDuration - 7) { // Warning 7 days before limit
-                            return (
-                              <div className="ml-2 flex items-center gap-2">
-                                <span className="px-2 py-1 text-xs bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-full">
-                                  {daysSinceStart >= maxDuration ? 'Expired' : `${maxDuration - daysSinceStart} days left`}
-                                </span>
-                                {daysSinceStart >= maxDuration && (
-                                  <button
-                                    onClick={() => discontinueExpiredMedicine(medicine.id)}
-                                    className="px-2 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded-full hover:bg-red-100 transition-colors"
-                                  >
-                                    Discontinue
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          }
-                        }
-                        return null;
-                      })()}
-                    </div>
-                    <div className="text-sm text-gray-600">{medicine.dosage}</div>
-                    <div className="text-xs text-gray-500">{medicine.frequency}</div>
-                    {medicine.endDate && (
-                      <div className="text-xs text-gray-400">
-                        Until {new Date(medicine.endDate).toLocaleDateString()}
-                      </div>
+          <tbody className="divide-y divide-slate-50">
+            {medicinesData.medicines.map((medicine: Medicine, i: number) => (
+              <tr key={medicine.id} className="group hover:bg-slate-50/30 transition-colors">
+                <td className="py-6 px-8 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-slate-900 tracking-tight">{medicine.name}</span>
+                    {!medicine.endDate && Math.floor((new Date().getTime() - new Date(medicine.startDate).getTime()) / 86400000) > 83 && (
+                      <span className="px-2 py-0.5 bg-rose-50 text-rose-600 text-[9px] font-black uppercase rounded-md border border-rose-100 animate-pulse">Expiring</span>
                     )}
                   </div>
+                  <div className="text-xs font-bold text-slate-400 flex flex-col gap-0.5">
+                    <span>{medicine.dosage}</span>
+                    <span className="text-[10px] opacity-70 italic">{medicine.frequency}</span>
+                  </div>
                 </td>
-                {dates.map((date, dateIndex) => {
-                  // Check if medicine was active on this date
-                  const isMedicineActiveOnDate = () => {
-                    const checkDate = new Date(date);
-                    const medicineStartDate = new Date(medicine.startDate);
-                    const medicineEndDate = medicine.endDate ? new Date(medicine.endDate) : null;
-                    
-                    // Medicine is active if:
-                    // 1. It started on or before the check date
-                    // 2. It either has no end date OR ends on or after the check date
-                    // 3. For medicines with no end date, limit to reasonable duration (e.g., 90 days)
-                    const isStarted = checkDate >= medicineStartDate;
-                    const isNotExpired = !medicineEndDate || checkDate <= medicineEndDate;
-                    
-                    // For medicines with no end date, limit to 90 days from start date
-                    const maxDuration = 90; // days
-                    const daysSinceStart = Math.floor((checkDate.getTime() - medicineStartDate.getTime()) / (1000 * 60 * 60 * 24));
-                    const withinMaxDuration = !medicineEndDate ? daysSinceStart <= maxDuration : true;
-                    
-                    return isStarted && isNotExpired && withinMaxDuration;
-                  };
-                  
-                  const wasActive = isMedicineActiveOnDate();
-                  
+                {dates.map((date, di) => {
+                  const checkDate = new Date(date);
+                  const sDate = new Date(medicine.startDate);
+                  const eDate = medicine.endDate ? new Date(medicine.endDate) : null;
+                  const wasActive = checkDate >= sDate && (!eDate || checkDate <= eDate) && (!eDate ? Math.floor((checkDate.getTime() - sDate.getTime()) / 86400000) <= 90 : true);
+
                   return (
-                    <td key={dateIndex} className={`py-4 px-2 text-center ${date.toDateString() === new Date().toDateString() ? 'bg-blue-50/40' : ''}`}>
+                    <td key={di} className={`py-6 px-2 text-center ${date.toDateString() === new Date().toDateString() ? 'bg-indigo-50/10' : ''}`}>
                       {wasActive ? (
-                        <div className="space-y-1">
-                          {generateCustomTimeSlots(medicine).map((timeSlot: TimeSlot, timeIndex: number) => {
-                            const isTaken = isDoseTaken(medicine.id, date.toISOString().split('T')[0], timeSlot.time);
-                            const actualIntakeTime = getActualIntakeTime(medicine.id, date.toISOString().split('T')[0], timeSlot.time);
+                        <div className="flex flex-col gap-2 px-2">
+                          {generateCustomTimeSlots(medicine).map((slot: TimeSlot, si: number) => {
+                            const taken = isDoseTaken(medicine.id, date.toISOString().split('T')[0], slot.time);
+                            const actualTime = getActualIntakeTime(medicine.id, date.toISOString().split('T')[0], slot.time);
                             const isToday = date.toDateString() === new Date().toDateString();
                             const isPast = date < new Date() && !isToday;
                             const isFuture = date > new Date();
-                            const isRecording = isRecordingDose(medicine.id, date.toISOString().split('T')[0], timeSlot.time);
                             
-                            // Check if time is in the future (for today's medicines)
                             let isFutureTime = false;
                             if (isToday) {
-                              const now = new Date();
-                              const currentHour = now.getHours();
-                              const currentMinute = now.getMinutes();
-                              const timeMatch = timeSlot.time.match(/(\d{1,2}):(\d{2})/);
-                              
-                              if (timeMatch) {
-                                const expectedHour = parseInt(timeMatch[1]);
-                                const expectedMinute = parseInt(timeMatch[2]);
-                                const currentTimeMinutes = currentHour * 60 + currentMinute;
-                                const expectedTimeMinutes = expectedHour * 60 + expectedMinute;
-                                isFutureTime = currentTimeMinutes < expectedTimeMinutes - 30;
-                              }
+                              const n = new Date();
+                              const tMatch = slot.time.match(/(\d{1,2}):(\d{2})/);
+                              if (tMatch) isFutureTime = (n.getHours() * 60 + n.getMinutes()) < (parseInt(tMatch[1]) * 60 + parseInt(tMatch[2]) - 30);
                             }
-                            
+
                             return (
-                              <button
-                                key={timeIndex}
-                                onClick={() => {
-                                  if (!isTaken && !isPast && !isFuture && !isFutureTime && !isRecording) {
-                                    handleTakeDose(medicine.id, date.toISOString().split('T')[0], timeSlot.time);
-                                  }
-                                }}
-                                disabled={isTaken || isPast || isFuture || isFutureTime}
-                                className={`w-full p-1 rounded text-xs font-medium transition-all duration-300 ${
-                                  isTaken
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
-                                    : isPast
-                                    ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
-                                    : isFuture
-                                    ? 'bg-orange-50 text-orange-600 border border-orange-200 cursor-not-allowed opacity-60'
-                                    : isFutureTime
-                                    ? 'bg-yellow-50 text-yellow-600 border border-yellow-200 cursor-not-allowed opacity-60'
-                                    : isToday
-                                    ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100.5'
-                                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100.5'
-                                }`}
-                                style={{ animation: 'fadeIn 0.35s ease-out', animationDelay: `${timeIndex * 70}ms` }}
-                              >
-                                <div className="flex items-center justify-center">
-                                  {isTaken ? (
-                                    <CheckCircleIconSolid className="h-3 w-3 mr-1" />
-                                  ) : (
-                                    <ClockIcon className="h-3 w-3 mr-1" />
-                                  )}
-                                  <span>{timeSlot.label}</span>
-                                </div>
-                                <div className="text-xs opacity-75">
-                                  {isTaken && actualIntakeTime ? actualIntakeTime : timeSlot.time}
+                              <button key={si} disabled={taken || isPast || isFuture || isFutureTime}
+                                onClick={() => handleTakeDose(medicine.id, date.toISOString().split('T')[0], slot.time)}
+                                className={`w-full py-1.5 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                                  taken ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm' :
+                                  isPast ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-40' :
+                                  (isFuture || isFutureTime) ? 'bg-amber-50/30 text-amber-500/50 border-amber-100/50 cursor-not-allowed' :
+                                  'bg-white text-indigo-600 border-slate-200 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 active:scale-95'
+                                }`}>
+                                <div className="flex flex-col">
+                                  <span>{slot.label}</span>
+                                  <span className="opacity-60 text-[8px] tracking-normal mt-0.5">{taken && actualTime ? actualTime : slot.time}</span>
                                 </div>
                               </button>
                             );
                           })}
                         </div>
                       ) : (
-                        <div className="text-gray-300 text-xs">
-                          -
-                        </div>
+                        <div className="text-slate-100 font-bold">—</div>
                       )}
                     </td>
                   );
@@ -568,25 +344,20 @@ const MedicineMatrix: React.FC<MedicineMatrixProps> = ({ patientId }) => {
         </table>
       </div>
 
-
-      {/* Reminder Settings Modal */}
-      {showReminderSettings && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity duration-300"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowReminderSettings(false);
-            }
-          }}
-        >
-          <MedicineReminderSettings
-            patientId={patientId}
-            onClose={() => {
-              setShowReminderSettings(false);
-            }}
-          />
-        </div>
-      )}
+      {/* ═══ Modal ═══ */}
+      <AnimatePresence>
+        {showReminderSettings && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4"
+            onClick={() => setShowReminderSettings(false)}>
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="bg-white rounded-[32px] p-2 border border-white/20 shadow-2xl overflow-hidden"
+              onClick={e => e.stopPropagation()}>
+              <MedicineReminderSettings patientId={patientId} onClose={() => setShowReminderSettings(false)} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
