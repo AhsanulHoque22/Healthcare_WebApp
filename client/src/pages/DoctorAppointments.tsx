@@ -459,25 +459,23 @@ Do you want to proceed?`;
         
         {/* ═══ PREMIUM HEADER ═══ */}
         <Reveal>
-          <div className="relative overflow-hidden rounded-[32px] bg-slate-900 p-8 md:p-12 text-white shadow-2xl shadow-slate-200/50">
-            <div className="absolute top-0 right-0 w-1/2 h-full">
-              <div className="absolute inset-0 bg-gradient-to-l from-indigo-500/20 via-transparent to-transparent opacity-60" />
-              <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-indigo-400/20 rounded-full blur-[80px]" />
+          <div className="relative overflow-hidden rounded-[32px] bg-slate-900 px-8 py-12 md:px-14 text-white shadow-2xl group">
+            <div className="absolute top-0 right-0 w-1/3 h-full">
+              <div className="absolute inset-0 bg-gradient-to-l from-indigo-500/10 via-transparent to-transparent" />
+              <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-indigo-400/10 rounded-full blur-[80px]" />
             </div>
             
-            <div className="relative z-10 md:flex items-center justify-between gap-10">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
               <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                  Clinical Care
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">Clinical Operations</span>
+                  <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-400/20">Doctor Portal</span>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1]">
-                  Appointment<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift italic pr-2">
-                    Management
-                  </span>.
+                  Appointment <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift italic">Management.</span>
                 </h1>
-                <p className="text-slate-400 font-medium max-w-lg text-lg">
+                <p className="text-slate-400 font-medium max-w-xl text-lg">
                   Review and manage patient requests with high-fidelity clinical oversight and predictive insights.
                 </p>
               </div>
@@ -526,109 +524,85 @@ Do you want to proceed?`;
         </div>
 
         {/* ═══ FILTERS & SEARCH ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Search Card */}
-          <Reveal className="lg:col-span-2">
-            <div className="premium-card bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm h-full flex flex-col justify-center space-y-6">
-              <div className="flex items-center gap-4 px-2">
-                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Quick Search</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Identify patients instantly</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Search name, email, or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-10 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-slate-900 placeholder:text-slate-400 font-medium transition-all group-hover:bg-white group-hover:shadow-md"
-                  />
-                  <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-600" />
-                  {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="relative group">
-                  <input
-                    type="date"
-                    value={searchDate}
-                    onChange={(e) => setSearchDate(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 text-slate-900 font-medium transition-all group-hover:bg-white group-hover:shadow-md"
-                  />
-                  <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-600" />
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* Status Filter Card */}
-          <Reveal delay={0.2}>
-            <div className="premium-card bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm h-full flex flex-col justify-center space-y-6">
-              <div className="flex items-center gap-4 px-2">
-                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
-                  <FunnelIcon className="h-5 w-5 text-violet-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Status Filter</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Streamline your workflow</p>
-                </div>
-              </div>
-
-              <select
-                value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-violet-500/20 text-slate-900 font-bold appearance-none cursor-pointer hover:bg-white hover:shadow-md transition-all"
-              >
-                <option value="all">All Appointments</option>
-                <option value="requested">Requested (Pending)</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* ═══ APPOINTMENTS LIST ═══ */}
-        <div className="space-y-6">
-          <Reveal>
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                Live Schedule
-                <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] uppercase font-black tracking-widest border border-indigo-100">
+        <Reveal delay={0.1}>
+          <div className="bg-white rounded-[24px] border border-slate-100 p-2 shadow-sm flex flex-col lg:flex-row items-center gap-2">
+            <div className="w-full lg:w-auto p-4 lg:px-6 lg:border-r border-slate-100 flex items-center gap-3 shrink-0">
+              <FunnelIcon className="h-5 w-5 text-indigo-600" />
+              <span className="font-black text-xs text-slate-900 uppercase tracking-widest">Filter Matrix</span>
+              {filteredAppointments.length > 0 && (
+                <span className="ml-2 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black">
                   {filteredAppointments.length} Found
                 </span>
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Real-time Sync
+              )}
+            </div>
+
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-2 px-2">
+              <div className="relative group">
+                <input
+                  type="text"
+                  placeholder="Search Patient..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 text-slate-900 text-xs font-bold rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition-all"
+                />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600" />
+              </div>
+
+              <div className="relative">
+                <select 
+                  value={selectedFilter} 
+                  onChange={(e) => setSelectedFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-slate-900 text-xs font-bold px-5 py-4 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all appearance-none outline-none cursor-pointer"
+                >
+                  <option value="all">Any Status</option>
+                  <option value="requested">Requested</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
+
+              <div className="relative group">
+                <input
+                  type="date"
+                  value={searchDate}
+                  onChange={(e) => setSearchDate(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 text-slate-900 text-xs font-bold rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition-all"
+                />
+                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600" />
+              </div>
             </div>
-          </Reveal>
-        <div className="grid grid-cols-1 gap-6">
+            
+            {(searchTerm || selectedFilter !== 'all' || searchDate) && (
+              <button 
+                onClick={() => { setSearchTerm(''); setSelectedFilter('all'); setSearchDate(''); }}
+                className="lg:mr-2 px-5 py-4 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all shrink-0"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </Reveal>
+
+        {/* ═══ APPOINTMENTS LIST ═══ */}
+        <div className="space-y-4">
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-white/50 animate-pulse rounded-[32px] border border-slate-100" />
+                <div key={i} className="h-28 bg-white animate-pulse rounded-[24px] border border-slate-100" />
               ))}
             </div>
           ) : filteredAppointments.length === 0 ? (
-            <Reveal>
+            <Reveal delay={0.2}>
               <div className="bg-white rounded-[32px] border border-slate-100 p-20 text-center shadow-sm">
-                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <CalendarIcon className="h-10 w-10 text-slate-300" />
+                <div className="w-24 h-24 bg-indigo-50 rounded-3xl mx-auto flex items-center justify-center mb-6">
+                  <CalendarIcon className="h-10 w-10 text-indigo-500" />
                 </div>
                 <h4 className="text-2xl font-black text-slate-900 mb-2">No Appointments</h4>
                 <p className="text-slate-400 font-medium max-w-sm mx-auto">
@@ -645,167 +619,147 @@ Do you want to proceed?`;
               </div>
             </Reveal>
           ) : (
-            <AnimatePresence mode="popLayout">
-              {filteredAppointments.map((apt, i) => (
-                <Reveal key={apt.id} delay={i * 0.05}>
-                  <div className="premium-card bg-white p-6 md:p-8 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 group transition-all duration-500 overflow-hidden relative">
-                    {/* Status accent bar */}
-                    <div className={`absolute top-0 left-0 w-2 h-full ${
-                      apt.status === 'completed' ? 'bg-emerald-500' :
-                      apt.status === 'in_progress' ? 'bg-violet-500' :
-                      apt.status === 'requested' ? 'bg-amber-500' :
-                      apt.status === 'scheduled' ? 'bg-blue-500' :
-                      'bg-slate-200'
-                    } opacity-80`} />
+            <div className="grid grid-cols-1 gap-4">
+              {filteredAppointments.map((apt, i) => {
+                const isPast = ['completed', 'cancelled'].includes(apt.status);
+                const sColor = 
+                  apt.status === 'requested' ? 'amber' :
+                  apt.status === 'scheduled' ? 'blue' :
+                  apt.status === 'confirmed' ? 'emerald' :
+                  apt.status === 'in_progress' ? 'violet' :
+                  apt.status === 'completed' ? 'slate' : 'rose';
 
-                    <div className="md:flex items-center justify-between gap-8">
-                      {/* Patient Profile Section */}
-                      <div className="flex items-center gap-6 flex-1">
-                        <div className="relative">
-                          <div className="w-20 h-20 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-2xl text-indigo-600 group-hover:bg-indigo-50 transition-colors shadow-inner overflow-hidden">
-                            {apt.patient?.user?.firstName?.[0]}{apt.patient?.user?.lastName?.[0]}
-                          </div>
-                          <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-lg border-2 border-white flex items-center justify-center ${
-                            apt.type === 'telemedicine' ? 'bg-blue-500' : 'bg-emerald-500'
-                          }`}>
-                            {apt.type === 'telemedicine' ? (
-                              <VideoCameraIcon className="h-3 w-3 text-white" />
-                            ) : (
-                              <UserIcon className="h-3 w-3 text-white" />
-                            )}
-                          </div>
+                return (
+                  <Reveal key={apt.id} delay={0.15 + (i * 0.05)}>
+                    <div className="bg-white rounded-[24px] border border-slate-100 p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 group relative">
+                      
+                      <div className="flex gap-6 items-start md:items-center w-full md:w-auto">
+                        <div className={`w-16 h-16 shrink-0 rounded-[20px] flex flex-col items-center justify-center bg-${isPast ? 'slate' : 'indigo'}-50 border border-${isPast ? 'slate' : 'indigo'}-100 transition-colors group-hover:bg-indigo-100/50`}>
+                          <span className={`text-[10px] font-black uppercase tracking-widest text-${isPast ? 'slate' : 'indigo'}-400 mb-0.5`}>
+                            {new Date(apt.appointmentDate).toLocaleDateString(undefined, { month: 'short' })}
+                          </span>
+                          <span className={`text-2xl font-black text-${isPast ? 'slate' : 'indigo'}-600 leading-none`}>
+                            {new Date(apt.appointmentDate).getDate()}
+                          </span>
                         </div>
-
-                        <div className="space-y-1">
+                        
+                        <div className="space-y-2 flex-col">
                           <div className="flex items-center gap-3">
-                            <h4 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            <h4 className="text-lg font-black text-slate-900 tracking-tight leading-none group-hover:text-indigo-600 transition-colors">
                               {apt.patient?.user?.firstName} {apt.patient?.user?.lastName}
                             </h4>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-                              #{apt.serialNumber}
-                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">#{apt.serialNumber}</span>
                           </div>
-                          
-                          <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">
-                              <CalendarIcon className="h-3.5 w-3.5" />
-                              {new Date(apt.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg">
-                              <ClockIcon className="h-3.5 w-3.5" />
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
+                            <span className="flex items-center text-[10px] font-bold text-slate-400 tracking-wider">
+                              <ClockIcon className="h-3.5 w-3.5 mr-1" />
                               {apt.appointmentTime}
-                            </div>
+                            </span>
+                            <span className="flex items-center text-[10px] font-bold text-slate-400 tracking-wider capitalize">
+                              <VideoCameraIcon className="h-3.5 w-3.5 mr-1" />
+                              {apt.type?.replace('_', ' ')}
+                            </span>
                             {apt.chamber && (
-                              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100/50">
-                                <MapPinIcon className="h-3.5 w-3.5" />
+                              <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100/50">
+                                <MapPinIcon className="h-3.5 w-3.5 mr-1" />
                                 {apt.chamber}
-                              </div>
+                              </span>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      {/* Status and Action Buttons */}
-                      <div className="mt-6 md:mt-0 flex items-center gap-4">
-                        <div className="hidden sm:block text-right pr-4 border-r border-slate-100 py-1">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                          <span className={`text-xs font-black uppercase tracking-widest ${
-                            apt.status === 'completed' ? 'text-emerald-500' :
-                            apt.status === 'in_progress' ? 'text-violet-500 animate-pulse' :
-                            apt.status === 'requested' ? 'text-amber-500' :
-                            apt.status === 'scheduled' ? 'text-blue-500' :
-                            'text-slate-400'
-                          }`}>
-                            {apt.status?.replace('_', ' ')}
-                          </span>
-                        </div>
-
+                      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto pl-[88px] md:pl-0">
+                        <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-${sColor}-50 text-${sColor}-600 border border-${sColor}-100`}>
+                          {apt.status?.replace('_', ' ')}
+                        </span>
+                        
                         <div className="flex items-center gap-2">
-                          <MagneticButton 
+                          <button 
                             onClick={() => handleViewDetails(apt)}
-                            className="p-3 rounded-2xl bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-slate-100 hover:border-indigo-200 shadow-sm"
-                            title="Patient History & Details"
+                            className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-indigo-50 border border-slate-100 text-slate-400 hover:text-indigo-600 transition-all hover:scale-110 shadow-sm"
+                            title="Patient History"
                           >
-                            <EyeIcon className="h-5 w-5" />
-                          </MagneticButton>
+                            <EyeIcon className="h-4 w-4" />
+                          </button>
 
                           {apt.status === 'requested' && (
-                            <>
-                              <MagneticButton 
+                            <div className="flex items-center gap-2">
+                              <button 
                                 onClick={() => handleApprove(apt.id)}
-                                className="px-5 py-3 rounded-2xl bg-emerald-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all active:scale-95"
+                                className="h-10 px-4 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all active:scale-95"
                               >
                                 Approve
-                              </MagneticButton>
-                              <MagneticButton 
+                              </button>
+                              <button 
                                 onClick={() => openRescheduleModal(apt)}
-                                className="p-3 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all border border-blue-100"
+                                className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center hover:bg-blue-100 border border-blue-100 text-blue-600 transition-all hover:scale-110"
+                                title="Reschedule"
                               >
-                                <ClockIcon className="h-5 w-5" />
-                              </MagneticButton>
-                              <MagneticButton 
+                                <ClockIcon className="h-4 w-4" />
+                              </button>
+                              <button 
                                 onClick={() => handleDecline(apt.id)}
-                                className="p-3 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all border border-rose-100"
+                                className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center hover:bg-rose-100 border border-rose-100 text-rose-600 transition-all hover:scale-110"
+                                title="Decline"
                               >
-                                <XMarkIcon className="h-5 w-5" />
-                              </MagneticButton>
-                            </>
+                                <XMarkIcon className="h-4 w-4" />
+                              </button>
+                            </div>
                           )}
 
                           {(apt.status === 'scheduled' || apt.status === 'confirmed') && (
-                            <MagneticButton 
+                            <button 
                               onClick={() => handleStartAppointment(apt.id)}
-                              className="px-6 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2 h-11"
+                              className="h-10 px-5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2 active:scale-95"
                             >
-                              <PlayIcon className="h-4 w-4" /> Start Session
-                            </MagneticButton>
+                              <PlayIcon className="h-4 w-4" /> Start
+                            </button>
                           )}
 
                           {apt.status === 'in_progress' && (
-                            <MagneticButton 
+                            <button 
                               onClick={() => {
                                 setSelectedAppointmentForPrescription(apt);
                                 setShowPrescriptionModal(true);
                               }}
-                              className="px-6 py-3 rounded-2xl bg-violet-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-violet-200 hover:bg-violet-700 transition-all flex items-center gap-2 h-11"
+                              className="h-10 px-5 bg-violet-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-violet-100 hover:bg-violet-700 transition-all flex items-center gap-2 active:scale-95"
                             >
                               <DocumentTextIcon className="h-4 w-4" /> Prescription
-                            </MagneticButton>
+                            </button>
                           )}
 
                           {apt.type === 'telemedicine' && (apt.status === 'confirmed' || apt.status === 'in_progress') && (
-                            <MagneticButton 
+                            <button 
                               onClick={() => {
                                 setSelectedAppointmentForPrescription(apt);
                                 setShowPrescriptionModal(true);
                                 setShowVideoInPrescription(true);
                               }}
-                              className="p-3 rounded-2xl bg-cyan-50 text-cyan-600 hover:bg-cyan-100 transition-all border border-cyan-100"
-                              title="Launch Video Call"
+                              className="h-10 px-4 bg-cyan-50 text-cyan-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-cyan-100 transition-all border border-cyan-100"
                             >
-                              <VideoCameraIcon className="h-5 w-5" />
-                            </MagneticButton>
+                              <VideoCameraIcon className="h-4 w-4" /> Video
+                            </button>
                           )}
 
                           {(apt.status === 'in_progress' || apt.status === 'confirmed') && (
-                            <MagneticButton 
+                            <button 
                               onClick={() => handleComplete(apt.id)}
-                              className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-100"
-                              title="Finalize & Complete"
+                              className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 border border-emerald-100 text-emerald-600 transition-all hover:scale-110"
+                              title="Complete"
                             >
-                              <CheckCircleIcon className="h-5 w-5" />
-                            </MagneticButton>
+                              <CheckCircleIcon className="h-4 w-4" />
+                            </button>
                           )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Reveal>
-              ))}
-            </AnimatePresence>
+                  </Reveal>
+                );
+              })}
+            </div>
           )}
         </div>
-      </div>
         </div>
 
         {/* ═══ PATIENT DETAILS MODAL ═══ */}
