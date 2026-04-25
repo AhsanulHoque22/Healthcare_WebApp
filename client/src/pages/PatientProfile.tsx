@@ -787,13 +787,13 @@ const PatientProfile: React.FC = () => {
                           if (assessmentStatus?.canTakeAssessment) {
                             setIsAssessmentOpen(true);
                           } else {
-                            toast(\`Next assessment available in \${assessmentStatus?.daysUntilNext || 7} days.\`, { icon: '⏳' });
+                            toast(`Next assessment available in ${assessmentStatus?.daysUntilNext || 7} days.`, { icon: '⏳' });
                           }
                         }}
-                        className={\`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 \${assessmentStatus?.canTakeAssessment ? 'bg-teal-500 text-white hover:bg-teal-400 ring-2 ring-teal-500/50 ring-offset-1 ring-offset-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700'}\`}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 ${assessmentStatus?.canTakeAssessment ? 'bg-teal-500 text-white hover:bg-teal-400 ring-2 ring-teal-500/50 ring-offset-1 ring-offset-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}
                       >
                         <SparklesIcon className="h-4 w-4" />
-                        {assessmentStatus?.canTakeAssessment ? 'Take Weekly Assesssment' : \`Available in \${assessmentStatus?.daysUntilNext} day(s)\`}
+                        {assessmentStatus?.canTakeAssessment ? 'Take Weekly Assesssment' : `Available in ${assessmentStatus?.daysUntilNext} day(s)`}
                       </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">

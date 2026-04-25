@@ -158,7 +158,7 @@ export default function WeeklyLifestyleAssessment({ isOpen, onClose, patientId, 
           <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-500 ease-out"
-              style={{ width: \`\${progress}%\` }}
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
           <p className="text-center text-xs text-gray-400 font-bold uppercase mt-2 tracking-widest">
@@ -177,7 +177,7 @@ export default function WeeklyLifestyleAssessment({ isOpen, onClose, patientId, 
       <div className="flex-1 overflow-hidden relative flex items-center justify-center p-6">
         
         {currentIdx < QUESTIONS.length ? (
-          <div className={\`w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100 transition-all duration-300 transform \${animationClass}\`}>
+          <div className={`w-full max-w-2xl bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100 transition-all duration-300 transform ${animationClass}`}>
             
             <div className="mb-8">
               <span className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">
@@ -198,11 +198,11 @@ export default function WeeklyLifestyleAssessment({ isOpen, onClose, patientId, 
                     <button
                       key={i}
                       onClick={() => handleAnswer(opt)}
-                      className={\`text-left px-6 py-4 rounded-2xl border-2 transition-all duration-200 font-medium text-lg
-                        \${answers[currentQ.id] === opt 
+                      className={`text-left px-6 py-4 rounded-2xl border-2 transition-all duration-200 font-medium text-lg
+                        ${answers[currentQ.id] === opt 
                           ? 'border-teal-500 bg-teal-50 text-teal-800 shadow-md ring-4 ring-teal-500/10' 
                           : 'border-gray-100 hover:border-teal-200 hover:bg-slate-50 text-gray-700'
-                        }\`}
+                        }`}
                     >
                       {opt}
                     </button>
@@ -285,7 +285,7 @@ export default function WeeklyLifestyleAssessment({ isOpen, onClose, patientId, 
             </div>
           </div>
         ) : (
-          <div className={\`w-full max-w-lg bg-white rounded-3xl shadow-xl p-12 text-center border border-gray-100 transition-all duration-300 transform \${animationClass}\`}>
+          <div className={`w-full max-w-lg bg-white rounded-3xl shadow-xl p-12 text-center border border-gray-100 transition-all duration-300 transform ${animationClass}`}>
             <div className="mx-auto w-24 h-24 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-teal-200">
               <CheckCircleIcon className="h-12 w-12 text-white" />
             </div>
