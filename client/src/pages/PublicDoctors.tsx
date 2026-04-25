@@ -161,7 +161,7 @@ const PublicDoctors: React.FC = () => {
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">
                   Connect With <br className="hidden md:block"/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift italic pr-2">
                     Elite Specialists
                   </span>.
                 </h1>
