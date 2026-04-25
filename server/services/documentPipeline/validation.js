@@ -2,7 +2,7 @@
  * Stage: Strict Validation Engine
  * Cross validates numbers with dictionary logical ranges and calculates status mapping.
  */
-const { MED_KNOWLEDGE } = require('./normalization');
+const { MED_KNOWLEDGE, normalizeUnits } = require('./normalization');
 
 function normalizeAndValidate(parsedData) {
    const validated = JSON.parse(JSON.stringify(parsedData));
@@ -12,31 +12,33 @@ function normalizeAndValidate(parsedData) {
    validated.labResults = validated.labResults.map(lab => {
       let isFlagged = false;
       let flagReason = null;
-      let calculatedStatus = 'NORMAL';
+      let calculatedStatus = lab.status || 'unknown';
       
       const reference = MED_KNOWLEDGE[lab.test];
 
       // A. Pure numeric validation
-      if (typeof lab.value !== 'number' || isNaN(lab.value) || lab.value < 0) {
-         isFlagged = true;
-         flagReason = "Invalid numeric lab result format.";
-         validationFailures += 2;
+      if (typeof lab.value !== 'number' || isNaN(lab.value)) {
+         // It might be a text result. Preserve LLM extracted status without penalty.
       } else if (reference) {
-         // B. Range Validation
-         if (lab.value < reference.critMin || lab.value > reference.critMax) {
-             isFlagged = true;
-             calculatedStatus = 'CRITICAL';
-             flagReason = `Clinically impossible or critical boundary for ${lab.test}. Expected inside [${reference.critMin}, ${reference.critMax}]`;
-             validationFailures++;
-         } else if (lab.value < reference.min) {
-             calculatedStatus = 'LOW';
-         } else if (lab.value > reference.max) {
-             calculatedStatus = 'HIGH';
-         }
+         const normLabUnit = lab.unit ? normalizeUnits(lab.unit) : 'unknown';
+         const unitMatches = !lab.unit || normLabUnit === 'unknown' || String(normLabUnit).toLowerCase() === String(reference.stdUnit).toLowerCase();
          
-         // C. Unit Consistency
-         if (lab.unit && lab.unit !== reference.stdUnit && lab.unit !== 'unknown') {
-             // In severe unit mismatches not fixed by conversion Engine, flag
+         if (unitMatches) {
+             // B. Range Validation
+             if (lab.value < reference.critMin || lab.value > reference.critMax) {
+                 isFlagged = true;
+                 calculatedStatus = 'CRITICAL';
+                 flagReason = `Clinically impossible or critical boundary for ${lab.test}. Expected inside [${reference.critMin}, ${reference.critMax}]`;
+                 validationFailures++;
+             } else if (lab.value < reference.min) {
+                 calculatedStatus = 'LOW';
+             } else if (lab.value > reference.max) {
+                 calculatedStatus = 'HIGH';
+             } else {
+                 calculatedStatus = 'NORMAL';
+             }
+         } else {
+             // C. Unit Consistency
              isFlagged = true;
              flagReason = `Unit consistency mismatch. Expected ${reference.stdUnit}, got ${lab.unit}`;
              validationFailures++;

@@ -28,7 +28,9 @@ const UNIT_MAP = {
   'cells/mcl': '/µL',
   '10^3/ul': 'k/µL',
   'iu/l': 'IU/L',
-  'meq/l': 'mEq/L'
+  'meq/l': 'mEq/L',
+  '/cmm': '/µL',
+  'million/cmm': 'mil/µL'
 };
 
 const FREQUENCY_DICTIONARY = {

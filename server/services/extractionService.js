@@ -95,10 +95,19 @@ function normalizeExtractedDocument(data, metadata = {}) {
     analyzedAt: metadata.analyzedAt || new Date().toISOString()
   };
 
+  const parseNumericValue = (val) => {
+    if (val == null) return NaN;
+    if (typeof val === 'number') return val;
+    const cleaned = String(val).replace(/,/g, '');
+    const match = cleaned.match(/[-+]?[0-9]*\.?[0-9]+/);
+    if (match) return Number.parseFloat(match[0]);
+    return NaN;
+  };
+
   const validatedLabs = normalizeAndValidate({
     labResults: normalized.labResults.map((labResult) => ({
       ...labResult,
-      value: Number.parseFloat(labResult.value)
+      value: parseNumericValue(labResult.value)
     })),
     diagnoses: normalized.diagnoses,
     medications: normalized.medications,
@@ -111,7 +120,7 @@ function normalizeExtractedDocument(data, metadata = {}) {
       return labResult;
     }
 
-    if (Number.isNaN(Number.parseFloat(labResult.value))) {
+    if (Number.isNaN(parseNumericValue(labResult.value))) {
       return labResult;
     }
 

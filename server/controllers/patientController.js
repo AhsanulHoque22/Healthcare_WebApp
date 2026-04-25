@@ -1,4 +1,4 @@
-const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder, LabTest, DocumentCache } = require('../models');
+const { Patient, User, MedicalRecord, Appointment, Prescription, LabTestOrder, LabTest, DocumentCache, LifestyleAssessment } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const crypto = require('crypto');
@@ -582,6 +582,92 @@ const getPatientMedicalSummary = async (req, res, next) => {
   }
 };
 
+// Get Lifestyle Assessment Status
+const getLifestyleAssessmentStatus = async (req, res, next) => {
+  try {
+    const patientId = req.params.id;
+    
+    const latestAssessment = await LifestyleAssessment.findOne({
+      where: { patientId },
+      order: [['createdAt', 'DESC']]
+    });
+
+    const now = new Date();
+    let canTakeAssessment = true;
+    let daysUntilNext = 0;
+
+    if (latestAssessment) {
+      const daysSinceLast = (now - new Date(latestAssessment.createdAt)) / (1000 * 60 * 60 * 24);
+      // Let them retake after 6.5 days to be safe with timezones
+      if (daysSinceLast < 6.5) {
+        canTakeAssessment = false;
+        daysUntilNext = Math.ceil(7 - daysSinceLast);
+      }
+    }
+
+    const history = await LifestyleAssessment.findAll({
+      where: { patientId },
+      order: [['createdAt', 'DESC']],
+      limit: 12
+    });
+
+    res.json({
+      success: true,
+      data: {
+        canTakeAssessment,
+        daysUntilNext,
+        history,
+        latestAssessment
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Submit Lifestyle Assessment
+const submitLifestyleAssessment = async (req, res, next) => {
+  try {
+    const patientId = req.params.id;
+    const { responses, completionScore, skippedQuestions, status } = req.body;
+    
+    // Always use current date to avoid unique constraint issues if retaking on the exact same nominal week start day across years etc
+    const weekStartDate = new Date();
+    // if there is an existing one today, update it instead of trying to create
+    let assessment = await LifestyleAssessment.findOne({
+        where: { patientId, weekStartDate: weekStartDate.toISOString().split('T')[0] }
+    });
+
+    if (assessment) {
+        assessment = await assessment.update({
+            responses,
+            completionScore,
+            skippedQuestions,
+            status,
+            completedAt: new Date()
+        });
+    } else {
+        assessment = await LifestyleAssessment.create({
+            patientId,
+            weekStartDate: weekStartDate.toISOString().split('T')[0],
+            responses,
+            completionScore: completionScore || 0,
+            skippedQuestions: skippedQuestions || [],
+            status: status || 'completed',
+            completedAt: new Date()
+        });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Assessment submitted successfully.',
+      data: { assessment }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPatientProfile,
   updatePatientProfile,
@@ -593,5 +679,7 @@ module.exports = {
   getPatientAppointments,
   getPatientDashboardStats,
   createMedicalRecord,
-  getPatientMedicalSummary
+  getPatientMedicalSummary,
+  getLifestyleAssessmentStatus,
+  submitLifestyleAssessment
 };

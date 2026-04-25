@@ -114,4 +114,8 @@ router.get('/:id/dashboard/stats', authorizeRoles('patient', 'doctor', 'admin'),
 // Medical Summary route
 router.get('/:id/medical-summary', authorizeRoles('patient', 'doctor', 'admin'), patientController.getPatientMedicalSummary);
 
+// Lifestyle Assessment routes
+router.get('/:id/lifestyle-assessment/status', authorizeRoles('patient', 'doctor', 'admin'), patientController.getLifestyleAssessmentStatus);
+router.post('/:id/lifestyle-assessment', authorizeRoles('patient', 'admin'), patientController.submitLifestyleAssessment);
+
 module.exports = router;

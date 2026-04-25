@@ -18,8 +18,10 @@ import {
   CheckCircleIcon,
   PencilIcon,
   DocumentTextIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
+import WeeklyLifestyleAssessment from '../components/WeeklyLifestyleAssessment';
 
 
 // Comprehensive list of common allergies
@@ -61,6 +63,9 @@ const PatientProfile: React.FC = () => {
   const [showAllergyDropdown, setShowAllergyDropdown] = useState(false);
   const [allergySearch, setAllergySearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [assessmentStatus, setAssessmentStatus] = useState<any>(null);
+  const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   
   // Patient medical data state
   const [patientData, setPatientData] = useState({
@@ -141,6 +146,14 @@ const PatientProfile: React.FC = () => {
       // Parse allergies string into array for selected allergies display
       const parsedAllergies = data.allergies ? data.allergies.split(', ').filter((a: string) => a.trim()) : [];
       setSelectedAllergies(parsedAllergies);
+      setPatientId(data.id);
+      
+      try {
+        const assessmentRes = await API.get(`/patients/${data.id}/lifestyle-assessment/status`);
+        setAssessmentStatus(assessmentRes.data.data);
+      } catch(e) {
+        console.error('Assessment status fetch failed', e);
+      }
       
       // Pre-fill forms!
       medicalForm.reset({
@@ -767,8 +780,23 @@ const PatientProfile: React.FC = () => {
                   {/* Lifestyle Badges */}
                   <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                     <div className="absolute right-0 top-0 h-full w-48 bg-gradient-to-l from-white/10 to-transparent"></div>
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Lifestyle & Habits</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative z-10 flex justify-between items-center mb-4">
+                      <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Lifestyle & Habits</h4>
+                      <button 
+                        onClick={() => {
+                          if (assessmentStatus?.canTakeAssessment) {
+                            setIsAssessmentOpen(true);
+                          } else {
+                            toast(\`Next assessment available in \${assessmentStatus?.daysUntilNext || 7} days.\`, { icon: '⏳' });
+                          }
+                        }}
+                        className={\`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 \${assessmentStatus?.canTakeAssessment ? 'bg-teal-500 text-white hover:bg-teal-400 ring-2 ring-teal-500/50 ring-offset-1 ring-offset-slate-900' : 'bg-slate-800 text-slate-400 border border-slate-700'}\`}
+                      >
+                        <SparklesIcon className="h-4 w-4" />
+                        {assessmentStatus?.canTakeAssessment ? 'Take Weekly Assesssment' : \`Available in \${assessmentStatus?.daysUntilNext} day(s)\`}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
                       <div className="flex items-center gap-3">
                         <div className="h-2 w-2 rounded-full bg-blue-400"></div>
                         <div>
@@ -892,6 +920,17 @@ const PatientProfile: React.FC = () => {
           </div>
         </div>
       </div>
+      {patientId && (
+        <WeeklyLifestyleAssessment 
+          isOpen={isAssessmentOpen} 
+          onClose={() => setIsAssessmentOpen(false)} 
+          patientId={patientId} 
+          onComplete={() => {
+            setIsAssessmentOpen(false);
+            fetchPatientData(); // Refresh to update button status
+          }} 
+        />
+      )}
     </div>
   );
 };

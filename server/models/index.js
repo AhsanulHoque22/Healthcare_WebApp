@@ -19,6 +19,7 @@ const MedicineLog = require('./MedicineLog');
 const ChatHistory = require('./ChatHistory');
 const DocumentCache = require('./DocumentCache');
 const EscalationRequest = require('./EscalationRequest');
+const LifestyleAssessment = require('./LifestyleAssessment');
 
 // User associations
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patientProfile' });
@@ -38,6 +39,8 @@ Patient.hasMany(MedicineReminder, { foreignKey: 'patientId', as: 'medicineRemind
 Patient.hasMany(MedicineDosage, { foreignKey: 'patientId', as: 'medicineDosages' });
 Patient.hasOne(PatientReminderSettings, { foreignKey: 'patientId', as: 'reminderSettings' });
 Patient.hasMany(MedicineLog, { foreignKey: 'patientId', as: 'medicineLogs' });
+Patient.hasMany(LifestyleAssessment, { foreignKey: 'patientId', as: 'lifestyleAssessments' });
+LifestyleAssessment.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 
 // Doctor associations
 Doctor.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -149,4 +152,5 @@ module.exports = {
   ChatHistory,
   DocumentCache,
   EscalationRequest,
+  LifestyleAssessment,
 };
