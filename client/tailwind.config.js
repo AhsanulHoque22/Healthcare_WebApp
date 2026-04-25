@@ -32,7 +32,11 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      transitionDuration: {
+        '400': '400ms',
+        '600': '600ms',
       },
     },
   },
