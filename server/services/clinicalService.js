@@ -310,10 +310,11 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
   // - Queue at most 20 documents (sort newest first, discard the rest)
   // - Normal load:  extract up to 3 fresh (uncached) docs; the rest are deferred
   // - reanalyze=true (explicit user action): extract up to 6 at once
-  // - Hard 45s timeout per document so one bad file can't hang the request
+  // - 75s timeout: 3MB phone photos need ~30s OCR + ~15s LLM = ~45s typical,
+  //   so 75s gives adequate headroom without hanging the request indefinitely
   const MAX_DOCS_TO_QUEUE = 20;
   const MAX_FRESH_EXTRACTIONS = reanalyze ? 6 : 3;
-  const DOC_TIMEOUT_MS = 45_000;
+  const DOC_TIMEOUT_MS = 75_000;
 
   const withDocTimeout = (promise) =>
     Promise.race([
@@ -360,11 +361,19 @@ const getUnifiedMedicalSummary = async (patientId, reanalyze = false) => {
         _extracting.add(urlHash);
 
         let data;
+        let isTimeout = false;
         try {
           data = await withDocTimeout(extractionService.extractDataFromDocument(doc.url));
         } catch (extractErr) {
+          isTimeout = extractErr.message?.startsWith('Timed out');
           console.error(`[ClinicalService] Extraction failed (${extractErr.message}): ${doc.url}`);
-          data = { error: extractErr.message || 'Unknown error' };
+          // Don't cache timeout errors — the background extraction may still
+          // complete and a future load should retry with a clean slate.
+          // Do cache other permanent errors (download failure, bad format) so
+          // we don't hammer the same broken doc on every load.
+          if (!isTimeout) {
+            data = { error: extractErr.message || 'Unknown error' };
+          }
         } finally {
           _extracting.delete(urlHash);
         }
