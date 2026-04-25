@@ -223,6 +223,16 @@ const Appointments: React.FC = () => {
     finally { setIsLoading(false); }
   };
 
+  const handleRateAppointment = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowRatingModal(true);
+  };
+
+  const handleVideoCall = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setShowVideoModal(true);
+  };
+
   useEffect(() => {
     const doctorId = searchParams.get('doctorId');
     if (doctorId) { setBookingForm(prev => ({ ...prev, doctorId })); setShowBookingModal(true); fetchDoctors(); }
