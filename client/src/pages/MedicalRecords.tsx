@@ -227,7 +227,9 @@ const MedicalRecords: React.FC = () => {
                             </div>
                             <div>
                               <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Chief Narrative</h3>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-500">Autonomous Evaluation Engine</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-500">
+                                {medicalSummary.llamaReasoningModel || 'Autonomous Evaluation Engine'}
+                              </p>
                             </div>
                           </div>
                           <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${getInsightStatusStyles(medicalSummary.llamaClinicalInsight.overallStatus)}`}>
@@ -239,16 +241,23 @@ const MedicalRecords: React.FC = () => {
                           {medicalSummary.llamaClinicalInsight.summary}
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        {medicalSummary.aiClinicalNarrative && medicalSummary.aiClinicalNarrative !== medicalSummary.llamaClinicalInsight.summary && (
+                          <div className="mb-8 p-6 bg-indigo-50/20 border border-indigo-100 rounded-[24px]">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Extended Narrative Extract</p>
+                            <p className="text-sm text-slate-600 font-medium leading-relaxed">{medicalSummary.aiClinicalNarrative}</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                           <InsightList title="Positive Vectors" icon="↗" items={medicalSummary.llamaClinicalInsight.improved} colorClass="bg-emerald-50 border-emerald-100 text-emerald-800" hColor="text-emerald-600" />
                           <InsightList title="Clinical Flags" icon="!" items={medicalSummary.llamaClinicalInsight.worsened} colorClass="bg-amber-50 border-amber-100 text-amber-800" hColor="text-amber-600" />
+                          <InsightList title="Stable State" icon="↔" items={medicalSummary.llamaClinicalInsight.stable} colorClass="bg-slate-50 border-slate-100 text-slate-700" hColor="text-slate-500" />
                         </div>
 
                         <div className="space-y-6">
-                          {medicalSummary.llamaClinicalInsight.lifestyleRecommendations?.length ? (
                             <div className="pt-6 border-t border-slate-100">
                               <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/> Lifestyle Remediation</h4>
-                              <div className="grid gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {medicalSummary.llamaClinicalInsight.lifestyleRecommendations.map((rec, i) => (
                                   <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white border border-slate-100 rounded-2xl p-4 hover:border-emerald-200 transition-colors">
                                     <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest shrink-0 w-fit">{rec.category}</div>
@@ -260,7 +269,6 @@ const MedicalRecords: React.FC = () => {
                                 ))}
                               </div>
                             </div>
-                          ) : null}
 
                           {medicalSummary.llamaClinicalInsight.attentionAreas?.length ? (
                             <div className="pt-6 border-t border-slate-100">
@@ -279,9 +287,9 @@ const MedicalRecords: React.FC = () => {
                           {medicalSummary.llamaClinicalInsight.specialistReferrals?.length ? (
                             <div className="pt-6 border-t border-slate-100">
                               <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500"/> Directed Referrals</h4>
-                              <div className="flex flex-wrap gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {medicalSummary.llamaClinicalInsight.specialistReferrals.map((ref, i) => (
-                                  <div key={i} className="flex-1 min-w-[250px] bg-white border border-indigo-100 rounded-2xl p-4 flex flex-col justify-between">
+                                  <div key={i} className="bg-white border border-indigo-100 rounded-2xl p-4 flex flex-col justify-between">
                                     <div className="flex justify-between items-start mb-2">
                                       <p className="font-bold text-indigo-950">{ref.specialist}</p>
                                       <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${ref.urgency === 'Urgent' ? 'bg-rose-100 text-rose-700' : 'bg-indigo-50 text-indigo-600'}`}>{ref.urgency}</span>
@@ -289,6 +297,39 @@ const MedicalRecords: React.FC = () => {
                                     <p className="text-xs text-slate-500 font-medium">{ref.reason}</p>
                                   </div>
                                 ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {medicalSummary.llamaClinicalInsight.activeMedications?.length ? (
+                            <div className="pt-6 border-t border-slate-100">
+                              <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-violet-500"/> Clinical Medications (AI Summarized)</h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {medicalSummary.llamaClinicalInsight.activeMedications.map((med, i) => (
+                                  <div key={i} className="bg-violet-50/30 border border-violet-100 rounded-2xl p-4">
+                                    <div className="flex justify-between items-start mb-1">
+                                      <p className="font-bold text-slate-900 text-sm">{med.name}</p>
+                                      <span className="text-[9px] font-black uppercase tracking-widest text-violet-500">{med.dosage}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-medium">{med.instructions} · {med.frequency}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {medicalSummary.llamaClinicalInsight.followUpConsiderations?.length ? (
+                            <div className="pt-6 border-t border-slate-100">
+                              <h4 className="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-slate-400"/> Follow-Up Considerations</h4>
+                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                                <ul className="space-y-3">
+                                  {medicalSummary.llamaClinicalInsight.followUpConsiderations.map((it, i) => (
+                                    <li key={i} className="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                                      <CheckCircleIcon className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                                      {it}
+                                    </li>
+                                  ))}
+                                </ul>
                               </div>
                             </div>
                           ) : null}
@@ -312,7 +353,7 @@ const MedicalRecords: React.FC = () => {
                     <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2"><BeakerIcon className="h-5 w-5 text-indigo-500" /> Lab Forensics</h3>
                     {medicalSummary?.recentLabResults?.length ? (
                       <div className="space-y-4">
-                        {medicalSummary.allLabResultsSummary?.highlightedFindings?.slice(0, 3).map((f, i) => (
+                        {medicalSummary.allLabResultsSummary?.highlightedFindings?.slice(0, 5).map((f, i) => (
                           <div key={i} className="bg-slate-50 border border-slate-100 rounded-[20px] p-4 relative overflow-hidden group">
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-indigo-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="flex justify-between items-start mb-2">
@@ -323,12 +364,48 @@ const MedicalRecords: React.FC = () => {
                               <span className="font-black text-lg text-slate-900 leading-none">{f.value}</span>
                               <span className="text-[10px] font-bold text-slate-400">{f.unit}</span>
                             </div>
+                            {f.referenceRange && <p className="text-[9px] text-slate-400 font-medium mb-1">REF: {f.referenceRange}</p>}
                             <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{f.reportName || f.source}</p>
+                          </div>
+                        ))}
+
+                        {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
+                          <div key={`full-${idx}`} className="pt-4 border-t border-slate-100">
+                             <div className="flex justify-between items-start mb-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lab.testNames?.slice(0, 30) || 'Dossier Extract'}</p>
+                                <span className="text-[9px] font-bold text-indigo-500">{new Date(lab.date).toLocaleDateString()}</span>
+                             </div>
+                             {lab.findings?.length > 0 && (
+                               <div className="flex flex-wrap gap-1.5">
+                                 {lab.findings.slice(0, 3).map((v:any, vi:number) => (
+                                   <span key={vi} className="px-2 py-1 bg-white border border-slate-100 rounded-lg text-[9px] font-bold text-slate-600">
+                                     {v.test}: {v.value}
+                                   </span>
+                                 ))}
+                               </div>
+                             )}
                           </div>
                         ))}
                       </div>
                     ) : <p className="text-sm font-medium text-slate-400 italic bg-slate-50 p-6 rounded-2xl text-center">No forensics data extracted.</p>}
                   </div>
+
+                  {medicalSummary.llamaClinicalInsight?.keyFindings?.length ? (
+                    <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2"><FireIcon className="h-5 w-5 text-orange-500" /> Key Observations</h3>
+                      <div className="space-y-3">
+                        {medicalSummary.llamaClinicalInsight.keyFindings.map((kf, i) => (
+                          <div key={i} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="flex justify-between items-center mb-1">
+                              <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{kf.title}</p>
+                              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${getInsightStatusStyles(kf.status)}`}>{kf.status}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-medium leading-tight">{kf.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
                     <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2"><DocumentTextIcon className="h-5 w-5 text-indigo-500" /> Recent Entities</h3>
