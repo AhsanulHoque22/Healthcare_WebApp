@@ -19,7 +19,8 @@ import {
   ArrowsRightLeftIcon,
   ArrowRightIcon,
   Bars3Icon,
-  UserIcon
+  UserIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import { motion, AnimatePresence } from 'framer-motion';
