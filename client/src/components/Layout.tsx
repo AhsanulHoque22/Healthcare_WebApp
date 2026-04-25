@@ -22,7 +22,11 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 
-const Layout: React.FC = () => {
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,31 +76,13 @@ const Layout: React.FC = () => {
   };
 
   const getColorClasses = (color: string, isActive: boolean) => {
-    const colors = {
-      blue: isActive ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700',
-      green: isActive ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-700 hover:bg-green-50 hover:text-green-700',
-      purple: isActive ? 'bg-purple-50 text-purple-700 border-purple-200' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700',
-      indigo: isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700',
-      orange: isActive ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-gray-700 hover:bg-orange-50 hover:text-orange-700',
-      teal: isActive ? 'bg-teal-50 text-teal-700 border-teal-200' : 'text-gray-700 hover:bg-teal-50 hover:text-teal-700',
-      yellow: isActive ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'text-gray-700 hover:bg-yellow-50 hover:text-yellow-700',
-      gray: isActive ? 'bg-gray-50 text-gray-700 border-gray-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-700',
-    };
-    return colors[color as keyof typeof colors] || colors.gray;
+    return isActive 
+      ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/20 shadow-inner' 
+      : 'text-slate-400 border border-transparent hover:bg-slate-800/50 hover:text-white';
   };
 
   const getIconColor = (color: string, isActive: boolean) => {
-    const colors = {
-      blue: isActive ? 'text-blue-600' : 'text-gray-400',
-      green: isActive ? 'text-green-600' : 'text-gray-400',
-      purple: isActive ? 'text-purple-600' : 'text-gray-400',
-      indigo: isActive ? 'text-indigo-600' : 'text-gray-400',
-      orange: isActive ? 'text-orange-600' : 'text-gray-400',
-      teal: isActive ? 'text-teal-600' : 'text-gray-400',
-      yellow: isActive ? 'text-yellow-600' : 'text-gray-400',
-      gray: isActive ? 'text-gray-600' : 'text-gray-400',
-    };
-    return colors[color as keyof typeof colors] || colors.gray;
+    return isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-300';
   };
 
   const getDashboardUrl = () => {
@@ -223,26 +209,26 @@ const Layout: React.FC = () => {
       <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col z-50 transition-all duration-500 ease-in-out ${
         desktopSidebarCollapsed ? 'lg:w-16' : 'lg:w-72'
       }`}>
-        <div className="flex flex-col flex-grow bg-white shadow-xl border-r border-gray-200 transition-all duration-500 ease-in-out">
+        <div className="flex flex-col flex-grow bg-slate-900 shadow-2xl border-r border-slate-800 transition-all duration-500 ease-in-out">
           {/* Desktop header */}
-          <div className="flex h-20 items-center px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
-            <Link to="/" className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/10">
+          <div className="flex h-20 items-center px-6 border-b border-white/5 bg-slate-900/50 backdrop-blur-sm">
+            <Link to="/" className="flex items-center w-full group relative overflow-hidden p-2 rounded-2xl transition-all duration-300 hover:bg-white/5">
               {!desktopSidebarCollapsed ? (
                 <div className="flex items-center space-x-3">
                   <div className="relative transition-transform duration-500 ease-out">
-                    <div className="absolute inset-0 bg-blue-400/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <img src="/logo.png" className="h-14 w-14 relative z-10 object-contain" alt="Livora Logo" />
+                    <div className="absolute inset-0 bg-indigo-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <img src="/logo.png" className="h-14 w-14 relative z-10 object-contain drop-shadow-md" alt="Livora Logo" />
                   </div>
                   <div className="relative z-10">
-                    <h1 className="text-xl font-bold text-white tracking-tight group-hover:text-blue-50 transition-colors">Livora</h1>
-                    <p className="text-[10px] text-blue-100 font-medium uppercase tracking-widest opacity-80">Healthcare</p>
-                    <div className="h-0.5 w-0 bg-blue-100/50 group-hover:w-full transition-all duration-500 rounded-full mt-0.5"></div>
+                    <h1 className="text-xl font-black text-white tracking-tight group-hover:text-indigo-300 transition-colors">Livora</h1>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] opacity-80">Healthcare</p>
+                    <div className="h-0.5 w-0 bg-indigo-500/50 group-hover:w-full transition-all duration-500 rounded-full mt-0.5"></div>
                   </div>
                 </div>
               ) : (
                 <div className="flex justify-center w-full relative">
-                  <div className="absolute inset-0 bg-blue-400/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-                  <img src="/logo.png" className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-12 " alt="Livora Logo" />
+                  <div className="absolute inset-0 bg-indigo-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+                  <img src="/logo.png" className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-12 drop-shadow-md" alt="Livora Logo" />
                 </div>
               )}
             </Link>
@@ -281,7 +267,7 @@ const Layout: React.FC = () => {
           </nav>
 
           {/* Desktop user section */}
-          <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 transition-all duration-500 ease-in-out">
+          <div className="p-4 bg-slate-900 border-t border-white/5 transition-all duration-500 ease-in-out">
             {!desktopSidebarCollapsed ? (
               <div className="transition-all duration-500 ease-in-out">
                 <Link to={getProfileUrl()} className="flex items-center space-x-3 mb-4 group transition-all duration-300">
@@ -290,26 +276,26 @@ const Layout: React.FC = () => {
                       <img
                         src={user.profileImage}
                         alt={`${user.firstName} ${user.lastName}`}
-                        className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-400"
+                        className="h-12 w-12 rounded-full object-cover border-2 border-slate-700 shadow-sm group-hover:border-indigo-400"
                       />
                     ) : (
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:from-blue-600 group-hover:to-indigo-700">
-                        <span className="text-sm font-bold text-white">
+                      <div className="h-12 w-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-sm group-hover:border-indigo-500 group-hover:text-indigo-400">
+                        <span className="text-sm font-black text-slate-300 group-hover:text-indigo-300">
                           {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                         </span>
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0 transition-all duration-500 ease-in-out">
-                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600">
+                    <p className="text-sm font-bold text-white truncate group-hover:text-indigo-300">
                       {user?.firstName} {user?.lastName}
                     </p>
-                    <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">{user?.role}</p>
                   </div>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-200 hover:shadow-sm hover:border-gray-300"
+                  className="w-full flex items-center justify-center px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 bg-slate-800/50 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-500/20"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
                   Sign out
@@ -322,11 +308,11 @@ const Layout: React.FC = () => {
                     <img
                       src={user.profileImage}
                       alt={`${user.firstName} ${user.lastName}`}
-                      className="h-8 w-8 rounded-full object-cover ring-2 ring-white shadow-sm group-hover:ring-blue-400"
+                      className="h-8 w-8 rounded-full object-cover border-2 border-slate-700 shadow-sm group-hover:border-indigo-400"
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:from-blue-600 group-hover:to-indigo-700">
-                      <span className="text-xs font-bold text-white">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-sm group-hover:border-indigo-500 group-hover:text-indigo-400">
+                      <span className="text-xs font-black text-slate-300 group-hover:text-indigo-300">
                         {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                       </span>
                     </div>
@@ -334,7 +320,7 @@ const Layout: React.FC = () => {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-all duration-300 border border-gray-200 hover:shadow-sm hover:border-gray-300"
+                  className="p-2 text-slate-400 bg-slate-800/50 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-500/20"
                   title="Sign out"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4" />
@@ -425,11 +411,11 @@ const Layout: React.FC = () => {
         </div>
 
         {/* Page content */}
-        <main className="pt-20 py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center">
-              <div className="w-full max-w-6xl">
-                <Outlet />
+        <main className={children ? "pt-0" : "pt-20 py-6"}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full h-full">
+            <div className="flex justify-center w-full h-full">
+              <div className="w-full">
+                {children || <Outlet />}
               </div>
             </div>
           </div>

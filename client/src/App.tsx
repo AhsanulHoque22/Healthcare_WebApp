@@ -47,6 +47,18 @@ function GlobalNotificationProvider({ children }: { children: React.ReactNode })
   );
 }
 
+function PublicDoctorsWrapper() {
+  const { user } = useAuth();
+  if (user) {
+    return (
+      <Layout>
+        <PublicDoctors />
+      </Layout>
+    );
+  }
+  return <PublicDoctors />;
+}
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,7 +85,7 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/registration-success" element={<RegistrationSuccess />} />
-                <Route path="/find-doctors" element={<PublicDoctors />} />
+                <Route path="/find-doctors" element={<PublicDoctorsWrapper />} />
                 
                 {/* Legacy dashboard route - redirect to app */}
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />

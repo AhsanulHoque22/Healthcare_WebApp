@@ -117,7 +117,8 @@ const PublicDoctors: React.FC = () => {
       <div className="dot-grid opacity-30 absolute inset-0 pointer-events-none"></div>
 
       <div className="relative z-10">
-        {/* Header / Nav */}
+        {/* Header / Nav - only show for non-logged in users since Layout provides it for logged in */}
+        {!user && (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -129,43 +130,6 @@ const PublicDoctors: React.FC = () => {
               <span className="ml-3 text-2xl font-black text-slate-900 tracking-tight">Livora</span>
             </Link>
             <div className="flex items-center space-x-6">
-              {user ? (
-                <div className="flex items-center space-x-6">
-                  <NotificationDropdown />
-                  <Link
-                    to={getDashboardUrl()}
-                    className="flex items-center space-x-3 group/account transition-all duration-300"
-                  >
-                    <div className="relative">
-                      {user.profileImage ? (
-                        <img
-                          src={user.profileImage}
-                          alt={user.firstName}
-                          className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md group-hover/account:border-indigo-100 transition-all"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner border border-slate-200 group-hover/account:border-indigo-200 group-hover/account:text-indigo-500 transition-all">
-                          {user?.firstName?.charAt(0) || ''}{user?.lastName?.charAt(0) || ''}
-                        </div>
-                      )}
-                    </div>
-                    <div className="hidden lg:block text-left">
-                      <p className="text-sm font-black text-slate-900 group-hover/account:text-indigo-600 transition-colors">
-                        {user.firstName} {user.lastName}
-                      </p>
-                      <p className="text-[9px] text-slate-400 uppercase tracking-widest font-black">
-                        {user.role} Dashboard
-                      </p>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => logout()}
-                    className="hidden lg:flex items-center px-4 py-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-300"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
                 <div className="flex items-center gap-4">
                   <Link to="/login" className="text-[11px] text-slate-500 font-black uppercase tracking-widest hover:text-indigo-600 transition-colors">Sign In</Link>
                   <Link to="/register" className="group relative overflow-hidden bg-slate-900 text-white px-6 py-2.5 rounded-full font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:shadow-indigo-500/20">
@@ -173,13 +137,13 @@ const PublicDoctors: React.FC = () => {
                     <div className="absolute inset-0 translate-y-[100%] bg-indigo-600 group-hover:translate-y-[0%] transition-transform duration-500 ease-out z-0"></div>
                   </Link>
                 </div>
-              )}
             </div>
           </div>
         </div>
       </nav>
+      )}
 
-      <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main className={`pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ${user ? 'pt-8' : 'pt-32'}`}>
         {/* SEO-friendly Section */}
         {/* ═══ PREMIUM HEADER ═══ */}
         <Reveal variant="fadeUp" delay={0.1}>
