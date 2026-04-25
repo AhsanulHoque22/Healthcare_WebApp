@@ -751,21 +751,16 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
       initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white/20 overflow-hidden"
-      style={{
-        background: `
-          radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(20, 184, 166, 0.05) 0%, transparent 50%),
-          linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)
-        `
-      }}
+      className="bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
     >
-      {/* Premium Header */}
-      <div className="relative p-8 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-xl border-b border-white/[0.08]">
-        {/* Background mesh gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-cyan-500/10 rounded-t-[32px]" />
-
-        <div className="relative flex items-center justify-between">
+      {/* ═══ PREMIUM HEADER ═══ */}
+      <div className="relative overflow-hidden bg-slate-900 px-8 py-10 md:px-12 text-white group">
+        <div className="absolute top-0 right-0 w-1/3 h-full">
+          <div className="absolute inset-0 bg-gradient-to-l from-indigo-500/10 via-transparent to-transparent" />
+          <div className="absolute top-[-20%] right-[-10%] w-[250px] h-[250px] bg-indigo-400/10 rounded-full blur-[80px]" />
+        </div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -776,28 +771,19 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-              className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20"
+              className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20"
             >
-              <DocumentTextIcon className="h-8 w-8 text-white" />
+              <DocumentTextIcon className="h-7 w-7 text-white" />
             </motion.div>
 
-            <div>
-              <motion.h3
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-200 bg-clip-text text-transparent"
-              >
-                Prescription Management
-              </motion.h3>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-slate-300 text-sm font-medium mt-1"
-              >
-                Record patient symptoms, diagnosis, and treatment plan
-              </motion.p>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-2 py-0.5 bg-white/10 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/10">Clinical Registry</span>
+                <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-indigo-400/20">Prescription v2.0</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-none text-white">
+                Consultation <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 italic">Interface.</span>
+              </h3>
             </div>
           </motion.div>
 
@@ -808,134 +794,65 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
             transition={{ delay: 0.6 }}
             className="hidden md:flex items-center gap-4"
           >
-            <div className="bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-2xl px-4 py-3">
+            <div className="px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-3 h-3 bg-emerald-400 rounded-full shadow-lg shadow-emerald-400/50"
-                />
-                <span className="text-sm font-bold text-emerald-300 uppercase tracking-wider">Active Session</span>
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50" />
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Live Session</span>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
-      {/* Patient Quick Info Bar */}
+      {/* ═══ PATIENT QUICK INFO BAR ═══ */}
       {appointmentData && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-gradient-to-r from-emerald-50/80 via-teal-50/60 to-cyan-50/80 backdrop-blur-sm border-b border-emerald-100/50 p-6"
-          style={{
-            background: `
-              radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
-              linear-gradient(135deg, rgba(236, 253, 245, 0.8) 0%, rgba(240, 253, 250, 0.6) 100%)
-            `
-          }}
+          className="bg-slate-50 border-y border-slate-100 p-2 flex flex-col lg:flex-row items-center gap-2"
         >
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.8 }}
-              className="flex items-center gap-4"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20">
-                <UserIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Patient Name</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {appointmentData.patient?.user?.firstName} {appointmentData.patient?.user?.lastName}
-                </p>
-              </div>
-            </motion.div>
+          <div className="w-full lg:w-auto p-4 lg:px-6 lg:border-r border-slate-100 flex items-center gap-3 shrink-0">
+            <UserIcon className="h-5 w-5 text-indigo-600" />
+            <span className="font-black text-xs text-slate-900 uppercase tracking-widest">Clinical File</span>
+          </div>
 
-            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
+          <div className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 px-2 py-1">
+            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Patient Name</p>
+              <p className="text-xs font-black text-slate-900 truncate">
+                {appointmentData.patient?.user?.firstName} {appointmentData.patient?.user?.lastName}
+              </p>
+            </div>
+            
+            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Age / Sex</p>
+              <p className="text-xs font-black text-slate-900">
+                {formatAge(calculateAge(appointmentData.patient?.user?.dateOfBirth))} / {formatGender(appointmentData.patient?.user?.gender)}
+              </p>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.9 }}
-              className="flex items-center gap-4"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/20">
-                <HeartIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Age / Sex</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {formatAge(calculateAge(appointmentData.patient?.user?.dateOfBirth))} / {formatGender(appointmentData.patient?.user?.gender)}
-                </p>
-              </div>
-            </motion.div>
+            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Weight / Blood</p>
+              <p className="text-xs font-black text-slate-900">
+                {appointmentData.patient?.weight ? `${appointmentData.patient.weight} kg` : '—'} / {appointmentData.patient?.bloodType || '—'}
+              </p>
+            </div>
 
-            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
+            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Session Date</p>
+              <p className="text-xs font-bold text-indigo-600">
+                {new Date(appointmentData.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.0 }}
-              className="flex items-center gap-4"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl shadow-cyan-500/20">
-                <ChartBarIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Weight</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {appointmentData.patient?.weight ? `${appointmentData.patient.weight} kg` : '—'}
-                </p>
-              </div>
-            </motion.div>
-
-            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.1 }}
-              className="flex items-center gap-4"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl shadow-rose-500/20">
-                <ShieldCheckIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Blood Type</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {appointmentData.patient?.bloodType || '—'}
-                </p>
-              </div>
-            </motion.div>
-
-            <div className="ml-auto flex items-center gap-4">
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.2 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <div className="col-span-2 md:col-span-1 flex items-center justify-center px-2">
+              <button
                 type="button"
                 onClick={() => window.open(`/app/patients?patientId=${appointmentData.patient?.id}&view=records`, '_blank')}
-                className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-xl hover:shadow-indigo-500/30"
+                className="w-full py-2 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center justify-center gap-1.5"
               >
-                <ClipboardDocumentListIcon className="h-5 w-5" />
-                View Medical History
-              </motion.button>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.3 }}
-                className="flex items-center gap-3 text-slate-600 border-l border-slate-200/50 pl-6"
-              >
-                <CalendarIcon className="h-5 w-5 text-indigo-500" />
-                <span className="text-sm font-bold">
-                  {new Date(appointmentData.appointmentDate).toLocaleDateString()}
-                </span>
-              </motion.div>
+                <ClipboardDocumentListIcon className="h-3 w-3" /> Full History
+              </button>
             </div>
           </div>
         </motion.div>
@@ -959,46 +876,36 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         </motion.div>
       )}
 
-      {/* Premium Tab Navigation */}
+      {/* ═══ PREMIUM TAB NAVIGATION ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5 }}
-        className="bg-gradient-to-r from-slate-50/80 to-slate-100/80 backdrop-blur-sm border-b border-slate-200/50"
+        className="px-8 pt-6 pb-2 border-b border-slate-100 bg-white"
       >
-        <div className="px-8">
-          <nav className="flex space-x-2 py-2">
-            {tabs.map((tab, index) => {
-              const Icon = tab.icon;
-              return (
-                <motion.button
-                  key={tab.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1.6 + index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`relative px-6 py-4 font-bold text-sm flex items-center gap-3 rounded-2xl transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? 'bg-white text-slate-900 shadow-xl shadow-slate-900/10 border border-slate-200/50'
-                      : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
-                  }`}
-                >
-                  <Icon className={`h-5 w-5 ${activeTab === tab.id ? 'text-indigo-500' : 'text-slate-500'}`} />
-                  <span className="hidden sm:inline">{tab.name}</span>
-                  {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 rounded-full"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
-          </nav>
-        </div>
+        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none pb-2">
+          {tabs.map((tab, index) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6 + index * 0.05 }}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' 
+                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                }`}
+              >
+                <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
+                {tab.name}
+              </motion.button>
+            );
+          })}
+        </nav>
       </motion.div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-8">
@@ -1025,28 +932,22 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               </div>
             </motion.div>
 
-            {/* Vital Signs Grid */}
+            {/* ═══ VITAL SIGNS GRID ═══ */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-slate-50/80 via-gray-50/60 to-slate-100/80 backdrop-blur-sm rounded-[28px] p-8 border border-slate-200/50 shadow-xl shadow-slate-900/5"
-              style={{
-                background: `
-                  radial-gradient(circle at 30% 20%, rgba(148, 163, 184, 0.05) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 80%, rgba(100, 116, 139, 0.05) 0%, transparent 50%),
-                  linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%)
-                `
-              }}
+              className="bg-white rounded-[24px] p-8 border border-slate-100 shadow-sm"
             >
-              <motion.h5
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3"
-              >
-                <HeartIcon className="h-5 w-5 text-rose-500" /> Vital Signs
-              </motion.h5>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center">
+                  <HeartIcon className="h-5 w-5 text-rose-500" />
+                </div>
+                <div>
+                  <h5 className="text-lg font-black text-slate-900 tracking-tight">Vital Parameters</h5>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time physiological metrics</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -1161,18 +1062,21 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               </div>
             </motion.div>
 
-            {/* Clinical Findings Text Area */}
+            {/* ═══ CLINICAL FINDINGS ═══ */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.1 }}
               className="space-y-4"
             >
-              <label className="block text-lg font-bold text-gray-800">Clinical Examination Findings</label>
+              <div className="flex items-center gap-3 px-2">
+                <DocumentTextIcon className="h-5 w-5 text-indigo-500" />
+                <label className="text-lg font-black text-slate-900 tracking-tight">Examination Findings</label>
+              </div>
               <textarea
                 {...form.register('clinicalFindings')}
                 rows={6}
-                className="w-full rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 outline-none transition-all shadow-lg resize-none"
+                className="w-full rounded-[24px] border border-slate-100 bg-slate-50 p-6 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition-all resize-none shadow-inner"
                 placeholder="Enter detailed clinical findings from examination..."
                 disabled={isReadOnly}
               />
@@ -1282,12 +1186,12 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <h5 className="text-lg font-semibold text-gray-900">Added to Prescription</h5>
                 </div>
 
-                <div className="grid gap-6">
+                <div className="grid gap-4">
                   {medicines.map((medicine, index) => (
-                    <div key={index} className={`border rounded-2xl p-6 transition-all duration-200 ${
+                    <div key={index} className={`rounded-[24px] border p-6 transition-all duration-300 ${
                       editingIndex === index 
-                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-400 shadow-lg scale-[1.01]' 
-                        : 'bg-white border-gray-200 hover:shadow-md'
+                        ? 'bg-indigo-50/50 border-indigo-200 shadow-xl shadow-indigo-500/5' 
+                        : 'bg-white border-slate-100 hover:shadow-lg hover:shadow-slate-200/50 group'
                     }`}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-3">
@@ -1518,12 +1422,12 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                   <button
                     type="button"
                     onClick={addMedicine}
-                    className="w-full py-4 border-2 border-dashed border-emerald-300 rounded-2xl text-emerald-600 font-semibold hover:bg-emerald-50 hover:border-emerald-400 transition-all duration-200 flex items-center justify-center gap-2 group"
+                    className="w-full py-6 border-2 border-dashed border-slate-100 rounded-[24px] text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                   >
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center transition-transform duration-200">
-                      <PlusIcon className="h-5 w-5" />
+                    <div className="w-8 h-8 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                      <PlusIcon className="h-4 w-4 text-indigo-500" />
                     </div>
-                    Add Another Medicine
+                    Append Pharmaceutical Record
                   </button>
                 )}
               </div>
@@ -1554,41 +1458,41 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                  <ClipboardDocumentListIcon className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <ClipboardDocumentListIcon className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-gray-900">Patient Symptoms</h4>
-                  <p className="text-sm text-gray-600">Record and manage patient symptoms</p>
+                  <h4 className="text-lg font-black text-slate-900 tracking-tight">Active Symptomatology</h4>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient-reported clinical observations</p>
                 </div>
               </div>
               {!isReadOnly && userRole === 'doctor' && (
                 <button
                   type="button"
                   onClick={addSymptom}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
+                  className="px-5 py-2.5 bg-white border border-slate-100 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 shadow-sm flex items-center gap-2"
                 >
-                  <PlusIcon className="h-4 w-4" />
-                  Add Symptom
+                  <PlusIcon className="h-4 w-4 text-amber-500" />
+                  Log Symptom
                 </button>
               )}
             </div>
 
             {symptoms.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="grid gap-3">
                 {symptoms.map((symptom, index) => (
-                  <div key={symptom.id} className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl p-6 hover:shadow-md transition-all duration-200">
-                    <div className="flex justify-between items-start mb-4">
+                  <div key={symptom.id} className="bg-white border border-slate-100 rounded-[20px] p-5 shadow-sm group hover:border-amber-200 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">{index + 1}</span>
+                        <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-[10px] font-black text-amber-600">
+                          {String(index + 1).padStart(2, '0')}
                         </div>
-                        <h5 className="text-lg font-bold text-gray-900">Symptom {index + 1}</h5>
+                        <h5 className="text-sm font-black text-slate-900 uppercase tracking-widest">Observable Symptom</h5>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeSymptom(symptom.id)}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:bg-rose-50 hover:text-rose-600 transition-all"
                       >
                         <XMarkIcon className="h-5 w-5" />
                       </button>
@@ -1597,30 +1501,18 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
                       value={symptom.description}
                       onChange={(e) => updateSymptom(symptom.id, e.target.value)}
                       rows={3}
-                      disabled={isReadOnly}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                      placeholder="Describe the symptom in detail..."
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-amber-500/20 focus:bg-white outline-none transition-all resize-none"
+                      placeholder="Specify symptom details, duration, and intensity..."
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-r from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ClipboardDocumentListIcon className="h-8 w-8 text-amber-600" />
+              <div className="text-center py-12 bg-slate-50 rounded-[24px] border border-dashed border-slate-200">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <ClipboardDocumentListIcon className="h-6 w-6 text-slate-300" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">No symptoms recorded</h3>
-                <p className="text-gray-500 mb-6">Add symptoms to track the patient's condition</p>
-                {!isReadOnly && userRole === 'doctor' && (
-                  <button
-                    type="button"
-                    onClick={addSymptom}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    Add First Symptom
-                  </button>
-                )}
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No Symptoms Recorded</p>
               </div>
             )}
           </div>
@@ -1629,185 +1521,76 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         {/* Diagnosis Tab */}
         {activeTab === 'diagnosis' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-xl flex items-center justify-center">
-                  <BeakerIcon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-gray-900">Diagnosis</h4>
-                  <p className="text-sm text-gray-600">Record medical diagnoses and assessments</p>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-50 rounded-[20px] flex items-center justify-center">
+                <BeakerIcon className="h-7 w-7 text-indigo-600" />
               </div>
-              {!isReadOnly && userRole === 'doctor' && (
-                <button
-                  type="button"
-                  onClick={addDiagnosis}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  Add Diagnosis
-                </button>
-              )}
+              <div>
+                <h4 className="text-xl font-black text-slate-900 tracking-tight">Clinical Assessment & Diagnosis</h4>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Definitive medical evaluation findings</p>
+              </div>
             </div>
 
-            {diagnoses.length > 0 ? (
-              <div className="grid gap-4">
-                {diagnoses.map((diagnosis, index) => (
-                  <div key={diagnosis.id} className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200/50 rounded-2xl p-6 hover:shadow-md transition-all duration-200">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">{index + 1}</span>
-                        </div>
-                        <h5 className="text-lg font-bold text-gray-900">Diagnosis {index + 1}</h5>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeDiagnosis(diagnosis.id)}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-all duration-200"
-                      >
-                        <XMarkIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <CalendarIcon className="h-5 w-5 text-purple-600" />
-                        <input
-                          type="date"
-                          value={diagnosis.date}
-                          onChange={(e) => updateDiagnosis(diagnosis.id, 'date', e.target.value)}
-                          disabled={isReadOnly}
-                          className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200"
-                        />
-                      </div>
-                      <textarea
-                        value={diagnosis.description}
-                        onChange={(e) => updateDiagnosis(diagnosis.id, 'description', e.target.value)}
-                        rows={4}
-                        disabled={isReadOnly}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                        placeholder="Enter detailed diagnosis information..."
-                      />
-                    </div>
-                  </div>
-                ))}
+            <div className="bg-white rounded-[24px] border border-slate-100 p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <MagnifyingGlassIcon className="h-5 w-5 text-indigo-500" />
+                <label className="text-sm font-black text-slate-900 uppercase tracking-widest">Primary Diagnosis</label>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BeakerIcon className="h-8 w-8 text-purple-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">No diagnosis recorded</h3>
-                <p className="text-gray-500 mb-6">Add medical diagnoses based on symptoms and examination</p>
-                {!isReadOnly && userRole === 'doctor' && (
-                  <button
-                    type="button"
-                    onClick={addDiagnosis}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-600 hover:to-violet-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 mx-auto"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    Add First Diagnosis
-                  </button>
-                )}
-              </div>
-            )}
+              <textarea
+                {...form.register('diagnosis')}
+                rows={8}
+                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] p-6 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition-all resize-none shadow-inner"
+                placeholder="Enter finalized clinical diagnosis and secondary conditions..."
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
         )}
 
         {/* Suggestions Tab */}
         {activeTab === 'suggestions' && (
-          <div className="space-y-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center">
-                <CheckIcon className="h-5 w-5 text-white" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-50 rounded-[20px] flex items-center justify-center">
+                <CheckIcon className="h-7 w-7 text-emerald-600" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-gray-900">Treatment Recommendations</h4>
-                <p className="text-sm text-gray-600">Provide comprehensive care instructions</p>
+                <h4 className="text-xl font-black text-slate-900 tracking-tight">Clinical Recommendations</h4>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lifestyle changes and follow-up guidance</p>
               </div>
             </div>
 
-            {/* Exercises Section */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                  <StarIcon className="h-4 w-4 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900">Exercise Recommendations</h4>
-              </div>
-              <textarea
-                {...form.register('exercises')}
-                rows={4}
-                disabled={isReadOnly}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                placeholder="Enter specific exercise recommendations and routines..."
-              />
-            </div>
-
-            {/* Dietary Changes Section */}
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                  <HeartIcon className="h-4 w-4 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900">Dietary Modifications</h4>
-              </div>
-              <textarea
-                {...form.register('dietaryChanges')}
-                rows={4}
-                disabled={isReadOnly}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                placeholder="Enter dietary changes and nutritional recommendations..."
-              />
-            </div>
-
-            {/* Lifestyle Modifications Section */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                  <ArrowPathIcon className="h-4 w-4 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900">Lifestyle Modifications</h4>
+            <div className="bg-white rounded-[24px] border border-slate-100 p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <DocumentTextIcon className="h-5 w-5 text-emerald-600" />
+                <label className="text-sm font-black text-slate-900 uppercase tracking-widest">General Suggestions</label>
               </div>
               <textarea
                 {...form.register('suggestions')}
-                rows={4}
+                rows={6}
+                className="w-full bg-slate-50 border border-slate-100 rounded-[20px] p-6 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition-all resize-none shadow-inner"
+                placeholder="Enter life-style instructions, dietary plans, and follow-up schedules..."
                 disabled={isReadOnly}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                placeholder="Enter lifestyle changes and behavioral modifications..."
               />
             </div>
 
-            {/* Follow-up Section */}
-            <div className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="h-4 w-4 text-white" />
+            {/* ═══ EMERGENCY PROTOCOL ═══ */}
+            <div className="bg-rose-50 border border-rose-100 rounded-[24px] p-8 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-32 h-full bg-rose-500/5 rotate-12 translate-x-12 translate-y-8" />
+              <div className="flex items-center gap-4 mb-6 relative">
+                <div className="w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-rose-200">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-white" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900">Follow-up Instructions</h4>
+                <div>
+                  <h4 className="text-lg font-black text-rose-900 tracking-tight uppercase tracking-wider">Emergency Instructions</h4>
+                  <p className="text-xs font-bold text-rose-600 opacity-80 uppercase tracking-widest">Immediate Critical Response Protocol</p>
+                </div>
               </div>
               <textarea
                 rows={4}
                 disabled={isReadOnly}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                placeholder="Enter follow-up appointment schedule and instructions..."
-              />
-            </div>
-
-            {/* Emergency Instructions Section */}
-            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center">
-                  <ExclamationTriangleIcon className="h-4 w-4 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900">Emergency Instructions</h4>
-              </div>
-              <textarea
-                rows={4}
-                disabled={isReadOnly}
-                className="w-full px-4 py-3 border border-red-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 resize-none"
-                placeholder="Enter emergency contact information and immediate action steps..."
+                className="w-full bg-white border border-rose-200 rounded-[20px] p-6 text-sm font-bold text-rose-900 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-300 outline-none transition-all resize-none shadow-sm placeholder:text-rose-300"
+                placeholder="Enter emergency contact information and immediate critical action steps..."
               />
             </div>
           </div>
@@ -1817,93 +1600,83 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
         {activeTab === 'tests' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-xl flex items-center justify-center">
-                  <BeakerIcon className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-cyan-50 rounded-[20px] flex items-center justify-center">
+                  <BeakerIcon className="h-7 w-7 text-cyan-600" />
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-gray-900">Tests Ordered</h4>
-                  <p className="text-sm text-gray-600">Manage laboratory tests and diagnostics</p>
+                  <h4 className="text-xl font-black text-slate-900 tracking-tight">Diagnostic Investigations</h4>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Laboratory & radiographic requisitions</p>
                 </div>
               </div>
             </div>
 
-            {/* Search and Add Tests */}
+            {/* ═══ LAB TEST SEARCH ═══ */}
             {!isReadOnly && userRole === 'doctor' && (
-              <div className="space-y-6">
-                {/* Search Input */}
-                <div className="bg-gradient-to-r from-cyan-50 to-teal-50 border border-cyan-200/50 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center justify-center">
-                      <MagnifyingGlassIcon className="h-4 w-4 text-white" />
-                    </div>
-                    <h5 className="text-lg font-semibold text-gray-900">Search Lab Tests</h5>
-                  </div>
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <div className="bg-slate-900 rounded-[24px] p-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-full bg-cyan-500/10 -skew-x-12 translate-x-12" />
+                <div className="relative flex flex-col md:flex-row items-center gap-6">
+                  <div className="w-full relative">
+                    <MagnifyingGlassIcon className="h-5 w-5 absolute left-5 top-1/2 -translate-y-1/2 text-cyan-500" />
                     <input
                       type="text"
                       value={testSearchTerm}
                       onChange={(e) => {
                         const value = e.target.value;
-                        console.log('Search term changed:', value);
                         setTestSearchTerm(value);
                         setShowTestSearch(value.length > 0);
                       }}
-                      placeholder="Search for lab tests..."
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200"
+                      placeholder="Search for validated laboratory tests..."
+                      className="w-full bg-white/10 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white text-sm font-bold placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-500/30 focus:bg-white/20 outline-none transition-all"
                     />
                   </div>
+                  
+                  <button
+                    type="button"
+                    onClick={addTest}
+                    className="shrink-0 px-8 py-4 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-cyan-50 transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    <PlusIcon className="h-4 w-4" /> Manual Add
+                  </button>
                 </div>
 
-                {/* Search Results */}
+                {/* Search Results Overlay */}
                 {showTestSearch && (
-                  <div className="bg-white border border-cyan-200/50 rounded-2xl max-h-80 overflow-y-auto shadow-lg">
+                  <div className="absolute z-50 left-8 right-8 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
                     {labTestsLoading ? (
-                      <div className="p-6 text-center">
-                        <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
-                          <BeakerIcon className="h-4 w-4 text-white" />
-                        </div>
-                        <p className="text-gray-600 font-medium">Loading tests...</p>
+                      <div className="p-10 text-center">
+                        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Querying Lab Database...</p>
                       </div>
                     ) : availableLabTests && availableLabTests.length > 0 ? (
-                      <div className="p-4">
-                        <h6 className="text-sm font-semibold text-gray-700 mb-3">Available Tests ({availableLabTests.length})</h6>
-                        <div className="space-y-3">
-                          {availableLabTests.map((labTest: any) => (
-                            <div
-                              key={labTest.id}
-                              className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-teal-50 border border-cyan-200/50 rounded-xl hover:shadow-md cursor-pointer transition-all duration-200"
-                              onClick={() => addTestFromSearch(labTest)}
-                            >
-                              <div className="flex-1">
-                                <h5 className="font-bold text-gray-900 mb-1">{labTest.name}</h5>
-                                <p className="text-sm text-gray-600 mb-2">{labTest.description}</p>
-                                <div className="flex items-center gap-2">
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800">
-                                    {labTest.category}
-                                  </span>
-                                  {labTest.price && (
-                                    <span className="text-xs font-semibold text-gray-700">
-                                      {formatCurrency(labTest.price)}
-                                    </span>
-                                  )}
-                                </div>
+                      <div className="p-2 space-y-1">
+                        {availableLabTests.map((labTest: any) => (
+                          <button
+                            key={labTest.id}
+                            onClick={() => addTestFromSearch(labTest)}
+                            className="w-full text-left p-4 hover:bg-slate-50 rounded-xl transition-all group flex items-center justify-between"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-black text-slate-900">{labTest.name}</span>
+                                <span className="px-2 py-0.5 bg-cyan-50 text-cyan-600 text-[10px] font-black uppercase tracking-widest rounded-md border border-cyan-100">
+                                  {labTest.category}
+                                </span>
                               </div>
-                              <div className="ml-4 p-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors duration-200">
+                              <p className="text-xs text-slate-400 font-medium line-clamp-1">{labTest.description}</p>
+                            </div>
+                            <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-all">
+                              <span className="text-xs font-black text-indigo-600">{formatCurrency(labTest.price)}</span>
+                              <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center">
                                 <PlusIcon className="h-4 w-4" />
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          </button>
+                        ))}
                       </div>
                     ) : (
-                      <div className="p-6 text-center">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <BeakerIcon className="h-6 w-6 text-gray-400" />
-                        </div>
-                        <p className="text-gray-600 font-medium">No tests found</p>
-                        <p className="text-sm text-gray-500">Try a different search term</p>
+                      <div className="p-10 text-center">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Zero Results Found</p>
                       </div>
                     )}
                   </div>
@@ -1911,69 +1684,77 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
               </div>
             )}
 
-            {/* Current Tests List */}
+            {/* ═══ CURRENT TESTS REGISTRY ═══ */}
             {tests.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid gap-4">
                 {tests.map((test) => (
-                  <div key={test.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">{test.name || 'Test'}</h5>
-                        {test.category && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
-                            {test.category}
-                          </span>
-                        )}
+                  <div key={test.id} className="bg-white rounded-[24px] border border-slate-100 p-6 shadow-sm hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
+                          <BeakerIcon className="h-5 w-5 text-indigo-500" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <h5 className="text-sm font-black text-slate-900 uppercase tracking-widest">{test.name || 'Custom Lab Test'}</h5>
+                          {test.category && (
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest rounded-md border border-indigo-100">
+                              {test.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-4">
                         {test.price && (
-                          <span className="text-sm font-medium text-gray-700">{formatCurrency(test.price)}</span>
+                          <span className="text-sm font-black text-slate-900">{formatCurrency(test.price)}</span>
                         )}
                         {!isReadOnly && userRole === 'doctor' && (
                           <button
                             type="button"
                             onClick={() => removeTest(test.id)}
-                            className="text-red-600 hover:text-red-800"
+                            className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-all shadow-sm"
                           >
-                            <XMarkIcon className="h-4 w-4" />
+                            <XMarkIcon className="h-5 w-5" />
                           </button>
                         )}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Test Name</label>
-                        <input
-                          type="text"
-                          value={test.name}
-                          onChange={(e) => updateTest(test.id, 'name', e.target.value)}
-                          disabled={isReadOnly || !!test.testId}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="e.g., Blood Test, X-Ray"
-                        />
-                        {test.testId && (
-                          <p className="text-xs text-gray-500 mt-1">This test is from our lab test database</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Instructional Clarity</label>
                         <textarea
                           value={test.description}
                           onChange={(e) => updateTest(test.id, 'description', e.target.value)}
                           rows={3}
                           disabled={isReadOnly}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="Describe the test requirements..."
+                          className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all resize-none shadow-inner"
+                          placeholder="Specify exact test requirements, preparation guidelines, and urgent reporting instructions..."
                         />
                       </div>
+                      
+                      {!test.testId && !isReadOnly && (
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manual Definition</label>
+                          <input
+                            type="text"
+                            value={test.name}
+                            onChange={(e) => updateTest(test.id, 'name', e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-4 text-xs font-black text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all shadow-inner"
+                            placeholder="Enter manual test nomenclature..."
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <BeakerIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                <p>No tests added yet. Search above to add from available tests or add manually.</p>
+              <div className="text-center py-16 bg-slate-50 rounded-[32px] border border-dashed border-slate-200">
+                <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <BeakerIcon className="h-8 w-8 text-slate-300" />
+                </div>
+                <h4 className="text-lg font-black text-slate-900 mb-2">Registry Empty</h4>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest max-w-xs mx-auto">No investigations requested for this clinical session</p>
               </div>
             )}
             
@@ -2332,28 +2113,32 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* ═══ ACTION BUTTONS ═══ */}
         {!isReadOnly && userRole === 'doctor' && (
-          <div className="bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-200/50 p-6 -mx-6 -mb-6 rounded-b-2xl">
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 shadow-sm hover:shadow-md font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckIcon className="h-5 w-5" />
-                    Save Prescription
-                  </>
-                )}
-              </button>
+          <div className="bg-slate-50 border-t border-slate-100 p-8 rounded-b-[32px] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
+                <ShieldCheckIcon className="h-5 w-5 text-emerald-500" />
+              </div>
+              <p className="text-xs font-bold text-slate-500">Clinical session will be finalized upon submission.</p>
             </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full md:w-auto px-10 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CheckIcon className="h-5 w-5" />
+                  Finalize Prescription
+                </>
+              )}
+            </button>
           </div>
         )}
         
