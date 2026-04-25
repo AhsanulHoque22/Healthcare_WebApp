@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { motion } from 'framer-motion';
 import API from '../api/api';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -746,252 +747,437 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
   ];
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden">
-      {/* Modern Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <DocumentTextIcon className="h-6 w-6 text-white" />
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="bg-white/95 backdrop-blur-xl rounded-[32px] shadow-2xl border border-white/20 overflow-hidden"
+      style={{
+        background: `
+          radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(20, 184, 166, 0.05) 0%, transparent 50%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)
+        `
+      }}
+    >
+      {/* Premium Header */}
+      <div className="relative p-8 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-xl border-b border-white/[0.08]">
+        {/* Background mesh gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-cyan-500/10 rounded-t-[32px]" />
+
+        <div className="relative flex items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-6"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+              className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20"
+            >
+              <DocumentTextIcon className="h-8 w-8 text-white" />
+            </motion.div>
+
             <div>
-              <h3 className="text-xl font-bold">Prescription Management</h3>
-              <p className="text-emerald-100 text-sm">Record patient symptoms, diagnosis, and treatment plan</p>
+              <motion.h3
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-200 bg-clip-text text-transparent"
+              >
+                Prescription Management
+              </motion.h3>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-slate-300 text-sm font-medium mt-1"
+              >
+                Record patient symptoms, diagnosis, and treatment plan
+              </motion.p>
             </div>
-          </div>
-          <div className="hidden md:flex items-center gap-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+          </motion.div>
+
+          {/* Status Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="hidden md:flex items-center gap-4"
+          >
+            <div className="bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Active Session</span>
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-3 h-3 bg-emerald-400 rounded-full shadow-lg shadow-emerald-400/50"
+                />
+                <span className="text-sm font-bold text-emerald-300 uppercase tracking-wider">Active Session</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
       {/* Patient Quick Info Bar */}
       {appointmentData && (
-        <div className="bg-emerald-50/50 border-b border-emerald-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-gradient-to-r from-emerald-50/80 via-teal-50/60 to-cyan-50/80 backdrop-blur-sm border-b border-emerald-100/50 p-6"
+          style={{
+            background: `
+              radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
+              linear-gradient(135deg, rgba(236, 253, 245, 0.8) 0%, rgba(240, 253, 250, 0.6) 100%)
+            `
+          }}
+        >
           <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-emerald-100">
-                <UserIcon className="h-5 w-5 text-emerald-600" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8 }}
+              className="flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                <UserIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Patient Name</p>
-                <p className="font-bold text-gray-900">
+                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Patient Name</p>
+                <p className="text-lg font-bold text-gray-900">
                   {appointmentData.patient?.user?.firstName} {appointmentData.patient?.user?.lastName}
                 </p>
               </div>
-            </div>
-            
-            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+            </motion.div>
 
-            <div>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Age / Sex</p>
-              <p className="font-bold text-gray-900">
-                {formatAge(calculateAge(appointmentData.patient?.user?.dateOfBirth))} / {formatGender(appointmentData.patient?.user?.gender)}
-              </p>
-            </div>
+            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
 
-            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.9 }}
+              className="flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/20">
+                <HeartIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Age / Sex</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatAge(calculateAge(appointmentData.patient?.user?.dateOfBirth))} / {formatGender(appointmentData.patient?.user?.gender)}
+                </p>
+              </div>
+            </motion.div>
 
-            <div>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Weight</p>
-              <p className="font-bold text-gray-900">
-                {appointmentData.patient?.weight ? `${appointmentData.patient.weight} kg` : '—'}
-              </p>
-            </div>
+            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
 
-            <div className="h-8 w-px bg-emerald-200/50 hidden md:block"></div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.0 }}
+              className="flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl shadow-cyan-500/20">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Weight</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {appointmentData.patient?.weight ? `${appointmentData.patient.weight} kg` : '—'}
+                </p>
+              </div>
+            </motion.div>
 
-            <div>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Blood Type</p>
-              <p className="font-bold text-gray-900">
-                {appointmentData.patient?.bloodType || '—'}
-              </p>
-            </div>
+            <div className="h-10 w-px bg-emerald-200/50 hidden md:block" />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.1 }}
+              className="flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl shadow-rose-500/20">
+                <ShieldCheckIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Blood Type</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {appointmentData.patient?.bloodType || '—'}
+                </p>
+              </div>
+            </motion.div>
+
             <div className="ml-auto flex items-center gap-4">
-              <button
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={() => window.open(`/app/patients?patientId=${appointmentData.patient?.id}&view=records`, '_blank')}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
+                className="flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-xl hover:shadow-indigo-500/30"
               >
-                <ClipboardDocumentListIcon className="h-4 w-4" />
+                <ClipboardDocumentListIcon className="h-5 w-5" />
                 View Medical History
-              </button>
-              <div className="flex items-center gap-2 text-emerald-700 border-l border-emerald-200/50 pl-4">
-                <CalendarIcon className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm font-medium">
+              </motion.button>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.3 }}
+                className="flex items-center gap-3 text-slate-600 border-l border-slate-200/50 pl-6"
+              >
+                <CalendarIcon className="h-5 w-5 text-indigo-500" />
+                <span className="text-sm font-bold">
                   {new Date(appointmentData.appointmentDate).toLocaleDateString()}
                 </span>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Voice Assistant Section */}
       {!isReadOnly && userRole === 'doctor' && (
-        <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/20">
-          <VoicePrescriptionAssistant 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4 }}
+          className="px-8 py-6 border-b border-emerald-100/50"
+        >
+          <VoicePrescriptionAssistant
             onTranscriptionUpdate={(transcript, isFinal) => {
               // Can be used for live preview if needed
             }}
             onExtractionRequest={handleVoiceExtraction}
             isProcessing={isExtracting}
           />
-        </div>
+        </motion.div>
       )}
 
-      {/* Modern Tab Navigation */}
-      <div className="bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-200/50">
-        <div className="px-6">
-          <nav className="flex space-x-1">
-            {tabs.map((tab) => {
+      {/* Premium Tab Navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5 }}
+        className="bg-gradient-to-r from-slate-50/80 to-slate-100/80 backdrop-blur-sm border-b border-slate-200/50"
+      >
+        <div className="px-8">
+          <nav className="flex space-x-2 py-2">
+            {tabs.map((tab, index) => {
               const Icon = tab.icon;
               return (
-                <button
+                <motion.button
                   key={tab.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.6 + index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`relative px-4 py-3 font-medium text-sm flex items-center gap-2 rounded-t-xl transition-all duration-200 ${
+                  className={`relative px-6 py-4 font-bold text-sm flex items-center gap-3 rounded-2xl transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'bg-white text-emerald-600 shadow-sm border border-gray-200/50 border-b-0'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                      ? 'bg-white text-slate-900 shadow-xl shadow-slate-900/10 border border-slate-200/50'
+                      : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-emerald-600' : 'text-gray-500'}`} />
+                  <Icon className={`h-5 w-5 ${activeTab === tab.id ? 'text-indigo-500' : 'text-slate-500'}`} />
                   <span className="hidden sm:inline">{tab.name}</span>
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 rounded-full"
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </nav>
         </div>
-      </div>
+      </motion.div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-8">
         {/* Clinical Tab */}
         {activeTab === 'clinical' && (
-          <div className="space-y-8 fade-in">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl flex items-center justify-center shadow-sm">
-                <HeartIcon className="h-5 w-5 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-8"
+          >
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center gap-4 mb-8"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl shadow-rose-500/20">
+                <HeartIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-gray-900">Vital Signs & Clinical Findings</h4>
-                <p className="text-sm text-gray-500">Record baseline vitals and clinical examination findings</p>
+                <h4 className="text-2xl font-bold text-gray-900">Vital Signs & Clinical Findings</h4>
+                <p className="text-slate-600 font-medium">Record baseline vitals and clinical examination findings</p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Vital Signs Grid */}
-            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
-              <h5 className="text-md font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <HeartIcon className="h-4 w-4 text-rose-500" /> Vital Signs
-              </h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Blood Pressure</label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-slate-50/80 via-gray-50/60 to-slate-100/80 backdrop-blur-sm rounded-[28px] p-8 border border-slate-200/50 shadow-xl shadow-slate-900/5"
+              style={{
+                background: `
+                  radial-gradient(circle at 30% 20%, rgba(148, 163, 184, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, rgba(100, 116, 139, 0.05) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%)
+                `
+              }}
+            >
+              <motion.h5
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3"
+              >
+                <HeartIcon className="h-5 w-5 text-rose-500" /> Vital Signs
+              </motion.h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">Blood Pressure</label>
                   <div className="relative">
                     <input
                       type="text"
-                      className="block w-full pl-3 pr-16 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      className="block w-full pl-4 pr-16 py-3 text-sm border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-lg"
                       placeholder="120/80"
                       value={vitalSigns.bloodPressure}
                       onChange={(e) => setVitalSigns({...vitalSigns, bloodPressure: e.target.value})}
                       disabled={isReadOnly}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">mmHg</span>
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-slate-500 text-sm font-medium">mmHg</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Heart Rate</label>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">Heart Rate</label>
                   <div className="relative">
                     <input
                       type="number"
-                      className="block w-full pl-3 pr-12 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      className="block w-full pl-4 pr-12 py-3 text-sm border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-lg"
                       placeholder="72"
                       value={vitalSigns.heartRate}
                       onChange={(e) => setVitalSigns({...vitalSigns, heartRate: e.target.value})}
                       disabled={isReadOnly}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">bpm</span>
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-slate-500 text-sm font-medium">bpm</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">Temperature</label>
                   <div className="relative">
                     <input
                       type="number"
                       step="0.1"
-                      className="block w-full pl-3 pr-10 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      className="block w-full pl-4 pr-10 py-3 text-sm border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-lg"
                       placeholder="98.6"
                       value={vitalSigns.temperature}
                       onChange={(e) => setVitalSigns({...vitalSigns, temperature: e.target.value})}
                       disabled={isReadOnly}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">°F/°C</span>
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-slate-500 text-sm font-medium">°F/°C</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Respiratory Rate</label>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">Respiratory Rate</label>
                   <div className="relative">
                     <input
                       type="number"
-                      className="block w-full pl-3 pr-24 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      className="block w-full pl-4 pr-24 py-3 text-sm border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-lg"
                       placeholder="16"
                       value={vitalSigns.respiratoryRate}
                       onChange={(e) => setVitalSigns({...vitalSigns, respiratoryRate: e.target.value})}
                       disabled={isReadOnly}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">breaths/min</span>
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-slate-500 text-sm font-medium">breaths/min</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Oxygen Saturation</label>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.0 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">Oxygen Saturation</label>
                   <div className="relative">
                     <input
                       type="number"
-                      className="block w-full pl-3 pr-12 py-2 sm:text-sm border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+                      className="block w-full pl-4 pr-12 py-3 text-sm border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-lg"
                       placeholder="98"
                       value={vitalSigns.oxygenSaturation}
                       onChange={(e) => setVitalSigns({...vitalSigns, oxygenSaturation: e.target.value})}
                       disabled={isReadOnly}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 sm:text-sm">%</span>
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-slate-500 text-sm font-medium">%</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Clinical Findings Text Area */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Examination Findings</label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 }}
+              className="space-y-4"
+            >
+              <label className="block text-lg font-bold text-gray-800">Clinical Examination Findings</label>
               <textarea
                 {...form.register('clinicalFindings')}
-                rows={5}
-                className="w-full rounded-xl border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition-colors"
+                rows={6}
+                className="w-full rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 outline-none transition-all shadow-lg resize-none"
                 placeholder="Enter detailed clinical findings from examination..."
                 disabled={isReadOnly}
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
 
         {/* Medicines Tab */}
@@ -2191,7 +2377,7 @@ const PrescriptionInterface: React.FC<PrescriptionInterfaceProps> = ({
           </div>
         )}
       </form>
-    </div>
+    </motion.div>
   );
 };
 
