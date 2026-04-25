@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import API from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { 
-  DocumentTextIcon, 
-  EyeIcon, 
+import {
+  DocumentTextIcon,
+  EyeIcon,
   ArrowDownTrayIcon,
   XMarkIcon,
-  UserIcon,
   CalendarIcon,
   ClockIcon,
   ClipboardDocumentListIcon,
   BeakerIcon,
-  ExclamationTriangleIcon,
-  HeartIcon,
   FunnelIcon,
   CheckCircleIcon,
-  SparklesIcon,
   ClipboardDocumentCheckIcon,
-  FireIcon
+  FireIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { generatePrescriptionPdf } from '../services/prescriptionPdfService';
 import PrescriptionView from '../components/PrescriptionView';
@@ -192,11 +189,8 @@ const MedicalRecords: React.FC = () => {
   const [prescriptionData, setPrescriptionData] = useState<PrescriptionData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'appointments' | 'medicines'>('summary');
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [isDownloading, setIsDownloading] = useState<number | null>(null);
 
-  // Get patient ID first
   const { data: patientProfile } = useQuery({
     queryKey: ['patient-profile'],
     queryFn: async () => {
@@ -206,22 +200,19 @@ const MedicalRecords: React.FC = () => {
     enabled: user?.role === 'patient',
   });
 
-  // Fetch completed appointments as medical records
   const { data: appointments, isLoading } = useQuery<AppointmentMedicalRecord[]>({
     queryKey: ['patient-appointments', patientProfile?.id],
     queryFn: async () => {
       const response = await API.get('/appointments');
-      // Filter only completed appointments
-      const completedAppointments = response.data.data.appointments.filter((apt: any) => 
+      const completedAppointments = response.data.data.appointments.filter((apt: any) =>
         apt.status === 'completed'
       );
       return completedAppointments || [];
     },
     enabled: !!patientProfile?.id,
-    refetchInterval: 10000, // Refetch every 10 seconds for dynamic updates
+    refetchInterval: 10000,
   });
 
-  // Fetch Medical Summary
   const { data: medicalSummary, isLoading: isLoadingSummary, isFetching: isFetchingSummary, refetch: refetchSummary } = useQuery<MedicalSummary>({
     queryKey: ['patient-medical-summary', patientProfile?.id],
     queryFn: async () => {
@@ -250,7 +241,6 @@ const MedicalRecords: React.FC = () => {
     }
   });
 
-  // Filter appointments based on selected filter
   const filteredAppointments = appointments?.filter((apt) => {
     if (recordTypeFilter === 'all') return true;
     if (recordTypeFilter === 'consultation') return apt.type === 'in_person' || apt.type === 'telemedicine';
@@ -258,33 +248,13 @@ const MedicalRecords: React.FC = () => {
     return true;
   }) || [];
 
-  // Page load animation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoaded(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const handleViewDetails = async (appointment: AppointmentMedicalRecord) => {
     setSelectedRecord(appointment);
     setShowDetailModal(true);
-    
-    // Fetch prescription data if available
     try {
       const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
       setPrescriptionData(response.data.data.prescription);
     } catch (error) {
-      console.log('No prescription found for this appointment');
       setPrescriptionData(null);
     }
   };
@@ -298,11 +268,10 @@ const MedicalRecords: React.FC = () => {
         const response = await API.get(`/prescriptions/appointment/${appointment.id}`);
         prescriptionForPdf = response.data?.data?.prescription || null;
       } catch (fetchError: any) {
-        console.warn('[MedicalRecords] No prescription found for appointment:', appointment.id);
+        // No prescription found
       }
       await generatePrescriptionPdf({ prescriptionData: prescriptionForPdf, appointmentData: appointment });
     } catch (error: any) {
-      console.error('[MedicalRecords] PDF generation error:', error);
       if (error.message?.toLowerCase().includes('popup')) {
         toast.error('Please allow pop-ups for this site, then try downloading again.');
       } else {
@@ -313,42 +282,29 @@ const MedicalRecords: React.FC = () => {
     }
   };
 
-  const getAppointmentTypeColor = (type: string) => {
+  const getAppointmentTypeLabel = (type: string) => {
     switch (type) {
-      case 'in_person':
-        return 'bg-blue-100 text-blue-800';
-      case 'telemedicine':
-        return 'bg-green-100 text-green-800';
-      case 'follow_up':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'in_person': return 'In Person';
+      case 'telemedicine': return 'Telemedicine';
+      case 'follow_up': return 'Follow-up';
+      default: return type.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
   };
 
-  const getAppointmentTypeLabel = (type: string) => {
+  const getAppointmentTypeBadge = (type: string) => {
     switch (type) {
-      case 'in_person':
-        return 'In Person Consultation';
-      case 'telemedicine':
-        return 'Telemedicine Consultation';
-      case 'follow_up':
-        return 'Follow-up Visit';
-      default:
-        return type.replace('_', ' ').split(' ').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
+      case 'in_person': return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200/60';
+      case 'telemedicine': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60';
+      case 'follow_up': return 'bg-violet-50 text-violet-700 ring-1 ring-violet-200/60';
+      default: return 'bg-slate-50 text-slate-700 ring-1 ring-slate-200/60';
     }
   };
 
   const getInsightStatusStyles = (status?: string) => {
     switch (status) {
-      case 'Critical':
-        return 'bg-rose-100 text-rose-700 border border-rose-200';
-      case 'Caution':
-        return 'bg-amber-100 text-amber-700 border border-amber-200';
-      default:
-        return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+      case 'Critical': return 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/60';
+      case 'Caution': return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60';
+      default: return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60';
     }
   };
 
@@ -359,1062 +315,856 @@ const MedicalRecords: React.FC = () => {
     return 'Normal';
   };
 
+  const calcDuration = (start: string, end: string) => {
+    const diffMins = Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 60000);
+    const h = Math.floor(diffMins / 60);
+    const m = diffMins % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  const tabs = [
+    { key: 'summary' as const, label: 'Medical Summary', icon: ClipboardDocumentCheckIcon },
+    { key: 'appointments' as const, label: 'Appointment History', icon: CalendarIcon },
+    { key: 'medicines' as const, label: 'Medicine History', icon: BeakerIcon },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-      {/* Enhanced Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-emerald-400/15 to-blue-400/15 rounded-full blur-2xl animate-pulse delay-700"></div>
-        <div className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-tl from-violet-400/15 to-indigo-400/15 rounded-full blur-2xl animate-pulse delay-300"></div>
+    <div className="min-h-screen bg-[#f8f9fc] relative">
+      {/* Subtle aurora background — two orbs only */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-64 -right-64 w-[600px] h-[600px] bg-indigo-400/8 rounded-full blur-3xl" />
+        <div className="absolute -bottom-64 -left-64 w-[600px] h-[600px] bg-violet-400/8 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Modern Header */}
-        <div className={`relative group overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-8 text-white shadow-2xl transition-all duration-500 hover:shadow-3xl `}>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/5"></div>
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors duration-500"></div>
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight mb-2 flex items-center">
-                  <div className="relative group mr-3">
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-blue-200/30 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    <ClipboardDocumentListIcon className="relative h-10 w-10 animate-pulse" />
-                  </div>
-                  Medical Records
-                </h1>
-                <p className="text-indigo-100 text-lg">
-                  View and manage your medical history and records.
-                </p>
-              </div>
-              <div className="hidden md:block">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-purple-200/20 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                  <div className="relative w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
-                    <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center relative">
-                      <DocumentTextIcon className="h-8 w-8 text-white" />
-                      <SparklesIcon className="h-4 w-4 text-white/70 absolute -top-1 -right-1 animate-pulse" />
-                    </div>
-                  </div>
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+        {/* ── Header ── */}
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 px-8 py-7 shadow-xl shadow-indigo-900/20 overflow-hidden relative">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/8 rounded-full blur-2xl" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-1.5">
+                <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <ClipboardDocumentListIcon className="h-5 w-5 text-white" />
                 </div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Medical Records</h1>
+              </div>
+              <p className="text-indigo-200 text-sm pl-12">View and manage your complete medical history.</p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <DocumentTextIcon className="h-8 w-8 text-white/80" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Modern Tab Navigation */}
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-          <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
-            <nav className="flex space-x-4">
-              <div className="relative group">
-                <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
-                  activeTab === 'summary'
-                    ? 'bg-gradient-to-r from-blue-300/40 to-indigo-300/40 opacity-60'
-                    : 'bg-gradient-to-r from-gray-200/20 to-blue-200/20 opacity-0 group-hover:opacity-40'
-                }`}></div>
-                <button
-                  onClick={() => setActiveTab('summary')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
-                    activeTab === 'summary'
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg animate-pulse'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <ClipboardDocumentCheckIcon className="h-5 w-5" />
-                  Medical Summary
-                </button>
-              </div>
-              <div className="relative group">
-                <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
-                  activeTab === 'appointments'
-                    ? 'bg-gradient-to-r from-indigo-200/40 to-purple-200/40 opacity-60'
-                    : 'bg-gradient-to-r from-gray-200/20 to-blue-200/20 opacity-0 group-hover:opacity-40'
-                }`}></div>
-                <button
-                  onClick={() => setActiveTab('appointments')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
-                    activeTab === 'appointments'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg animate-pulse'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <CalendarIcon className="h-5 w-5" />
-                  Appointment History
-                </button>
-              </div>
-              <div className="relative group">
-                <div className={`absolute inset-0 rounded-xl blur-lg transition-opacity duration-500 ${
-                  activeTab === 'medicines'
-                    ? 'bg-gradient-to-r from-emerald-200/40 to-green-200/40 opacity-60'
-                    : 'bg-gradient-to-r from-gray-200/20 to-green-200/20 opacity-0 group-hover:opacity-40'
-                }`}></div>
-                <button
-                  onClick={() => setActiveTab('medicines')}
-                  className={`relative py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 hover:shadow-md ${
-                    activeTab === 'medicines'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <BeakerIcon className="h-5 w-5" />
-                  Medicine History
-                </button>
-              </div>
-            </nav>
-          </div>
+        {/* ── Tab Navigation ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-1.5">
+          <nav className="flex gap-1">
+            {tabs.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  activeTab === key
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline truncate">{label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
-        {/* Tab Content */}
-        {/* Medical Summary Tab */}
+        {/* ══════════════════════════════════════════
+            TAB: MEDICAL SUMMARY
+        ══════════════════════════════════════════ */}
         {activeTab === 'summary' && (
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <div className="relative group mr-2">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-indigo-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-                    <ClipboardDocumentCheckIcon className="relative h-6 w-6 text-blue-600 animate-pulse" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Comprehensive Medical Summary</h3>
-                    <p className="text-sm text-gray-600">Aggregated view of your recent medical history</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => refetchSummary()}
-                  disabled={isFetchingSummary}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-200"
-                >
-                  <svg className={`h-4 w-4 ${isFetchingSummary ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                  {isFetchingSummary ? 'Refreshing...' : 'Refresh'}
-                </button>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Section header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Comprehensive Medical Summary</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Aggregated view of your recent medical history</p>
               </div>
-              
+              <button
+                onClick={() => refetchSummary()}
+                disabled={isFetchingSummary}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ArrowPathIcon className={`h-4 w-4 ${isFetchingSummary ? 'animate-spin' : ''}`} />
+                {isFetchingSummary ? 'Refreshing…' : 'Refresh'}
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
               {isLoadingSummary ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                  <p className="text-gray-600 text-lg">Running Llama clinical reconciliation...</p>
+                <div className="flex flex-col items-center py-16 gap-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
+                  <p className="text-slate-500 text-sm">Running clinical reconciliation…</p>
                 </div>
               ) : medicalSummary ? (
-                <div className="space-y-6">
-                  {(medicalSummary?.cacheMeta?.deferredCount ?? 0) > 0 ? (
-                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-amber-900">
-                          {medicalSummary!.cacheMeta!.deferredCount} document{medicalSummary!.cacheMeta!.deferredCount! > 1 ? 's are' : ' is'} pending analysis
-                        </p>
-                        <p className="text-sm text-amber-700">
-                          Documents are analyzed in batches to prevent server overload. Click to process the next batch.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => reanalyzeWithLlama()}
-                        disabled={isReanalyzing}
-                        className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isReanalyzing ? 'Analyzing...' : 'Analyze next batch'}
-                      </button>
-                    </div>
-                  ) : (medicalSummary?.cacheMeta?.legacyCount ?? 0) > 0 ? (
-                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-amber-900">Legacy AI cache detected</p>
-                        <p className="text-sm text-amber-700">
-                          {medicalSummary!.cacheMeta!.legacyCount} document{medicalSummary!.cacheMeta!.legacyCount! > 1 ? 's were' : ' was'} analyzed with an older model.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => reanalyzeWithLlama()}
-                        disabled={isReanalyzing}
-                        className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isReanalyzing ? 'Refreshing...' : 'Re-analyze with Llama'}
-                      </button>
-                    </div>
-                  ) : (medicalSummary?.cacheMeta?.failedCount ?? 0) > 0 ? (
-                    <div className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-rose-900">
-                          {medicalSummary!.cacheMeta!.failedCount} document{medicalSummary!.cacheMeta!.failedCount! > 1 ? 's' : ''} failed to analyze
-                        </p>
-                        <p className="text-sm text-rose-700">
-                          Some documents were unreadable or timed out. Click below to retry.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => reanalyzeWithLlama()}
-                        disabled={isReanalyzing}
-                        className="inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isReanalyzing ? 'Retrying...' : 'Retry extraction'}
-                      </button>
-                    </div>
-                  ) : null}
+                <>
+                  {/* ── Cache alert banners ── */}
+                  {(medicalSummary?.cacheMeta?.deferredCount ?? 0) > 0 && (
+                    <AlertBanner
+                      color="amber"
+                      title={`${medicalSummary.cacheMeta!.deferredCount} document${medicalSummary.cacheMeta!.deferredCount! > 1 ? 's are' : ' is'} pending analysis`}
+                      body="Documents are analyzed in batches to prevent server overload. Click to process the next batch."
+                      action="Analyze next batch"
+                      loading={isReanalyzing}
+                      onAction={() => reanalyzeWithLlama()}
+                    />
+                  )}
+                  {(medicalSummary?.cacheMeta?.deferredCount ?? 0) === 0 && (medicalSummary?.cacheMeta?.legacyCount ?? 0) > 0 && (
+                    <AlertBanner
+                      color="amber"
+                      title="Legacy AI cache detected"
+                      body={`${medicalSummary.cacheMeta!.legacyCount} document${medicalSummary.cacheMeta!.legacyCount! > 1 ? 's were' : ' was'} analyzed with an older model.`}
+                      action="Re-analyze with Llama"
+                      loading={isReanalyzing}
+                      onAction={() => reanalyzeWithLlama()}
+                    />
+                  )}
+                  {(medicalSummary?.cacheMeta?.deferredCount ?? 0) === 0 && (medicalSummary?.cacheMeta?.legacyCount ?? 0) === 0 && (medicalSummary?.cacheMeta?.failedCount ?? 0) > 0 && (
+                    <AlertBanner
+                      color="rose"
+                      title={`${medicalSummary.cacheMeta!.failedCount} document${medicalSummary.cacheMeta!.failedCount! > 1 ? 's' : ''} failed to analyze`}
+                      body="Some documents were unreadable or timed out. Click below to retry."
+                      action="Retry extraction"
+                      loading={isReanalyzing}
+                      onAction={() => reanalyzeWithLlama()}
+                    />
+                  )}
 
-                  {/* Document Analysis Transparency — always visible when cacheMeta exists */}
+                  {/* ── Document meta stats ── */}
                   {medicalSummary?.cacheMeta && (
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-2">
-                      <div className="rounded-xl bg-white border border-gray-100 p-3 text-center shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Docs</p>
-                        <p className="text-lg font-bold text-gray-900">{medicalSummary.cacheMeta.analyzedDocuments ?? '—'}</p>
-                      </div>
-                      <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Analyzed</p>
-                        <p className="text-lg font-bold text-indigo-900">
-                          {medicalSummary.cacheMeta.analyzedCount ??
-                            (medicalSummary.cacheMeta.reusableCount ?? 0)}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">Pending</p>
-                        <p className="text-lg font-bold text-amber-900">{medicalSummary.cacheMeta.deferredCount ?? 0}</p>
-                      </div>
-                      <div className="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Failed</p>
-                        <p className="text-lg font-bold text-rose-900">{medicalSummary.cacheMeta.failedCount ?? 0}</p>
-                      </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <StatTile label="Total Docs" value={medicalSummary.cacheMeta.analyzedDocuments ?? '—'} color="slate" />
+                      <StatTile label="Analyzed" value={medicalSummary.cacheMeta.analyzedCount ?? (medicalSummary.cacheMeta.reusableCount ?? 0)} color="indigo" />
+                      <StatTile label="Pending" value={medicalSummary.cacheMeta.deferredCount ?? 0} color="amber" />
+                      <StatTile label="Failed" value={medicalSummary.cacheMeta.failedCount ?? 0} color="rose" />
                     </div>
                   )}
 
-                  {medicalSummary?.llamaClinicalInsight ? (
-                    <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 shadow-sm">
-                      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <div className="mb-2 flex items-center gap-2">
-                            <div className="rounded-md bg-violet-600 p-1 text-white">
-                              <FireIcon className="h-4 w-4" />
-                            </div>
-                            <h4 className="text-md font-bold uppercase tracking-wider text-violet-900">Clinical Insight</h4>
+                  {/* ── Llama Clinical Insight ── */}
+                  {medicalSummary?.llamaClinicalInsight && (
+                    <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/60 to-fuchsia-50/40 overflow-hidden">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 py-4 border-b border-violet-100">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
+                            <FireIcon className="h-4 w-4 text-white" />
                           </div>
-                          <p className="text-sm text-violet-700">
-                            Deep reconciliation across prescriptions, lab reports, and uploaded records.
-                          </p>
+                          <div>
+                            <p className="text-sm font-bold text-violet-900 tracking-wide uppercase">Clinical Insight</p>
+                            <p className="text-xs text-violet-600 mt-0.5">Deep reconciliation across prescriptions, lab reports, and uploaded records.</p>
+                          </div>
                         </div>
-                        <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold ${getInsightStatusStyles(medicalSummary.llamaClinicalInsight.overallStatus)}`}>
+                        <span className={`self-start sm:self-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getInsightStatusStyles(medicalSummary.llamaClinicalInsight.overallStatus)}`}>
                           {medicalSummary.llamaClinicalInsight.overallStatus}
                         </span>
                       </div>
 
-                      <p className="mb-4 rounded-xl border border-violet-100 bg-white/80 p-4 text-sm font-medium leading-relaxed text-gray-700">
-                        {medicalSummary.llamaClinicalInsight.summary}
-                      </p>
+                      <div className="p-5 space-y-5">
+                        <p className="text-sm leading-relaxed text-slate-700 bg-white/70 rounded-xl p-4 border border-violet-100/50">
+                          {medicalSummary.llamaClinicalInsight.summary}
+                        </p>
 
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                        <div className="rounded-xl bg-white/80 p-4">
-                          <h5 className="mb-2 text-sm font-semibold text-emerald-700">Improved</h5>
-                          {medicalSummary.llamaClinicalInsight.improved?.length ? (
-                            <ul className="space-y-2 text-sm text-gray-700">
-                              {medicalSummary.llamaClinicalInsight.improved.map((item, idx) => (
-                                <li key={idx} className="rounded-lg bg-emerald-50 px-3 py-2">{item}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm italic text-gray-500">No clear improvement trend identified yet.</p>
-                          )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <InsightList
+                            title="Improved"
+                            items={medicalSummary.llamaClinicalInsight.improved}
+                            emptyText="No clear improvement trend identified yet."
+                            colorClass="bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100"
+                            headingClass="text-emerald-700"
+                          />
+                          <InsightList
+                            title="Needs Attention"
+                            items={medicalSummary.llamaClinicalInsight.worsened}
+                            emptyText="No worsening trend flagged from the recent records."
+                            colorClass="bg-amber-50 text-amber-800 ring-1 ring-amber-100"
+                            headingClass="text-amber-700"
+                          />
                         </div>
-                        <div className="rounded-xl bg-white/80 p-4">
-                          <h5 className="mb-2 text-sm font-semibold text-amber-700">Needs Attention</h5>
-                          {medicalSummary.llamaClinicalInsight.worsened?.length ? (
-                            <ul className="space-y-2 text-sm text-gray-700">
-                              {medicalSummary.llamaClinicalInsight.worsened.map((item, idx) => (
-                                <li key={idx} className="rounded-lg bg-amber-50 px-3 py-2">{item}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm italic text-gray-500">No worsening trend flagged from the recent records.</p>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* Specialist Referrals */}
-                      {medicalSummary.llamaClinicalInsight.specialistReferrals?.length ? (
-                        <div className="mt-4 pt-4 border-t border-violet-100">
-                          <h5 className="text-sm font-bold text-violet-800 mb-3 flex items-center gap-1">
-                            <span>🩺</span> Recommended Specialists
-                          </h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            {medicalSummary.llamaClinicalInsight.specialistReferrals.map((ref, idx) => (
-                              <div key={idx} className={`rounded-lg border p-3 text-sm ${
-                                ref.urgency === 'Urgent' ? 'border-rose-200 bg-rose-50' :
-                                ref.urgency === 'Soon'   ? 'border-amber-200 bg-amber-50' :
-                                                            'border-blue-100 bg-blue-50'
-                              }`}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-semibold text-gray-900">{ref.specialist}</span>
-                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    ref.urgency === 'Urgent' ? 'bg-rose-200 text-rose-800' :
-                                    ref.urgency === 'Soon'   ? 'bg-amber-200 text-amber-800' :
-                                                                'bg-blue-200 text-blue-800'
-                                  }`}>{ref.urgency}</span>
+                        {medicalSummary.llamaClinicalInsight.specialistReferrals?.length ? (
+                          <SubSection title="Recommended Specialists" emoji="🩺">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {medicalSummary.llamaClinicalInsight.specialistReferrals.map((ref, idx) => (
+                                <div key={idx} className={`rounded-xl border p-3 text-sm ${
+                                  ref.urgency === 'Urgent' ? 'border-rose-200 bg-rose-50/60' :
+                                  ref.urgency === 'Soon'   ? 'border-amber-200 bg-amber-50/60' :
+                                                              'border-blue-100 bg-blue-50/60'
+                                }`}>
+                                  <div className="flex items-center justify-between gap-2 mb-1">
+                                    <span className="font-semibold text-slate-900">{ref.specialist}</span>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      ref.urgency === 'Urgent' ? 'bg-rose-100 text-rose-700' :
+                                      ref.urgency === 'Soon'   ? 'bg-amber-100 text-amber-700' :
+                                                                  'bg-blue-100 text-blue-700'
+                                    }`}>{ref.urgency}</span>
+                                  </div>
+                                  <p className="text-slate-500 text-xs">{ref.reason}</p>
                                 </div>
-                                <p className="text-gray-600 text-xs">{ref.reason}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
+                              ))}
+                            </div>
+                          </SubSection>
+                        ) : null}
 
-                      {/* Lifestyle Recommendations */}
-                      {medicalSummary.llamaClinicalInsight.lifestyleRecommendations?.length ? (
-                        <div className="mt-4 pt-4 border-t border-violet-100">
-                          <h5 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-1">
-                            <span>🌿</span> Lifestyle Recommendations
-                          </h5>
-                          <div className="space-y-2">
-                            {medicalSummary.llamaClinicalInsight.lifestyleRecommendations.map((rec, idx) => (
-                              <div key={idx} className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm">
-                                <div className="flex items-start gap-2">
-                                  <span className="mt-0.5 text-xs font-bold uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded shrink-0">{rec.category}</span>
+                        {medicalSummary.llamaClinicalInsight.lifestyleRecommendations?.length ? (
+                          <SubSection title="Lifestyle Recommendations" emoji="🌿">
+                            <div className="space-y-2">
+                              {medicalSummary.llamaClinicalInsight.lifestyleRecommendations.map((rec, idx) => (
+                                <div key={idx} className="flex items-start gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-sm">
+                                  <span className="mt-0.5 text-[10px] font-bold uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-lg shrink-0">{rec.category}</span>
                                   <div>
-                                    <p className="font-medium text-gray-900">{rec.action}</p>
-                                    {rec.reason && <p className="text-xs text-gray-500 mt-0.5">{rec.reason}</p>}
+                                    <p className="font-medium text-slate-900">{rec.action}</p>
+                                    {rec.reason && <p className="text-xs text-slate-500 mt-0.5">{rec.reason}</p>}
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
+                              ))}
+                            </div>
+                          </SubSection>
+                        ) : null}
 
-                      {/* Areas Needing Attention */}
-                      {medicalSummary.llamaClinicalInsight.attentionAreas?.length ? (
-                        <div className="mt-4 pt-4 border-t border-violet-100">
-                          <h5 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-1">
-                            <span>⚠️</span> Areas Needing Attention
-                          </h5>
-                          <div className="space-y-2">
-                            {medicalSummary.llamaClinicalInsight.attentionAreas.map((item, idx) => (
-                              <div key={idx} className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-                                <p className="font-semibold text-amber-900">{item.area}</p>
-                                <p className="text-amber-700 text-xs mt-0.5">{item.detail}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
+                        {medicalSummary.llamaClinicalInsight.attentionAreas?.length ? (
+                          <SubSection title="Areas Needing Attention" emoji="⚠️">
+                            <div className="space-y-2">
+                              {medicalSummary.llamaClinicalInsight.attentionAreas.map((item, idx) => (
+                                <div key={idx} className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-sm">
+                                  <p className="font-semibold text-amber-900">{item.area}</p>
+                                  <p className="text-amber-700 text-xs mt-0.5">{item.detail}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </SubSection>
+                        ) : null}
 
-                      {/* Follow-Up Considerations */}
-                      {medicalSummary.llamaClinicalInsight.followUpConsiderations?.length ? (
-                        <div className="mt-4 pt-4 border-t border-violet-100">
-                          <h5 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                            <span>📋</span> Follow-Up Checklist
-                          </h5>
-                          <ul className="space-y-1">
-                            {medicalSummary.llamaClinicalInsight.followUpConsiderations.map((item, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
-                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
+                        {medicalSummary.llamaClinicalInsight.followUpConsiderations?.length ? (
+                          <SubSection title="Follow-Up Checklist" emoji="📋">
+                            <ul className="space-y-1.5">
+                              {medicalSummary.llamaClinicalInsight.followUpConsiderations.map((item, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </SubSection>
+                        ) : null}
+                      </div>
                     </div>
-                  ) : null}
+                  )}
 
-                  {/* Diagnoses and Symptoms */}
-                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                      <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600" /> Recent Medical Findings
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ── Recent Medical Findings ── */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+                    <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-100">
+                      <ClipboardDocumentListIcon className="h-5 w-5 text-emerald-600 shrink-0" />
+                      <h4 className="font-bold text-slate-900">Recent Medical Findings</h4>
+                    </div>
+                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
-                        <h5 className="text-sm font-semibold text-emerald-700 mb-2">Diagnoses</h5>
-                        {medicalSummary?.summarizedDiagnoses && Array.isArray(medicalSummary.summarizedDiagnoses) && medicalSummary.summarizedDiagnoses.length > 0 ? (
+                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">Diagnoses</p>
+                        {medicalSummary?.summarizedDiagnoses?.length ? (
                           <ul className="space-y-2">
                             {medicalSummary.summarizedDiagnoses.map((diag: any, idx: number) => (
-                              <li key={idx} className="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm flex justify-between items-center">
-                                <span>{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || diag?.description || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
-                                <span className="text-xs text-emerald-600/70">
+                              <li key={idx} className="flex items-center justify-between gap-2 bg-white rounded-xl px-3 py-2.5 text-sm border border-slate-100">
+                                <span className="text-slate-800">{typeof diag === 'object' ? (diag?.condition || diag?.diagnosis || diag?.description || JSON.stringify(diag)) : (diag || 'Unknown')}</span>
+                                <span className="text-xs text-slate-400 shrink-0">
                                   {diag?.date && !isNaN(new Date(diag.date).getTime()) ? new Date(diag.date).toLocaleDateString() : ''}
                                 </span>
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-gray-500 italic">No recent diagnoses found.</p>
+                          <p className="text-sm text-slate-400 italic">No recent diagnoses found.</p>
                         )}
                       </div>
                       <div>
-                        <h5 className="text-sm font-semibold text-emerald-700 mb-2">Symptoms Reported</h5>
-                        {medicalSummary?.recentSymptoms && Array.isArray(medicalSummary.recentSymptoms) && medicalSummary.recentSymptoms.length > 0 ? (
+                        <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-3">Symptoms Reported</p>
+                        {medicalSummary?.recentSymptoms?.length ? (
                           <ul className="space-y-2">
                             {medicalSummary.recentSymptoms.map((symp: any, idx: number) => (
-                              <li key={idx} className="text-sm text-gray-700 border-l-2 border-emerald-300 pl-2 py-1">
-                                {typeof symp === 'object' ? (symp?.symptom || symp?.name || symp?.description || JSON.stringify(symp)) : (symp || 'Unknown')} 
+                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 border-l-2 border-indigo-300 pl-3 py-1">
+                                <span>{typeof symp === 'object' ? (symp?.symptom || symp?.name || symp?.description || JSON.stringify(symp)) : (symp || 'Unknown')}</span>
                                 {symp?.date && !isNaN(new Date(symp.date).getTime()) && (
-                                  <span className="text-xs text-gray-400 ml-1">({new Date(symp.date).toLocaleDateString()})</span>
+                                  <span className="text-xs text-slate-400 shrink-0">({new Date(symp.date).toLocaleDateString()})</span>
                                 )}
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-gray-500 italic">No recent symptoms reported.</p>
+                          <p className="text-sm text-slate-400 italic">No recent symptoms reported.</p>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* All Lab Reports */}
-                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <h4 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
-                      <BeakerIcon className="h-5 w-5 text-purple-600" /> All Laboratory Tests
-                    </h4>
-                    {medicalSummary?.recentLabResults && Array.isArray(medicalSummary.recentLabResults) && medicalSummary.recentLabResults.length > 0 ? (
-                      <div className="space-y-4">
-                        {medicalSummary?.allLabResultsSummary ? (
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-                            <div className="rounded-xl bg-slate-50 p-3 text-center">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reports</p>
-                              <p className="text-lg font-bold text-slate-900">{medicalSummary.allLabResultsSummary.totalReports}</p>
+                  {/* ── Lab Results ── */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+                    <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-100">
+                      <BeakerIcon className="h-5 w-5 text-violet-600 shrink-0" />
+                      <h4 className="font-bold text-slate-900">All Laboratory Tests</h4>
+                    </div>
+                    <div className="p-5">
+                      {medicalSummary?.recentLabResults?.length ? (
+                        <div className="space-y-4">
+                          {medicalSummary?.allLabResultsSummary && (
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                              <StatTile label="Reports" value={medicalSummary.allLabResultsSummary.totalReports} color="slate" />
+                              <StatTile label="Findings" value={medicalSummary.allLabResultsSummary.totalFindings} color="indigo" />
+                              <StatTile label="Critical" value={medicalSummary.allLabResultsSummary.criticalCount} color="rose" />
+                              <StatTile label="Caution" value={medicalSummary.allLabResultsSummary.cautionCount} color="amber" />
+                              <StatTile label="Normal" value={medicalSummary.allLabResultsSummary.normalCount} color="emerald" />
                             </div>
-                            <div className="rounded-xl bg-blue-50 p-3 text-center">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Findings</p>
-                              <p className="text-lg font-bold text-blue-900">{medicalSummary.allLabResultsSummary.totalFindings}</p>
-                            </div>
-                            <div className="rounded-xl bg-rose-50 p-3 text-center">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Critical</p>
-                              <p className="text-lg font-bold text-rose-900">{medicalSummary.allLabResultsSummary.criticalCount}</p>
-                            </div>
-                            <div className="rounded-xl bg-amber-50 p-3 text-center">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Caution</p>
-                              <p className="text-lg font-bold text-amber-900">{medicalSummary.allLabResultsSummary.cautionCount}</p>
-                            </div>
-                            <div className="rounded-xl bg-emerald-50 p-3 text-center">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Normal</p>
-                              <p className="text-lg font-bold text-emerald-900">{medicalSummary.allLabResultsSummary.normalCount}</p>
-                            </div>
-                          </div>
-                        ) : null}
+                          )}
 
-                        {medicalSummary?.allLabResultsSummary?.highlightedFindings?.length ? (
-                          <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                            <h5 className="mb-3 text-sm font-semibold text-gray-900">Highlighted Results Across All Lab Tests</h5>
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                              {medicalSummary.allLabResultsSummary.highlightedFindings.map((finding, idx) => (
-                                <div key={idx} className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
-                                  <div className="mb-2 flex items-center justify-between gap-2">
-                                    <span className="text-sm font-semibold text-gray-900">{finding.test}</span>
-                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(finding.status)}`}>
-                                      {finding.status}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm font-medium text-gray-800">
-                                    {finding.value} {finding.unit}
-                                  </p>
-                                  {finding.referenceRange ? (
-                                    <p className="text-xs text-gray-500">Reference: {finding.referenceRange}</p>
-                                  ) : null}
-                                  <p className="mt-1 text-[11px] text-gray-500">
-                                    {finding.reportName || finding.source}
-                                    {finding.date ? ` • ${new Date(finding.date).toLocaleDateString()}` : ''}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
-                          <div key={idx} className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-3 shadow-sm">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <span className="font-bold text-sm text-gray-900 block">{lab?.testNames || 'Laboratory Investigation'}</span>
-                                <span className="text-[11px] text-gray-500 font-medium">{lab.source === 'MedVault' ? 'Self Uploaded' : `Order #${String(lab?.orderId || '—')}`} • {lab?.date && !isNaN(new Date(lab.date).getTime()) ? new Date(lab.date).toLocaleDateString() : ''}</span>
-                              </div>
-                              <span className={`text-[10px] ${lab.source === 'MedVault' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'} px-2 py-0.5 rounded-full font-bold uppercase tracking-wider`}>
-                                {lab.source === 'MedVault' ? 'MedVault' : 'Result Ready'}
-                              </span>
-                            </div>
-                            
-                            {lab?.findings && Array.isArray(lab.findings) && lab.findings.length > 0 && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                                {lab.findings.slice(0, 4).map((f: any, fIdx: number) => (
-                                  <div key={fIdx} className="bg-white p-2 rounded-lg border border-purple-100 flex justify-between items-center shadow-sm">
-                                    <span className="text-[10px] font-medium text-gray-600 truncate mr-2">{f.test || 'Result'}</span>
-                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getInsightStatusStyles(getLabStatus(f.status))}`}>
-                                      {f.value} {f.unit} • {getLabStatus(f.status)}
-                                    </span>
+                          {medicalSummary?.allLabResultsSummary?.highlightedFindings?.length ? (
+                            <div className="rounded-xl border border-slate-100 bg-white p-4">
+                              <p className="text-sm font-semibold text-slate-700 mb-3">Highlighted Results Across All Lab Tests</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                {medicalSummary.allLabResultsSummary.highlightedFindings.map((finding, idx) => (
+                                  <div key={idx} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                                      <span className="text-sm font-semibold text-slate-900 truncate">{finding.test}</span>
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${getInsightStatusStyles(finding.status)}`}>
+                                        {finding.status}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-800">{finding.value} {finding.unit}</p>
+                                    {finding.referenceRange && <p className="text-xs text-slate-400">Ref: {finding.referenceRange}</p>}
+                                    <p className="mt-1 text-[11px] text-slate-400">
+                                      {finding.reportName || finding.source}
+                                      {finding.date ? ` · ${new Date(finding.date).toLocaleDateString()}` : ''}
+                                    </p>
                                   </div>
                                 ))}
                               </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No lab tests found for this patient.</p>
-                    )}
+                            </div>
+                          ) : null}
+
+                          {medicalSummary.recentLabResults.map((lab: any, idx: number) => (
+                            <div key={idx} className="rounded-xl border border-slate-100 bg-white p-4 space-y-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="font-semibold text-sm text-slate-900">{lab?.testNames || 'Laboratory Investigation'}</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    {lab.source === 'MedVault' ? 'Self Uploaded' : `Order #${String(lab?.orderId || '—')}`}
+                                    {lab?.date && !isNaN(new Date(lab.date).getTime()) ? ` · ${new Date(lab.date).toLocaleDateString()}` : ''}
+                                  </p>
+                                </div>
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded-lg shrink-0 ${lab.source === 'MedVault' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'}`}>
+                                  {lab.source === 'MedVault' ? 'MedVault' : 'Result Ready'}
+                                </span>
+                              </div>
+                              {lab?.findings?.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {lab.findings.slice(0, 4).map((f: any, fIdx: number) => (
+                                    <div key={fIdx} className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                      <span className="text-xs text-slate-600 truncate">{f.test || 'Result'}</span>
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${getInsightStatusStyles(getLabStatus(f.status))}`}>
+                                        {f.value} {f.unit}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">No lab tests found for this patient.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               ) : null}
             </div>
           </div>
         )}
 
-
-        {/* Tab Content - Appointments */}
+        {/* ══════════════════════════════════════════
+            TAB: APPOINTMENTS
+        ══════════════════════════════════════════ */}
         {activeTab === 'appointments' && (
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center">
-                  <div className="relative group mr-2">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/40 to-blue-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-                    <CalendarIcon className="relative h-6 w-6 text-indigo-600 animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Appointment History</h3>
-                </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <FunnelIcon className="h-5 w-5 text-indigo-600 mr-2" />
-                  <select 
-                    value={recordTypeFilter}
-                    onChange={(e) => setRecordTypeFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:shadow-md"
-                  >
-                    <option value="all">All Appointments</option>
-                    <option value="consultation">Consultations</option>
-                    <option value="follow_up">Follow-up Visits</option>
-                  </select>
-                </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-5 border-b border-slate-100">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Appointment History</h2>
+                <p className="text-sm text-slate-500 mt-0.5">All completed appointments and visit records</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <FunnelIcon className="h-4 w-4 text-slate-400" />
+                <select
+                  value={recordTypeFilter}
+                  onChange={(e) => setRecordTypeFilter(e.target.value)}
+                  className="text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  <option value="all">All Appointments</option>
+                  <option value="consultation">Consultations</option>
+                  <option value="follow_up">Follow-up Visits</option>
+                </select>
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <div className="p-6">
+              {isLoading ? (
+                <div className="flex flex-col items-center py-16 gap-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
+                  <p className="text-slate-500 text-sm">Loading medical records…</p>
                 </div>
-                <p className="text-gray-600 text-lg">Loading medical records...</p>
-              </div>
-            ) : filteredAppointments && filteredAppointments.length > 0 ? (
-              <div className="space-y-4">
-                {filteredAppointments.map((appointment, index) => (
-                  <div
-                    key={appointment.id}
-                    className="relative group bg-gradient-to-r from-white to-blue-50 rounded-xl p-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition-all duration-300"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
-                    <div className="relative">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-3 text-white">
-                            <CalendarIcon className="h-6 w-6" />
+              ) : filteredAppointments.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredAppointments.map((appointment, index) => (
+                    <div
+                      key={appointment.id}
+                      className="group rounded-2xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-slate-200 hover:shadow-md transition-all duration-200 p-5"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                        {/* Left icon */}
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                          <CalendarIcon className="h-5 w-5 text-indigo-600" />
+                        </div>
+
+                        {/* Main content */}
+                        <div className="flex-1 min-w-0 space-y-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${getAppointmentTypeBadge(appointment.type)}`}>
+                              {getAppointmentTypeLabel(appointment.type)}
+                            </span>
+                            <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </span>
+                            <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              Serial #{appointment.serialNumber}
+                            </span>
                           </div>
+
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                appointment.type === 'in_person' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200' :
-                                appointment.type === 'telemedicine' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' :
-                                appointment.type === 'follow_up' ? 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border border-purple-200' :
-                                'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200'
-                              }`}>
-                                {getAppointmentTypeLabel(appointment.type)}
-                              </span>
-                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { 
-                                  year: 'numeric', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                              </span>
-                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                Serial #{appointment.serialNumber}
-                              </span>
-                            </div>
-                            <h4 className="font-bold text-gray-900 text-lg">
+                            <h4 className="font-bold text-slate-900">
                               Dr. {appointment.doctor.user.firstName} {appointment.doctor.user.lastName}
                             </h4>
-                            <p className="text-sm text-gray-600 flex items-center gap-1">
-                              <ClockIcon className="h-4 w-4 text-indigo-600" />
-                              {appointment.appointmentTime} • {getDepartmentLabel(appointment.doctor.department)}
+                            <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-0.5">
+                              <ClockIcon className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                              {appointment.appointmentTime} · {getDepartmentLabel(appointment.doctor.department)}
                             </p>
                           </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          {appointment.reason && (
-                            <div className="bg-white/50 rounded-lg p-3">
-                              <p className="text-sm text-gray-700">
-                                <span className="font-semibold text-gray-900">Reason:</span> {appointment.reason.length > 100 ? `${appointment.reason.substring(0, 100)}...` : appointment.reason}
-                              </p>
-                            </div>
-                          )}
-                          {appointment.diagnosis && (
-                            <div className="bg-white/50 rounded-lg p-3">
-                              <p className="text-sm text-gray-700">
-                                <span className="font-semibold text-gray-900">Diagnosis:</span> {appointment.diagnosis.length > 100 ? `${appointment.diagnosis.substring(0, 100)}...` : appointment.diagnosis}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {appointment.startedAt && appointment.completedAt && (
-                          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-3 border border-emerald-200/50">
-                            <p className="text-sm text-gray-700 flex items-center gap-2">
-                              <CheckCircleIcon className="h-4 w-4 text-emerald-600" />
-                              <span className="font-semibold text-gray-900">Duration:</span> {(() => {
-                                const start = new Date(appointment.startedAt);
-                                const end = new Date(appointment.completedAt);
-                                const diffMs = end.getTime() - start.getTime();
-                                const diffMins = Math.floor(diffMs / 60000);
-                                const hours = Math.floor(diffMins / 60);
-                                const mins = diffMins % 60;
-                                return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-                              })()}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 ml-4">
-                        <button
-                          onClick={() => handleViewDetails(appointment)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-sm hover:shadow-lg animate-pulse"
-                        >
-                          <EyeIcon className="h-4 w-4" />
-                          View Details
-                        </button>
-                        <button
-                          onClick={() => handleDownload(appointment)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-lg hover:from-gray-600 hover:to-slate-600 transition-all duration-300 shadow-sm hover:shadow-lg"
-                        >
-                          <ArrowDownTrayIcon className="h-4 w-4" />
-                          Download
-                        </button>
-                      </div>
-                    </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <DocumentTextIcon className="h-12 w-12 text-indigo-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No completed appointments found</h3>
-                <p className="text-gray-600">
-                  {recordTypeFilter !== 'all' 
-                    ? `No ${getAppointmentTypeLabel(recordTypeFilter)} appointments available` 
-                    : 'Your medical records will appear here after completed doctor visits'}
-                </p>
-              </div>
-            )}
-        </div>
-      </div>
-      )}
 
-        {/* Medicine History Tab */}
-        {activeTab === 'medicines' && patientProfile?.id && (
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/30 to-green-200/30 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-            <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 `}>
-              <div className="flex items-center mb-6">
-                <div className="relative group mr-2">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/40 to-green-200/40 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-                  <BeakerIcon className="relative h-6 w-6 text-indigo-600 animate-pulse" />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {appointment.reason && (
+                              <div className="bg-white rounded-xl px-3 py-2.5 border border-slate-100 text-sm">
+                                <span className="font-semibold text-slate-700">Reason: </span>
+                                <span className="text-slate-600">{appointment.reason.length > 90 ? `${appointment.reason.substring(0, 90)}…` : appointment.reason}</span>
+                              </div>
+                            )}
+                            {appointment.diagnosis && (
+                              <div className="bg-white rounded-xl px-3 py-2.5 border border-slate-100 text-sm">
+                                <span className="font-semibold text-slate-700">Diagnosis: </span>
+                                <span className="text-slate-600">{appointment.diagnosis.length > 90 ? `${appointment.diagnosis.substring(0, 90)}…` : appointment.diagnosis}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {appointment.startedAt && appointment.completedAt && (
+                            <div className="flex items-center gap-2 text-sm text-emerald-700">
+                              <CheckCircleIcon className="h-4 w-4 shrink-0" />
+                              <span>Duration: <strong>{calcDuration(appointment.startedAt, appointment.completedAt)}</strong></span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex sm:flex-col gap-2 shrink-0">
+                          <button
+                            onClick={() => handleViewDetails(appointment)}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors duration-150 shadow-sm"
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">View</span>
+                          </button>
+                          <button
+                            onClick={() => handleDownload(appointment)}
+                            disabled={isDownloading === appointment.id}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors duration-150 disabled:opacity-50"
+                          >
+                            <ArrowDownTrayIcon className={`h-4 w-4 ${isDownloading === appointment.id ? 'animate-bounce' : ''}`} />
+                            <span className="hidden sm:inline">{isDownloading === appointment.id ? 'Saving…' : 'PDF'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Medicine History</h3>
-                <p className="text-sm text-gray-600">Track your medication history and adherence</p>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center py-16 gap-4 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                    <DocumentTextIcon className="h-8 w-8 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">No completed appointments found</h3>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {recordTypeFilter !== 'all'
+                        ? `No ${getAppointmentTypeLabel(recordTypeFilter)} appointments available`
+                        : 'Your medical records will appear here after completed doctor visits'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            <MedicineHistory patientId={patientProfile.id} />
           </div>
-        </div>
         )}
 
+        {/* ══════════════════════════════════════════
+            TAB: MEDICINE HISTORY
+        ══════════════════════════════════════════ */}
+        {activeTab === 'medicines' && patientProfile?.id && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="flex items-center gap-2.5 px-6 py-5 border-b border-slate-100">
+              <BeakerIcon className="h-5 w-5 text-violet-600 shrink-0" />
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Medicine History</h2>
+                <p className="text-sm text-slate-500">Track your medication history and adherence</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <MedicineHistory patientId={patientProfile.id} />
+            </div>
+          </div>
+        )}
 
-        {/* Modern View Details Modal */}
-        {showDetailModal && selectedRecord && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/50">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                    <DocumentTextIcon className="h-6 w-6 mr-2 text-indigo-600" />
-                    Medical Record Details
-                  </h2>
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-all duration-300 p-2 hover:bg-gray-100 rounded-full hover:shadow-md"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          DETAIL MODAL
+      ══════════════════════════════════════════ */}
+      {showDetailModal && selectedRecord && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl border border-slate-100 my-4">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
+                  <DocumentTextIcon className="h-4 w-4 text-indigo-600" />
                 </div>
+                <h2 className="text-lg font-bold text-slate-900">Medical Record Details</h2>
+              </div>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors duration-150"
+              >
+                <XMarkIcon className="h-4 w-4 text-slate-600" />
+              </button>
+            </div>
 
+            <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Patient Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+                {/* Patient info */}
+                <DetailCard title="Patient Information">
+                  <InfoRow label="Name" value={`${selectedRecord.patient?.user?.firstName} ${selectedRecord.patient?.user?.lastName}`} />
+                  <InfoRow label="Email" value={selectedRecord.patient?.user?.email} />
+                  <InfoRow label="Age / Sex" value={`${formatAge(calculateAge(selectedRecord.patient?.user?.dateOfBirth))} / ${formatGender(selectedRecord.patient?.user?.gender)}`} />
+                  <InfoRow label="Phone" value={selectedRecord.patient?.user?.phone || 'Not provided'} />
+                  <InfoRow label="Blood Type" value={selectedRecord.patient?.bloodType || 'Not provided'} />
+                </DetailCard>
+
+                {/* Appointment info */}
+                <DetailCard title="Appointment Information">
+                  <InfoRow label="Date" value={new Date(selectedRecord.appointmentDate).toLocaleDateString()} />
+                  <InfoRow label="Time" value={selectedRecord.appointmentTime} />
+                  <InfoRow label="Serial Number" value={`#${selectedRecord.serialNumber}`} />
+                  <InfoRow label="Type" value={getAppointmentTypeLabel(selectedRecord.type)} />
+                  {selectedRecord.startedAt && selectedRecord.completedAt && (
+                    <>
+                      <InfoRow label="Started At" value={new Date(selectedRecord.startedAt).toLocaleString()} />
+                      <InfoRow label="Completed At" value={new Date(selectedRecord.completedAt).toLocaleString()} />
+                      <InfoRow label="Duration" value={calcDuration(selectedRecord.startedAt, selectedRecord.completedAt)} highlight />
+                    </>
+                  )}
+                </DetailCard>
+
+                {/* Doctor info */}
+                <DetailCard title="Doctor Information">
+                  <InfoRow label="Name" value={`Dr. ${selectedRecord.doctor?.user?.firstName} ${selectedRecord.doctor?.user?.lastName}`} />
+                  <InfoRow label="Department" value={getDepartmentLabel(selectedRecord.doctor?.department || '') || 'General Medicine'} />
+                  <InfoRow label="BMDC Registration" value={selectedRecord.doctor?.bmdcRegistrationNumber || 'Not provided'} />
+                  <InfoRow label="Experience" value={`${selectedRecord.doctor?.experience || 0} years`} />
+                </DetailCard>
+
+                {/* Vitals */}
+                <DetailCard title="Vitals">
+                  <div className="grid grid-cols-2 gap-2">
+                    <VitalTile label="Height" value={selectedRecord.patient?.height ? `${selectedRecord.patient.height} cm` : '—'} color="blue" />
+                    <VitalTile label="Weight" value={selectedRecord.patient?.weight ? `${selectedRecord.patient.weight} kg` : '—'} color="emerald" />
+                    <VitalTile label="Blood Pressure" value={selectedRecord.patient?.bloodPressure || '—'} color="violet" />
+                    <VitalTile label="Pulse" value={selectedRecord.patient?.pulse ? `${selectedRecord.patient.pulse} bpm` : '—'} color="rose" />
+                  </div>
+                </DetailCard>
+              </div>
+
+              {/* Medical background */}
+              <DetailCard title="Medical Background">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-gray-900">
-                        {selectedRecord.patient?.user?.firstName} {selectedRecord.patient?.user?.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.user?.email}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Age / Sex</label>
-                      <p className="text-gray-900">
-                        {formatAge(calculateAge(selectedRecord.patient?.user?.dateOfBirth))} / {formatGender(selectedRecord.patient?.user?.gender)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Phone</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.user?.phone || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Blood Type</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.bloodType || 'Not provided'}</p>
-                    </div>
+                    <InfoField label="Allergies" value={selectedRecord.patient?.allergies || 'None reported'} />
+                    <InfoField label="Current Medications" value={selectedRecord.patient?.currentMedications || 'None reported'} />
+                    <InfoField label="Chronic Conditions" value={selectedRecord.patient?.chronicConditions || 'None reported'} />
+                  </div>
+                  <div className="space-y-3">
+                    <InfoField label="Smoking Status" value={selectedRecord.patient?.smokingStatus || 'Not specified'} />
+                    <InfoField label="Alcohol Consumption" value={selectedRecord.patient?.alcoholConsumption || 'Not specified'} />
+                    <InfoField label="Physical Activity" value={selectedRecord.patient?.physicalActivity || 'Not specified'} />
                   </div>
                 </div>
-
-                {/* Appointment Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Appointment Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Date</label>
-                      <p className="text-gray-900">
-                        {new Date(selectedRecord.appointmentDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Time</label>
-                      <p className="text-gray-900">{selectedRecord.appointmentTime}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Serial Number</label>
-                      <p className="text-gray-900">#{selectedRecord.serialNumber}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Type</label>
-                      <p className="text-gray-900 capitalize">{selectedRecord.type.replace('_', ' ')}</p>
-                    </div>
-                    {selectedRecord.startedAt && selectedRecord.completedAt && (
-                      <>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Started At</label>
-                          <p className="text-gray-900">
-                            {new Date(selectedRecord.startedAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Completed At</label>
-                          <p className="text-gray-900">
-                            {new Date(selectedRecord.completedAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Total Duration</label>
-                          <p className="text-green-700 font-semibold">
-                            {(() => {
-                              const start = new Date(selectedRecord.startedAt);
-                              const end = new Date(selectedRecord.completedAt);
-                              const diffMs = end.getTime() - start.getTime();
-                              const diffMins = Math.floor(diffMs / 60000);
-                              const hours = Math.floor(diffMins / 60);
-                              const mins = diffMins % 60;
-                              return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-                            })()}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                <div className="mt-3 space-y-3">
+                  <InfoField
+                    label="Medical History & Past Surgeries"
+                    value={[selectedRecord.patient?.medicalHistory, selectedRecord.patient?.pastSurgeries].filter(Boolean).join('\n') || 'None reported'}
+                    multiline
+                  />
+                  <InfoField label="Family Medical History" value={selectedRecord.patient?.familyMedicalHistory || 'None reported'} />
                 </div>
+              </DetailCard>
 
-                {/* Doctor Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Doctor Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-gray-900">
-                        Dr. {selectedRecord.doctor?.user?.firstName} {selectedRecord.doctor?.user?.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Department</label>
-                      <p className="text-gray-900">
-                        {getDepartmentLabel(selectedRecord.doctor?.department || '') || 'General Medicine'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">BMDC Registration</label>
-                      <p className="text-gray-900">{selectedRecord.doctor?.bmdcRegistrationNumber || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Experience</label>
-                      <p className="text-gray-900">{selectedRecord.doctor?.experience || 0} years</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Medical Information */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold text-gray-900 border-b pb-2">Medical Information</h3>
-                  
-                  {/* Vitals Section */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                      <label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Height</label>
-                      <p className="text-lg font-bold text-blue-900">{selectedRecord.patient?.height ? `${selectedRecord.patient.height} cm` : '—'}</p>
-                    </div>
-                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                      <label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Weight</label>
-                      <p className="text-lg font-bold text-emerald-900">{selectedRecord.patient?.weight ? `${selectedRecord.patient.weight} kg` : '—'}</p>
-                    </div>
-                    <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
-                      <label className="text-xs font-bold text-purple-600 uppercase tracking-wider">Blood Pressure</label>
-                      <p className="text-lg font-bold text-purple-900">{selectedRecord.patient?.bloodPressure || '—'}</p>
-                    </div>
-                    <div className="bg-red-50 p-3 rounded-xl border border-red-100">
-                      <label className="text-xs font-bold text-red-600 uppercase tracking-wider">Pulse</label>
-                      <p className="text-lg font-bold text-red-900">{selectedRecord.patient?.pulse ? `${selectedRecord.patient.pulse} bpm` : '—'}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                          Allergies
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.allergies || 'None reported'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                          Current Medications
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.currentMedications || 'None reported'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
-                          Chronic Conditions
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.chronicConditions || 'None reported'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                          Smoking Status
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.smokingStatus || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                          Alcohol Consumption
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.alcoholConsumption || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-teal-500 rounded-full"></div>
-                          Physical Activity
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                          {selectedRecord.patient?.physicalActivity || 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                        Medical History / Past Surgeries
-                      </label>
-                      <div className="text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-100 mt-1 space-y-2">
-                        {selectedRecord.patient?.medicalHistory && (
-                          <div>
-                            <span className="text-xs font-bold text-gray-400 uppercase">History:</span>
-                            <p>{selectedRecord.patient.medicalHistory}</p>
+              {/* Uploaded Documents */}
+              {selectedRecord.patient?.medicalDocuments && selectedRecord.patient.medicalDocuments.length > 0 && (
+                <DetailCard title="Uploaded Documents">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {selectedRecord.patient.medicalDocuments.map((doc: any, idx: number) => (
+                      <div key={doc.id || idx} className="flex items-center justify-between gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100 hover:border-slate-200 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                            <DocumentTextIcon className="h-4 w-4 text-blue-600" />
                           </div>
-                        )}
-                        {selectedRecord.patient?.pastSurgeries && (
-                          <div>
-                            <span className="text-xs font-bold text-gray-400 uppercase">Surgeries:</span>
-                            <p>{selectedRecord.patient.pastSurgeries}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
+                            <p className="text-xs text-slate-400">{doc.type}</p>
                           </div>
-                        )}
-                        {!selectedRecord.patient?.medicalHistory && !selectedRecord.patient?.pastSurgeries && (
-                          <p>None reported</p>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-bold text-gray-500 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                        Family Medical History
-                      </label>
-                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1">
-                        {selectedRecord.patient?.familyMedicalHistory || 'None reported'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient Uploaded Medical Documents */}
-                {selectedRecord.patient?.medicalDocuments && selectedRecord.patient.medicalDocuments.length > 0 && (
-                  <div className="col-span-full space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Uploaded Documents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedRecord.patient.medicalDocuments.map((doc: any, idx: number) => (
-                        <div key={doc.id || idx} className="bg-white/50 rounded-lg p-4 flex items-center justify-between border border-blue-100 hover:shadow-md transition-all">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="bg-blue-100 text-blue-600 p-2 rounded-lg shrink-0">
-                              <DocumentTextIcon className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-sm font-semibold text-gray-900 truncate">{doc.name}</h4>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                  {doc.type}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap shrink-0 ml-4"
-                          >
-                            View
-                          </a>
                         </div>
-                      ))}
-                    </div>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors shrink-0"
+                        >
+                          View
+                        </a>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </DetailCard>
+              )}
 
-                {/* Reason & Symptoms */}
-                <div className="col-span-full space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Appointment Reason</h3>
+              {/* Appointment reason & symptoms */}
+              {(selectedRecord.reason || selectedRecord.symptoms) && (
+                <DetailCard title="Appointment Reason">
+                  {selectedRecord.reason && <InfoField label="Reason" value={selectedRecord.reason} />}
+                  {selectedRecord.symptoms && <InfoField label="Symptoms" value={selectedRecord.symptoms} />}
+                </DetailCard>
+              )}
+
+              {/* Clinical notes */}
+              {(selectedRecord.notes || selectedRecord.diagnosis || selectedRecord.prescription) && (
+                <DetailCard title="Medical Details">
                   <div className="space-y-3">
-                    {selectedRecord.reason && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Reason</label>
-                        <p className="text-gray-900">{selectedRecord.reason}</p>
-                      </div>
-                    )}
-                    {selectedRecord.symptoms && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Symptoms</label>
-                        <p className="text-gray-900">{selectedRecord.symptoms}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Doctor's Notes, Diagnosis & Prescription */}
-                <div className="col-span-full space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Medical Details</h3>
-                  <div className="space-y-4">
                     {selectedRecord.notes && (
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <label className="text-sm font-medium text-green-900">Doctor's Notes</label>
-                        <p className="text-green-800 mt-1">{selectedRecord.notes}</p>
+                      <div className="bg-emerald-50/60 rounded-xl p-4 border border-emerald-100">
+                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-1.5">Doctor's Notes</p>
+                        <p className="text-sm text-slate-800">{selectedRecord.notes}</p>
                       </div>
                     )}
                     {selectedRecord.diagnosis && (
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <label className="text-sm font-medium text-purple-900">Diagnosis</label>
-                        <p className="text-purple-800 mt-1">{selectedRecord.diagnosis}</p>
+                      <div className="bg-violet-50/60 rounded-xl p-4 border border-violet-100">
+                        <p className="text-xs font-bold uppercase tracking-wider text-violet-600 mb-1.5">Diagnosis</p>
+                        <p className="text-sm text-slate-800">{selectedRecord.diagnosis}</p>
                       </div>
                     )}
                     {selectedRecord.prescription && (
-                      <div className="bg-indigo-50 p-4 rounded-lg">
-                        <label className="text-sm font-medium text-indigo-900">Prescription</label>
-                        <p className="text-indigo-800 mt-1">{selectedRecord.prescription}</p>
+                      <div className="bg-indigo-50/60 rounded-xl p-4 border border-indigo-100">
+                        <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-1.5">Prescription</p>
+                        <p className="text-sm text-slate-800">{selectedRecord.prescription}</p>
                       </div>
                     )}
                   </div>
-                </div>
+                </DetailCard>
+              )}
 
-                {/* Prescription Details */}
-                {prescriptionData && (
-                  <div className="col-span-full">
-                    <PrescriptionView 
-                      prescriptionData={prescriptionData}
-                      appointmentData={selectedRecord}
-                      userRole={user?.role}
-                    />
-                  </div>
-                )}
+              {/* Prescription view component */}
+              {prescriptionData && (
+                <PrescriptionView
+                  prescriptionData={prescriptionData}
+                  appointmentData={selectedRecord}
+                  userRole={user?.role}
+                />
+              )}
 
-                {/* Emergency Contact */}
-                <div className="col-span-full space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Emergency Contact</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Contact Name</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.emergencyContact || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Contact Phone</label>
-                      <p className="text-gray-900">{selectedRecord.patient?.emergencyPhone || 'Not provided'}</p>
-                    </div>
-                  </div>
+              {/* Emergency contact */}
+              <DetailCard title="Emergency Contact">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InfoRow label="Contact Name" value={selectedRecord.patient?.emergencyContact || 'Not provided'} />
+                  <InfoRow label="Contact Phone" value={selectedRecord.patient?.emergencyPhone || 'Not provided'} />
                 </div>
+              </DetailCard>
+
+              {/* Modal actions */}
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => handleDownload(selectedRecord)}
+                  disabled={isDownloading === selectedRecord?.id}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-colors duration-150 disabled:opacity-50"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4" />
+                  {isDownloading === selectedRecord?.id ? 'Saving…' : 'Download PDF'}
+                </button>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-colors duration-150 shadow-sm"
+                >
+                  Close
+                </button>
               </div>
-
-                <div className="mt-6 flex justify-end gap-4">
-                  <button
-                    onClick={() => handleDownload(selectedRecord)}
-                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-slate-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
-                  >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
-                    Download Record
-                  </button>
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl animate-pulse"
-                  >
-                    Close
-                  </button>
-                </div>
             </div>
           </div>
         </div>
-        )}
+      )}
+    </div>
+  );
+};
+
+/* ── Small reusable sub-components ── */
+
+interface AlertBannerProps {
+  color: 'amber' | 'rose';
+  title: string;
+  body: string;
+  action: string;
+  loading: boolean;
+  onAction: () => void;
+}
+const AlertBanner: React.FC<AlertBannerProps> = ({ color, title, body, action, loading, onAction }) => {
+  const s = color === 'amber'
+    ? { wrap: 'border-amber-200 bg-amber-50', title: 'text-amber-900', body: 'text-amber-700', btn: 'bg-amber-600 hover:bg-amber-700' }
+    : { wrap: 'border-rose-200 bg-rose-50', title: 'text-rose-900', body: 'text-rose-700', btn: 'bg-rose-600 hover:bg-rose-700' };
+  return (
+    <div className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${s.wrap}`}>
+      <div>
+        <p className={`text-sm font-semibold ${s.title}`}>{title}</p>
+        <p className={`text-sm mt-0.5 ${s.body}`}>{body}</p>
       </div>
+      <button
+        onClick={onAction}
+        disabled={loading}
+        className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors shrink-0 disabled:cursor-not-allowed disabled:opacity-60 ${s.btn}`}
+      >
+        {loading ? 'Processing…' : action}
+      </button>
+    </div>
+  );
+};
+
+type StatColor = 'slate' | 'indigo' | 'amber' | 'rose' | 'emerald';
+interface StatTileProps { label: string; value: number | string | undefined; color: StatColor; }
+const StatTile: React.FC<StatTileProps> = ({ label, value, color }) => {
+  const map: Record<StatColor, string> = {
+    slate: 'bg-slate-50 border-slate-100',
+    indigo: 'bg-indigo-50 border-indigo-100',
+    amber: 'bg-amber-50 border-amber-100',
+    rose: 'bg-rose-50 border-rose-100',
+    emerald: 'bg-emerald-50 border-emerald-100',
+  };
+  const text: Record<StatColor, string> = {
+    slate: 'text-slate-500',
+    indigo: 'text-indigo-500',
+    amber: 'text-amber-500',
+    rose: 'text-rose-500',
+    emerald: 'text-emerald-600',
+  };
+  const val: Record<StatColor, string> = {
+    slate: 'text-slate-900',
+    indigo: 'text-indigo-900',
+    amber: 'text-amber-900',
+    rose: 'text-rose-900',
+    emerald: 'text-emerald-900',
+  };
+  return (
+    <div className={`rounded-xl border p-3 text-center ${map[color]}`}>
+      <p className={`text-[10px] font-bold uppercase tracking-wider ${text[color]}`}>{label}</p>
+      <p className={`text-xl font-bold mt-1 ${val[color]}`}>{value ?? '—'}</p>
+    </div>
+  );
+};
+
+interface InsightListProps { title: string; items: string[]; emptyText: string; colorClass: string; headingClass: string; }
+const InsightList: React.FC<InsightListProps> = ({ title, items, emptyText, colorClass, headingClass }) => (
+  <div className="bg-white/70 rounded-xl p-4 border border-white/80">
+    <p className={`text-xs font-bold uppercase tracking-wider mb-3 ${headingClass}`}>{title}</p>
+    {items?.length ? (
+      <ul className="space-y-1.5">
+        {items.map((item, idx) => (
+          <li key={idx} className={`rounded-lg px-3 py-2 text-sm ${colorClass}`}>{item}</li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-sm italic text-slate-400">{emptyText}</p>
+    )}
+  </div>
+);
+
+interface SubSectionProps { title: string; emoji: string; children: React.ReactNode; }
+const SubSection: React.FC<SubSectionProps> = ({ title, emoji, children }) => (
+  <div className="pt-4 border-t border-violet-100">
+    <p className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+      <span>{emoji}</span> {title}
+    </p>
+    {children}
+  </div>
+);
+
+interface DetailCardProps { title: string; children: React.ReactNode; }
+const DetailCard: React.FC<DetailCardProps> = ({ title, children }) => (
+  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+    <p className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 bg-white">{title}</p>
+    <div className="p-5 space-y-3">{children}</div>
+  </div>
+);
+
+interface InfoRowProps { label: string; value: string; highlight?: boolean; }
+const InfoRow: React.FC<InfoRowProps> = ({ label, value, highlight }) => (
+  <div>
+    <p className="text-xs font-medium text-slate-400">{label}</p>
+    <p className={`text-sm mt-0.5 ${highlight ? 'font-bold text-emerald-700' : 'text-slate-900'}`}>{value}</p>
+  </div>
+);
+
+interface InfoFieldProps { label: string; value: string; multiline?: boolean; }
+const InfoField: React.FC<InfoFieldProps> = ({ label, value, multiline }) => (
+  <div>
+    <p className="text-xs font-medium text-slate-400 mb-1">{label}</p>
+    <div className={`bg-white rounded-xl px-3 py-2.5 border border-slate-100 text-sm text-slate-800 ${multiline ? 'whitespace-pre-line' : ''}`}>
+      {value}
+    </div>
+  </div>
+);
+
+interface VitalTileProps { label: string; value: string; color: 'blue' | 'emerald' | 'violet' | 'rose'; }
+const VitalTile: React.FC<VitalTileProps> = ({ label, value, color }) => {
+  const map = {
+    blue: 'bg-blue-50 border-blue-100 text-blue-600 text-blue-900',
+    emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600 text-emerald-900',
+    violet: 'bg-violet-50 border-violet-100 text-violet-600 text-violet-900',
+    rose: 'bg-rose-50 border-rose-100 text-rose-600 text-rose-900',
+  };
+  const [labelCls, valCls] = map[color].split(' ').reduce<[string[], string[]]>(
+    ([l, v], cls, i) => i < 3 ? [[...l, cls], v] : [l, [...v, cls]],
+    [[], []]
+  );
+  return (
+    <div className={`rounded-xl border p-3 ${map[color].split(' ').slice(0, 2).join(' ')}`}>
+      <p className={`text-[10px] font-bold uppercase tracking-wider ${map[color].split(' ')[2]}`}>{label}</p>
+      <p className={`text-lg font-bold mt-1 ${map[color].split(' ')[3]}`}>{value}</p>
     </div>
   );
 };
