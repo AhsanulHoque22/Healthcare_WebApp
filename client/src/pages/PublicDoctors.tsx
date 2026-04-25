@@ -24,11 +24,14 @@ import {
   LanguageIcon,
   TrophyIcon,
   CurrencyDollarIcon,
-  AdjustmentsVerticalIcon
+  AdjustmentsVerticalIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import DoctorRatings from '../components/DoctorRatings';
 import { formatCurrency } from '../services/paymentService';
 import { getDepartmentLabel, MEDICAL_DEPARTMENTS } from '../utils/departments';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Reveal } from '../components/landing/AnimatedSection';
 
 const PublicDoctors: React.FC = () => {
   const { user, logout } = useAuth();
@@ -106,17 +109,24 @@ const PublicDoctors: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 selection:bg-indigo-500 selection:text-white">
-      {/* Header / Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm transition-all duration-300">
+    <div className="min-h-screen relative bg-slate-50 overflow-hidden font-sans selection:bg-indigo-500/30 selection:text-indigo-900">
+      {/* Background Ambience */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none animate-[pulse_10s_ease-in-out_infinite]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-500/10 rounded-full blur-[120px] pointer-events-none animate-[pulse_12s_ease-in-out_infinite_reverse]" />
+      <div className="noise-overlay opacity-20 pointer-events-none absolute inset-0 mix-blend-overlay"></div>
+      <div className="dot-grid opacity-30 absolute inset-0 pointer-events-none"></div>
+
+      <div className="relative z-10">
+        {/* Header / Nav */}
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center group transition-all duration-500">
               <div className="relative group">
-                <div className="absolute inset-0 bg-blue-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                <img src="/logo.png" className="h-14 w-14 relative z-10" alt="Livora Logo" />
+                <div className="absolute inset-0 bg-indigo-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <img src="/logo.png" className="h-14 w-14 relative z-10 drop-shadow-md" alt="Livora Logo" />
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-gray-900 via-indigo-900 to-blue-900 bg-clip-text text-transparent">Livora</span>
+              <span className="ml-3 text-2xl font-black text-slate-900 tracking-tight">Livora</span>
             </Link>
             <div className="flex items-center space-x-6">
               {user ? (
@@ -131,35 +141,38 @@ const PublicDoctors: React.FC = () => {
                         <img
                           src={user.profileImage}
                           alt={user.firstName}
-                          className="h-10 w-10 rounded-full object-cover ring-2 ring-indigo-100 group-hover/account:ring-indigo-500 transition-all shadow-sm"
+                          className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md group-hover/account:border-indigo-100 transition-all"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-sm group-hover/account:scale-105 transition-all">
+                        <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-black shadow-inner border border-slate-200 group-hover/account:border-indigo-200 group-hover/account:text-indigo-500 transition-all">
                           {user?.firstName?.charAt(0) || ''}{user?.lastName?.charAt(0) || ''}
                         </div>
                       )}
                     </div>
                     <div className="hidden lg:block text-left">
-                      <p className="text-sm font-bold text-gray-900 group-hover/account:text-indigo-600 transition-colors">
+                      <p className="text-sm font-black text-slate-900 group-hover/account:text-indigo-600 transition-colors">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold opacity-70">
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest font-black">
                         {user.role} Dashboard
                       </p>
                     </div>
                   </Link>
                   <button
                     onClick={() => logout()}
-                    className="hidden lg:flex items-center px-4 py-2 text-sm font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                    className="hidden lg:flex items-center px-4 py-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-300"
                   >
                     Sign Out
                   </button>
                 </div>
               ) : (
-                <>
-                  <Link to="/login" className="text-gray-600 font-semibold hover:text-indigo-600 transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 active:scale-95 transition-all duration-300">Join Now</Link>
-                </>
+                <div className="flex items-center gap-4">
+                  <Link to="/login" className="text-[11px] text-slate-500 font-black uppercase tracking-widest hover:text-indigo-600 transition-colors">Sign In</Link>
+                  <Link to="/register" className="group relative overflow-hidden bg-slate-900 text-white px-6 py-2.5 rounded-full font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:shadow-indigo-500/20">
+                    <span className="relative z-10">Join Now</span>
+                    <div className="absolute inset-0 translate-y-[100%] bg-indigo-600 group-hover:translate-y-[0%] transition-transform duration-500 ease-out z-0"></div>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -168,58 +181,61 @@ const PublicDoctors: React.FC = () => {
 
       <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* SEO-friendly Section */}
-        <section className={`mb-16 text-center ${pageLoaded ? 'animate-fade-in-down' : 'opacity-0'}`}>
-          <div className="inline-flex items-center px-4 py-2 bg-indigo-50 rounded-full text-indigo-700 text-sm font-bold mb-6 animate-pulse border border-indigo-100 shadow-sm">
-            <SparklesIcon className="h-4 w-4 mr-2" />
-            Find Your Perfect Specialist
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
-            Consult with Expert <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Verified Doctors</span>
-          </h1>
-          <p className="max-w-3xl mx-auto text-xl text-gray-600 leading-relaxed font-medium">
-            Browse through our network of top-tier healthcare professionals. 
-            Real-time availability, verified qualifications, and genuine patient reviews.
-          </p>
-          {!isLoading && (
-            <p className="mt-4 text-indigo-600 font-bold bg-indigo-50 inline-block px-4 py-1 rounded-full text-sm">
-              Currently showing {doctors?.length || 0} verified experts
+        <Reveal variant="fadeUp" delay={0.1}>
+          <section className="mb-16 text-center">
+            <div className="inline-flex items-center px-4 py-2 bg-indigo-50/50 backdrop-blur-sm rounded-full text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mb-6 border border-indigo-100 shadow-sm">
+              <SparklesIcon className="h-4 w-4 mr-2" />
+              Verified Clinical Network
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tighter leading-tight">
+              Connect With <br className="hidden md:block"/>
+              <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 bg-clip-text text-transparent">Elite Specialists</span>
+            </h1>
+            <p className="max-w-2xl mx-auto text-lg text-slate-500 font-medium leading-relaxed">
+              Access our premier network of verified healthcare professionals. Experience seamless bookings, real-time availability, and uncompromising clinical excellence.
             </p>
-          )}
-        </section>
+            {!isLoading && doctors?.length > 0 && (
+              <p className="mt-8 text-slate-400 font-bold text-xs uppercase tracking-[0.2em]">
+                {doctors.length} Verified Experts Online
+              </p>
+            )}
+          </section>
+        </Reveal>
 
         {/* Search and Filters */}
         <div className={`mb-12 sticky top-24 z-40 ${pageLoaded ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '200ms' }}>
-          <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-indigo-100 border border-white p-6 md:p-8">
-              <div className="flex flex-col md:flex-row lg:flex-row gap-4 w-full">
-                <div className="flex-1 relative group">
-                  <div className="absolute inset-y-0 left-0 pl-1 py-1 h-full flex items-center group-focus-within:text-indigo-600 transition-colors">
-                    <div className="bg-gray-50 rounded-2xl p-3 ml-1 group-hover:bg-indigo-50 transition-colors">
-                      <MagnifyingGlassIcon className="h-6 w-6 text-gray-400 group-focus-within:text-indigo-600" />
-                    </div>
+          <div className="glass rounded-[40px] shadow-2xl shadow-indigo-500/5 border border-white/20 p-8 md:p-10 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 opacity-0 group-hover/filter:opacity-100 transition-opacity duration-1000"></div>
+            <div className="relative z-10 flex flex-col md:flex-row lg:flex-row gap-6 w-full">
+              <div className="flex-1 relative group flex">
+                <div className="absolute inset-y-0 left-0 pl-2 h-full flex items-center group-focus-within:text-indigo-600 transition-colors pointer-events-none">
+                  <div className="bg-slate-900 rounded-xl p-3 group-hover:bg-indigo-600 transition-colors">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-white" />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search by name, reg no, or hospital..."
-                    className="w-full pl-16 pr-6 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all text-lg font-medium outline-none"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
                 </div>
+                <input
+                  type="text"
+                  placeholder="Enter name, registry, or hospital..."
+                  className="w-full pl-16 pr-6 py-5 bg-white/50 border border-slate-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all text-sm font-bold outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
                 
-                <div className="md:w-64 relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none group-focus-within:text-indigo-600 z-10">
-                    <AdjustmentsVerticalIcon className="h-6 w-6 text-gray-400" />
+                <div className="md:w-72 relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10 text-slate-400 group-focus-within:text-indigo-600">
+                    <AcademicCapIcon className="h-5 w-5" />
                   </div>
                   <Combobox value={specialization} onChange={(val: string | null) => val && setSpecialization(val)}>
                     <div className="relative h-full">
                       <Combobox.Input
-                        className="w-full pl-12 pr-10 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-700 font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-lg outline-none"
-                        displayValue={(val: string) => val === 'All' ? 'All Categories' : val}
+                        className="w-full h-full pl-12 pr-10 py-5 bg-white/50 border border-slate-100 rounded-2xl text-slate-700 font-bold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-sm outline-none"
+                        displayValue={(val: string) => val === 'All' ? 'All Departments' : val}
                         onChange={(event) => setDeptQuery(event.target.value)}
                         placeholder="Search Dept..."
                       />
                       <Combobox.Button className="absolute inset-y-0 right-4 flex items-center">
-                        <ChevronDownIcon className="h-5 w-5 text-gray-400 transition-transform group-focus-within:rotate-180" aria-hidden="true" />
+                        <ChevronDownIcon className="h-5 w-5 text-slate-400 transition-transform group-focus-within:rotate-180" aria-hidden="true" />
                       </Combobox.Button>
                       <Transition
                         as={Fragment}
@@ -258,23 +274,23 @@ const PublicDoctors: React.FC = () => {
                   </Combobox>
                 </div>
 
-                <div className="md:w-64 relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none group-focus-within:text-indigo-600">
-                    <ArrowsUpDownIcon className="h-6 w-6 text-gray-400" />
+                <div className="md:w-64 relative group flex flex-col justify-center">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600">
+                    <ArrowsUpDownIcon className="h-5 w-5" />
                   </div>
                   <select
-                    className="w-full pl-12 pr-10 py-5 bg-gray-50/50 border border-gray-100 rounded-3xl text-gray-700 font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-lg cursor-pointer outline-none"
+                    className="w-full h-full pl-12 pr-10 py-5 bg-white/50 border border-slate-100 rounded-2xl text-slate-700 font-bold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all appearance-none text-sm cursor-pointer outline-none"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                   >
-                    <option value="all">All Ratings</option>
+                    <option value="all">Default Sorting</option>
                     <option value="rating_desc">Highest Rated</option>
                     <option value="rating_asc">Lowest Rated</option>
                     <option value="reviews_desc">Most Reviews</option>
                     <option value="reviews_asc">Fewest Reviews</option>
                   </select>
-                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                    <ChevronRightIcon className="h-5 w-5 text-gray-400 rotate-90" />
+                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDownIcon className="h-4 w-4" />
                   </div>
                 </div>
             </div>
@@ -334,116 +350,121 @@ const PublicDoctors: React.FC = () => {
 
         {/* Results Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {[...Array(6)].map((_: any, i: number) => (
-              <div key={i} className="h-[400px] bg-white/50 rounded-3xl animate-pulse border border-white"></div>
+              <div key={i} className="h-[500px] bg-slate-100/50 rounded-[40px] animate-pulse border border-slate-200"></div>
             ))}
           </div>
         ) : (
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '400ms' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {doctors && doctors.length > 0 ? (
               doctors.map((doctor: any, index: number) => (
-                <div 
-                  key={doctor.id} 
-                  className="group bg-white/80 backdrop-blur-sm rounded-3xl border border-white shadow-xl hover:shadow-2xl hover:shadow-indigo-200/50 transition-all duration-500 overflow-hidden flex flex-col relative"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Doctor Image Header */}
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10Opacity-80"></div>
-                    {doctor.user?.profileImage ? (
-                      <img 
-                        src={doctor.user.profileImage} 
-                        alt={doctor.user.firstName}
-                        className="w-full h-full object-cover transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
-                        <UserGroupIcon className="h-20 w-20 text-white/20" />
-                      </div>
-                    )}
-                    <div className="absolute top-4 right-4 z-20">
-                      <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5">
-                        <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className="font-bold text-gray-900 text-sm">{doctor.calculatedRating?.toFixed(1) || 'New'}</span>
+                <Reveal key={doctor.id} variant="fadeUp" delay={index * 0.05} className="h-full">
+                  <div className="premium-card h-full bg-white rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-700 overflow-hidden flex flex-col relative group">
+                    {/* Doctor Image Header */}
+                    <div className="relative h-64 overflow-hidden rounded-t-[40px]">
+                      <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-transparent transition-colors duration-700 z-10"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent z-10"></div>
+                      {doctor.user?.profileImage ? (
+                        <img 
+                          src={doctor.user.profileImage} 
+                          alt={doctor.user.firstName}
+                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                          <UserIcon className="h-20 w-20 text-slate-300" />
+                        </div>
+                      )}
+                      
+                      <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
+                        <div className="glass px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-white/20">
+                          <StarIcon className="h-4 w-4 text-amber-500 fill-current" />
+                          <span className="font-black text-slate-900 text-sm">{doctor.calculatedRating?.toFixed(1) || 'New'}</span>
+                        </div>
                         {doctor.totalRatings > 0 && (
-                          <span className="text-gray-500 text-[10px] font-bold">({doctor.totalRatings})</span>
+                          <div className="bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-full text-center border border-white/10">
+                            <span className="text-white/90 text-[9px] font-black tracking-widest uppercase">{doctor.totalRatings} Reviews</span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <div className="absolute bottom-4 left-4 z-20">
-                       <h2 className="text-2xl font-bold text-white tracking-tight drop-shadow-md">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</h2>
-                    </div>
-                  </div>
 
-                  {/* Doctor Details */}
-                  <div className="p-6 flex-1 flex flex-col">
-                    <p className="inline-flex items-center text-indigo-600 font-bold text-sm uppercase tracking-widest mb-4">
-                      <AcademicCapIcon className="h-4 w-4 mr-2" />
-                      {getDepartmentLabel(doctor.department)}
-                    </p>
-                    
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <MapPinIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
-                        <span className="font-medium">{doctor.hospital || 'Private Practice'}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <CalendarIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
-                        <span className="font-medium">{doctor.experience || 0} Years Experience</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 group-hover:text-gray-900 transition-colors">
-                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-indigo-400 transition-transform" />
-                        <span className="font-medium text-sm">Reg: {doctor.bmdcRegistrationNumber || 'N/A'}</span>
+                      <div className="absolute bottom-6 left-6 right-6 z-20">
+                         <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-md group-hover:text-indigo-300 transition-colors">
+                           Dr. {doctor.user?.firstName} {doctor.user?.lastName}
+                         </h2>
+                         <p className="text-indigo-300 font-bold text-xs uppercase tracking-[0.2em] mt-2">
+                           {getDepartmentLabel(doctor.department)}
+                         </p>
                       </div>
                     </div>
 
-                    <p className="text-gray-500 text-sm line-clamp-3 mb-6 italic">
-                      "{doctor.bio || 'Dedicated healthcare professional committed to providing exceptional care and personalized treatment plans for every patient.'}"
-                    </p>
+                    {/* Doctor Details */}
+                    <div className="p-8 flex-1 flex flex-col bg-white relative">
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 translate-x-[-150%] skew-x-[-20deg] group-hover:animate-[shine_1.5s_ease-in-out_forwards] pointer-events-none" />
 
-                    <div className="mt-auto space-y-3">
-                      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                        <div>
-                           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Consultation Fee</p>
-                           <p className="text-xl font-extrabold text-blue-600">৳{doctor.consultationFee || 0}</p>
+                      <div className="space-y-4 mb-8">
+                        <div className="flex items-start text-slate-600">
+                          <MapPinIcon className="h-5 w-5 mr-3 mt-0.5 text-slate-400 shrink-0" />
+                          <span className="font-bold text-sm leading-snug">{doctor.hospital || 'Private Practice'}</span>
                         </div>
-                        <div className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                           <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                           <span className="text-green-700 text-xs font-bold uppercase">Online Now</span>
+                        <div className="flex items-center text-slate-600">
+                          <CalendarIcon className="h-5 w-5 mr-3 text-slate-400 shrink-0" />
+                          <span className="font-bold text-sm leading-snug">{doctor.experience || 0} Years Experience</span>
+                        </div>
+                        <div className="flex items-center text-slate-600">
+                          <ShieldCheckIcon className="h-5 w-5 mr-3 text-slate-400 shrink-0" />
+                          <span className="text-sm font-bold leading-snug font-mono bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">Reg: {doctor.bmdcRegistrationNumber || 'N/A'}</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          onClick={() => { setSelectedDoctor(doctor); setShowProfileModal(true); }}
-                          className="flex items-center justify-center gap-2 py-3 bg-white text-gray-900 border-2 border-gray-100 rounded-2xl font-bold hover:bg-gray-50 transition-all"
-                        >
-                          About
-                        </button>
-                        <Link
-                          to={user ? `/app/appointments?doctor=${doctor.id}` : `/login?redirect=/app/appointments&doctor=${doctor.id}`}
-                          className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 transition-all group/btn"
-                        >
-                          Book visit
-                        </Link>
+                      <div className="mt-auto space-y-6">
+                        <div className="flex items-center justify-between border-t border-slate-50 pt-6">
+                          <div>
+                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Consultation Protocol</p>
+                             <p className="text-3xl font-black text-slate-900 tracking-tight">৳{doctor.consultationFee || 0}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                             <div className="flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                               <span className="text-emerald-700 text-[10px] font-black uppercase tracking-widest">Available</span>
+                             </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => { setSelectedDoctor(doctor); setShowProfileModal(true); }}
+                            className="flex items-center justify-center py-4 bg-slate-50 text-slate-400 text-xs uppercase tracking-widest border border-slate-100 rounded-2xl font-black hover:bg-slate-100 hover:text-slate-900 transition-all"
+                          >
+                            Dossier
+                          </button>
+                          <Link
+                            to={user ? `/app/appointments?doctor=${doctor.id}` : `/login?redirect=/app/appointments&doctor=${doctor.id}`}
+                            className="group/btn relative overflow-hidden flex items-center justify-center bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 transition-all hover:shadow-indigo-500/20"
+                          >
+                             <span className="relative z-10">Initiate Sync</span>
+                             <div className="absolute inset-0 translate-y-[100%] bg-indigo-600 group-hover/btn:translate-y-[0%] transition-transform duration-500 ease-out z-0"></div>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Reveal>
               ))
             ) : (
-              <div className="col-span-full py-20 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-dashed border-gray-300">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                   <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" />
+              <div className="col-span-full py-20 text-center glass rounded-[40px] border border-white/20">
+                <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner border border-slate-100">
+                   <UserGroupIcon className="h-10 w-10 text-slate-300" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">No Doctors Found</h3>
-                <p className="text-gray-600">Try adjusting your search criteria or specialization filter.</p>
+                <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">No Specialists Active</h3>
+                <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">Adjust your matrix filters to locate matching healthcare professionals.</p>
                 <button 
-                  onClick={() => { setSearchTerm(''); setSpecialization('All'); setMinRating(0); setMinReviews(0); }}
-                  className="mt-6 text-indigo-600 font-bold hover:underline"
+                  onClick={() => { setSearchTerm(''); setSpecialization('All'); setMinRating(0); setMinReviews(0); setDeptQuery(''); }}
+                  className="mt-6 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-500 transition-colors"
                 >
-                  Clear all filters
+                  Reset Parameters
                 </button>
               </div>
             )}
@@ -452,17 +473,36 @@ const PublicDoctors: React.FC = () => {
       </main>
 
       {/* Doctor Profile Modal */}
+      <AnimatePresence>
       {showProfileModal && selectedDoctor && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fade-in">
-          <div className="bg-white/95 rounded-[40px] w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-scale-up border border-white/50">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+        >
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowProfileModal(false)}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl" 
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-[40px] shadow-2xl border border-slate-100"
+          >
             <button 
               onClick={() => setShowProfileModal(false)}
-              className="absolute top-8 right-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all z-20 group"
+              className="absolute top-8 right-8 w-12 h-12 bg-slate-50 hover:bg-slate-100 flex items-center justify-center rounded-full transition-all z-20 group"
             >
-              <XMarkIcon className="h-6 w-6 text-gray-600 group-hover:rotate-90 transition-transform duration-300" />
+              <XMarkIcon className="h-6 w-6 text-slate-400 group-hover:text-slate-900 group-hover:rotate-90 transition-all duration-300" />
             </button>
 
-            <div className="p-8 md:p-12">
+            <div className="p-8 md:p-12 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500" />
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 {/* Lateral Profile Info */}
                 <div className="lg:col-span-4 space-y-8">
@@ -475,26 +515,26 @@ const PublicDoctors: React.FC = () => {
                         alt="Dr. Profile" 
                       />
                     ) : (
-                      <div className="w-full aspect-square bg-gradient-to-br from-indigo-500 to-blue-600 rounded-[40px] relative z-10 border-4 border-white shadow-2xl flex items-center justify-center">
-                        <UserGroupIcon className="h-32 w-32 text-white/20" />
+                      <div className="w-full aspect-square bg-slate-100 rounded-[40px] relative z-10 border-4 border-white shadow-2xl flex items-center justify-center">
+                        <UserIcon className="h-32 w-32 text-slate-300" />
                       </div>
                     )}
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-4 border-white shadow-lg">
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-[3px] border-white shadow-lg whitespace-nowrap">
                       BMDC Verified
                     </div>
                   </div>
 
-                  <div className="bg-gray-50/50 rounded-[32px] p-8 border border-gray-100 text-center">
-                    <h2 className="text-3xl font-black text-gray-900 mb-2 leading-tight">Dr. {selectedDoctor.user?.firstName} {selectedDoctor.user?.lastName}</h2>
-                    <p className="text-indigo-600 font-black text-sm uppercase tracking-[4px] mb-6">{getDepartmentLabel(selectedDoctor.department)}</p>
+                  <div className="glass rounded-[32px] p-8 border border-white/20 text-center shadow-lg shadow-indigo-500/5">
+                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">Dr. {selectedDoctor.user?.firstName} {selectedDoctor.user?.lastName}</h2>
+                    <p className="text-indigo-600 font-bold text-xs uppercase tracking-[0.2em] mb-6">{getDepartmentLabel(selectedDoctor.department)}</p>
                     
                     <div className="flex flex-col gap-4">
-                       <div className="flex items-center justify-between bg-white px-6 py-4 rounded-2xl border border-gray-100">
-                          <span className="text-gray-400 font-bold text-xs uppercase">Experience</span>
-                          <span className="text-gray-900 font-black">{selectedDoctor.experience || 0} Years</span>
+                       <div className="flex items-center justify-between bg-white px-6 py-4 rounded-2xl border border-slate-100">
+                          <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Experience</span>
+                          <span className="text-slate-900 font-black">{selectedDoctor.experience || 0} Years</span>
                        </div>
-                       <div className="flex items-center justify-between bg-white px-6 py-4 rounded-2xl border border-gray-100">
-                          <span className="text-gray-400 font-bold text-xs uppercase">Consultation</span>
+                       <div className="flex items-center justify-between bg-white px-6 py-4 rounded-2xl border border-slate-100">
+                          <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Consultation</span>
                           <span className="text-indigo-600 font-black">{formatCurrency(selectedDoctor.consultationFee || 0)}</span>
                        </div>
                     </div>
@@ -504,29 +544,29 @@ const PublicDoctors: React.FC = () => {
                 {/* Right Content */}
                 <div className="lg:col-span-8 space-y-10">
                   <div>
-                    <h3 className="text-sm font-black text-gray-400 uppercase tracking-[4px] mb-4">Professional Bio</h3>
-                    <p className="text-lg text-gray-600 leading-relaxed font-medium italic">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Professional Bio</h3>
+                    <p className="text-lg text-slate-600 leading-relaxed font-medium italic">
                       "{selectedDoctor.bio || 'Dedicated healthcare professional committed to providing exceptional care and personalized treatment plans for every patient.'}"
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-indigo-50/50 p-6 rounded-[32px] border border-indigo-100 flex items-start gap-4">
-                      <div className="p-3 bg-indigo-100 rounded-2xl">
-                        <MapPinIcon className="h-6 w-6 text-indigo-600" />
+                    <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-2xl shadow-sm">
+                        <MapPinIcon className="h-6 w-6 text-slate-500" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black text-indigo-400 uppercase mb-1">Chamber / Hospital</h4>
-                        <p className="text-indigo-900 font-bold">{selectedDoctor.hospital || 'Private Clinic'}</p>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Chamber / Hospital</h4>
+                        <p className="text-slate-900 font-bold">{selectedDoctor.hospital || 'Private Clinic'}</p>
                       </div>
                     </div>
-                    <div className="bg-emerald-50/50 p-6 rounded-[32px] border border-emerald-100 flex items-start gap-4">
-                      <div className="p-3 bg-emerald-100 rounded-2xl">
-                        <LanguageIcon className="h-6 w-6 text-emerald-600" />
+                    <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-2xl shadow-sm">
+                        <LanguageIcon className="h-6 w-6 text-slate-500" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black text-emerald-400 uppercase mb-1">Languages Spoken</h4>
-                        <p className="text-emerald-900 font-bold">{selectedDoctor.languages?.join(', ') || 'English, Bengali'}</p>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Languages Spoken</h4>
+                        <p className="text-slate-900 font-bold">{selectedDoctor.languages?.join(', ') || 'English, Bengali'}</p>
                       </div>
                     </div>
                   </div>
@@ -534,12 +574,12 @@ const PublicDoctors: React.FC = () => {
                   {/* Qualifications */}
                   {selectedDoctor.degrees && selectedDoctor.degrees.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-black text-gray-400 uppercase tracking-[4px] mb-6">Expertise & Degrees</h3>
+                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Expertise & Degrees</h3>
                       <div className="flex flex-wrap gap-4">
                         {selectedDoctor.degrees.map((degree: string, i: number) => (
-                          <div key={i} className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm">
+                          <div key={i} className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm">
                              <AcademicCapIcon className="h-5 w-5 text-indigo-500" />
-                             <span className="font-bold text-gray-700">{degree}</span>
+                             <span className="font-bold text-slate-700">{degree}</span>
                           </div>
                         ))}
                       </div>
@@ -549,7 +589,7 @@ const PublicDoctors: React.FC = () => {
                   {/* Awards */}
                   {selectedDoctor.awards && selectedDoctor.awards.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-black text-gray-400 uppercase tracking-[4px] mb-6">Achievements</h3>
+                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Achievements</h3>
                       <div className="flex flex-wrap gap-4">
                         {selectedDoctor.awards.map((award: string, i: number) => (
                           <div key={i} className="flex items-center gap-3 bg-amber-50 px-5 py-3 rounded-2xl border border-amber-100 shadow-sm">
@@ -562,23 +602,23 @@ const PublicDoctors: React.FC = () => {
                   )}
 
                   {/* Rating Analysis Header */}
-                  <div className="pt-8 border-t border-gray-100">
+                  <div className="pt-8 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-8">
                        <div>
-                          <h3 className="text-3xl font-black text-gray-900 tracking-tight">Patient Feedback</h3>
-                          <p className="text-gray-500 font-medium">Verified reviews from our community</p>
+                          <h3 className="text-3xl font-black text-slate-900 tracking-tight">Patient Feedback</h3>
+                          <p className="text-slate-400 font-medium">Verified reviews from our community</p>
                        </div>
                        <div className="text-right">
                           <div className="flex items-center gap-2 mb-1 justify-end">
-                             <StarIcon className="h-6 w-6 text-yellow-400 fill-current" />
-                             <span className="text-4xl font-black text-gray-900">{selectedDoctor.calculatedRating?.toFixed(1) || '0.0'}</span>
+                             <StarIcon className="h-6 w-6 text-amber-400 fill-current" />
+                             <span className="text-4xl font-black text-slate-900 tracking-tighter">{selectedDoctor.calculatedRating?.toFixed(1) || '0.0'}</span>
                           </div>
-                          <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{selectedDoctor.totalRatings || 0} VERIFIED REVIEWS</span>
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{selectedDoctor.totalRatings || 0} VERIFIED REVIEWS</span>
                        </div>
                     </div>
                     
                     {/* DoctorRatings Component */}
-                    <div className="bg-gray-50/50 rounded-[40px] p-2 border border-gray-100">
+                    <div className="bg-slate-50 rounded-[40px] p-2 border border-slate-100 shadow-inner">
                        <DoctorRatings doctorId={selectedDoctor.id} showAll={true} />
                     </div>
                   </div>
@@ -586,30 +626,34 @@ const PublicDoctors: React.FC = () => {
                   <div className="flex pt-10">
                      <Link
                        to={user ? `/app/appointments?doctor=${selectedDoctor.id}` : `/login?redirect=/app/appointments&doctor=${selectedDoctor.id}`}
-                       className="flex-1 py-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-[24px] font-black text-xl text-center shadow-2xl shadow-indigo-200 transition-all"
+                       className="group/btn relative overflow-hidden flex-1 py-6 bg-slate-900 text-white rounded-3xl font-black text-[15px] uppercase tracking-widest text-center shadow-2xl transition-all hover:shadow-indigo-500/25"
                      >
-                       Confirm Booking
+                       <span className="relative z-10">Confirm Booking</span>
+                       <div className="absolute inset-0 translate-y-[100%] bg-indigo-600 group-hover/btn:translate-y-[0%] transition-transform duration-500 ease-out z-0"></div>
                      </Link>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
+
+      </div> {/* Close the relative z-10 block wrapping the entire main layout */}
 
       {/* Footer (Simplified for Branding) */}
-      <footer className="bg-white border-t border-gray-100 py-12">
+      <footer className="bg-slate-50 border-t border-white relative z-20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
            <div className="flex justify-center items-center mb-6">
               <img src="/logo.png" className="h-10 w-10 opacity-50 grayscale hover:grayscale-0 transition-all cursor-pointer" alt="Livora Logo" />
-              <span className="ml-3 text-xl font-bold text-gray-400">Livora</span>
+              <span className="ml-3 text-xl font-black text-slate-300">Livora</span>
            </div>
-           <p className="text-gray-500 text-sm font-medium">© 2026 Livora Healthcare. All rights reserved.</p>
-           <div className="mt-4 flex justify-center space-x-6 text-sm font-semibold text-gray-400">
-              <a href="#" className="hover:text-indigo-600">Privacy Policy</a>
-              <a href="#" className="hover:text-indigo-600">Terms of Service</a>
-              <a href="#" className="hover:text-indigo-600">Contact Support</a>
+           <p className="text-slate-400 text-sm font-bold">© 2026 Livora Healthcare. All rights reserved.</p>
+           <div className="mt-4 flex justify-center space-x-6 text-[10px] font-black uppercase tracking-widest text-slate-300">
+              <a href="#" className="hover:text-indigo-400 transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-indigo-400 transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-indigo-400 transition-colors">Platform Status</a>
            </div>
         </div>
       </footer>
