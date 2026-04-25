@@ -12,9 +12,18 @@ import {
   ArrowPathIcon,
   SparklesIcon,
   FunnelIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  QueueListIcon,
+  ChartPieIcon,
+  ShoppingBagIcon,
+  ArrowsRightLeftIcon,
+  ArrowRightIcon,
+  Bars3Icon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Reveal, MagneticButton } from '../components/landing/AnimatedSection';
 
 interface LabOrder {
   id: number;
@@ -740,623 +749,602 @@ const LabReports: React.FC = () => {
     }))
   });
 
+  const statsCards = [
+    { name: 'Total Tests', value: allTests.length, icon: QueueListIcon, color: 'text-indigo-600', bg: 'bg-indigo-500/5' },
+    { name: 'Pending Payments', value: allTests.filter(t => (t.paymentStatus || t.status) !== 'paid' && t.status !== 'completed').length, icon: BanknotesIcon, color: 'text-rose-600', bg: 'bg-rose-500/5' },
+    { name: 'Completed', value: allTests.filter(t => t.status === 'completed' || t.status === 'confirmed').length, icon: CheckCircleIcon, color: 'text-emerald-600', bg: 'bg-emerald-500/5' },
+    { name: 'Processing', value: allTests.filter(t => t.status === 'sample_processing' || t.status === 'sample_taken').length, icon: ArrowPathIcon, color: 'text-amber-600', bg: 'bg-amber-500/5' },
+  ];
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#fafbff] flex items-center justify-center noise-overlay">
         <div className="text-center">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto mb-4"></div>
-            <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border-4 border-purple-400 opacity-20 mx-auto"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto mb-6"></div>
           </div>
-          <p className="text-gray-600 font-medium animate-pulse">Loading lab reports...</p>
+          <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px] animate-pulse">Synchronizing Lab Matrix...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        {/* Header */}
-        <div className={`mb-6 flex justify-between items-start ${pageLoaded ? 'animate-fade-in-down' : ''}`}>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative p-3 rounded-2xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg transition-transform duration-300">
-                  <ArrowDownTrayIcon className="h-7 w-7 text-purple-600" />
-                  <SparklesIcon className="h-4 w-4 text-purple-400 absolute -top-1 -right-1 animate-pulse" />
+    <div className="min-h-screen bg-[#fafbff] relative overflow-hidden font-sans noise-overlay dot-grid selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Aurora Background Effects */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-5%] w-[800px] h-[800px] bg-indigo-500/[0.04] rounded-full blur-[140px] animate-aurora" />
+        <div className="absolute bottom-[-15%] right-[-10%] w-[700px] h-[700px] bg-violet-500/[0.04] rounded-full blur-[120px] animate-aurora" style={{ animationDelay: '-10s' }} />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20 space-y-12">
+        {/* PREMIUM HEADER */}
+        <Reveal>
+          <div className="relative overflow-hidden rounded-[40px] bg-slate-900 p-10 md:p-16 text-white shadow-2xl shadow-indigo-500/10">
+            <div className="absolute top-0 right-0 w-1/2 h-full">
+              <div className="absolute inset-0 bg-gradient-to-l from-indigo-500/20 via-transparent to-transparent opacity-60" />
+              <div className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-indigo-400/20 rounded-full blur-[100px]" />
+            </div>
+            
+            <div className="relative z-10 md:flex items-center justify-between gap-10">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-white/10 backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Clinical Records
+                </div>
+                <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] heading-display">
+                  Diagnostic <br />
+                  <span className="text-gradient bg-gradient-to-r from-indigo-400 via-violet-300 to-cyan-300 animate-gradient-shift italic">Matrix.</span>
+                </h1>
+                <p className="text-slate-400 font-medium max-w-xl text-lg leading-relaxed">
+                  Real-time synchronization of laboratory reports, payment statuses, and automated diagnostic insights.
+                </p>
+                
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <MagneticButton 
+                    onClick={() => {
+                      queryClient.invalidateQueries({ queryKey: ['lab-orders'] });
+                      queryClient.invalidateQueries({ queryKey: ['prescription-lab-tests'] });
+                      toast.success('Lab Matrix Refreshed');
+                    }}
+                    className="flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:shadow-indigo-500/20 transition-all border border-white/10"
+                  >
+                    <ArrowPathIcon className="h-4 w-4" /> Sync Registry
+                  </MagneticButton>
                 </div>
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Lab Reports
-              </h1>
+
+              <div className="hidden lg:block">
+                <div className="w-64 h-64 rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-xl flex items-center justify-center relative group overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                   <SparklesIcon className="h-24 w-24 text-indigo-400 opacity-20 group-hover:scale-110 transition-transform duration-700" />
+                   <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Agentic Analysis Ready</p>
+                   </div>
+                </div>
+              </div>
             </div>
-            <p className="ml-1 text-gray-600 font-medium">View and manage your lab test reports and payments</p>
           </div>
-          <button
-            onClick={() => {
-              queryClient.invalidateQueries({ queryKey: ['lab-orders'] });
-              queryClient.invalidateQueries({ queryKey: ['prescription-lab-tests'] });
-              toast.success('Data refreshed!');
-            }}
-            className="group relative bg-white/70 backdrop-blur-md hover:bg-white/90 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:shadow-lg border border-white/20 animate-pulse"
-          >
-            <svg className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
+        </Reveal>
+
+        {/* STATS STRIP */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsCards.map((stat, i) => (
+            <Reveal key={stat.name} delay={i * 0.1}>
+              <div className="premium-card bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-700 group relative overflow-hidden">
+                <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} rounded-bl-full opacity-30 group-hover:scale-110 transition-transform duration-700`} />
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center border border-slate-50 transition-transform group-hover:rotate-6`}>
+                    <stat.icon className={`h-7 w-7 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">{stat.name}</p>
+                    <p className="text-2xl font-black text-slate-900 tracking-tight">{stat.value}</p>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
 
-        {/* Filters */}
-        <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-          <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6 mb-2 transition-all duration-300 hover:shadow-xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FunnelIcon className="h-4 w-4 text-purple-600" />
-                  Test Type
-                </label>
-                <select
-                  value={testTypeFilter}
-                  onChange={(e) => setTestTypeFilter(e.target.value as 'all' | 'prescribed' | 'ordered')}
-                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 cursor-pointer"
-                >
-                  <option value="all">All Tests</option>
-                  <option value="prescribed">Prescribed by Doctor</option>
-                  <option value="ordered">Self-Ordered</option>
-                </select>
+        {/* FILTERS ENGINE */}
+        <Reveal variant="fadeIn" delay={0.4}>
+          <div className="glass border-white/20 rounded-[32px] p-8 shadow-xl shadow-indigo-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 opacity-20" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="md:col-span-1 border-r border-slate-100 pr-8">
+                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-2">
+                    <FunnelIcon className="h-4 w-4 text-indigo-500" /> Filter Analysis
+                 </h4>
+                 <div className="flex items-center gap-3 p-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">{allTests.length} Protocols Loaded</span>
+                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <CheckCircleIcon className="h-4 w-4 text-purple-600" />
-                  Status
-                </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-white/40 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 hover:bg-white/70 cursor-pointer"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="ordered">Ordered</option>
-                  <option value="approved">Approved</option>
-                  <option value="sample_processing">Sample Processing</option>
-                  <option value="sample_taken">Sample Taken</option>
-                  <option value="reported">Reported (Results Uploaded)</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
+              <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Protocol Type</label>
+                  <div className="relative">
+                    <select
+                      value={testTypeFilter}
+                      onChange={(e) => setTestTypeFilter(e.target.value as 'all' | 'prescribed' | 'ordered')}
+                      className="w-full h-14 pl-5 pr-10 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="all">Comprehensive Analysis</option>
+                      <option value="prescribed">Doctor Prescribed</option>
+                      <option value="ordered">Patient Initiated</option>
+                    </select>
+                    <ArrowsRightLeftIcon className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
+                  </div>
+                </div>
 
-              <div className="flex items-end">
-                <div className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-200/50 backdrop-blur-sm">
-                  <div className="text-sm font-semibold text-purple-900">
-                    {allTests.length} test{allTests.length !== 1 ? 's' : ''} found
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Operational Status</label>
+                  <div className="relative">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full h-14 pl-5 pr-10 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Full Lifecycle</option>
+                      <option value="ordered">Ordered</option>
+                      <option value="approved">Approved</option>
+                      <option value="sample_processing">Sample Processing</option>
+                      <option value="sample_taken">Sample Taken</option>
+                      <option value="reported">Reported</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <QueueListIcon className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        {/* Tests List */}
-        {allTests.length === 0 ? (
-          <div className={`relative group ${pageLoaded ? 'animate-fade-in-up' : ''}`}>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-            <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-12 text-center hover:shadow-xl transition-all duration-300">
-              <div className="text-purple-400 mb-6">
-                <svg className="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No lab tests found</h3>
-              <p className="text-gray-600 font-medium">
-                {statusFilter || testTypeFilter !== 'all' 
-                  ? 'Try adjusting your filters to see more results.'
-                  : 'You haven\'t ordered any lab tests yet.'}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className={`space-y-6 ${pageLoaded ? 'animate-fade-in' : ''}`}>
-            {allTests.map((test, index) => {
-              const totalAmount = getTotalAmount(test);
-              const paidAmount = getPaidAmount(test);
-              const remainingAmount = getRemainingAmount(test);
-              const canPay = canMakePayment(test);
+        <div className="grid grid-cols-1 gap-10 pb-20">
+          <AnimatePresence mode="popLayout">
+            {allTests.length === 0 ? (
+              <Reveal variant="fadeIn" delay={0.5}>
+                <div className="glass rounded-[40px] p-20 text-center border-white/20">
+                  <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                    <BeakerIcon className="h-10 w-10 text-slate-300" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">No diagnostic data found.</h3>
+                  <p className="text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+                    Adjust your analysis filters or initiate a new diagnostic protocol to populate the matrix.
+                  </p>
+                </div>
+              </Reveal>
+            ) : (
+              allTests.map((test, index) => {
+                const totalAmount = getTotalAmount(test);
+                const paidAmount = getPaidAmount(test);
+                const remainingAmount = getRemainingAmount(test);
+                const canPay = canMakePayment(test);
 
-              return (
-                <div
-                  key={test.id}
-                  className="relative group"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-2xl blur-xl opacity-20 group-hover:opacity-50 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden transition-all duration-500 hover:shadow-2xl">
-                    {/* Header */}
-                    <div className="px-6 py-5 border-b border-white/20 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900">
-                              {test.type === 'prescription' ? test.name : `Order #${test.orderNumber}`}
-                            </h3>
-                            <div className="flex items-center flex-wrap gap-2 mt-2">
-                              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${getStatusBadgeColor(test.status)}`}>
-                                {getStatusIcon(test.status)}
-                                <span>{formatStatus(test.status)}</span>
-                              </span>
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${getPaymentStatusBadgeColor(test.paymentStatus || 'not_paid')}`}>
-                                Payment: {formatStatus(test.paymentStatus || 'not_paid')}
-                              </span>
-                              {test.sampleId && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100/80 text-purple-800 border border-purple-300/50 backdrop-blur-sm">
-                                  Sample ID: {test.sampleId}
-                                </span>
-                              )}
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100/80 text-gray-700 border border-gray-300/50 backdrop-blur-sm">
-                                {test.type === 'prescription' ? 'Prescription' : 'Self-Ordered'}
-                              </span>
-                            </div>
-                          </div>
+                return (
+                  <Reveal key={test.id} delay={index * 0.05} variant="blurFade">
+                    <div className="premium-card bg-white rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-700 overflow-hidden group">
+                      {/* CARD HEADER STRIP */}
+                      <div className="px-10 py-8 border-b border-slate-50 flex flex-wrap items-center justify-between gap-6 bg-slate-50/30">
+                        <div className="flex items-center gap-6">
+                           <div className="w-16 h-16 rounded-3xl bg-slate-900 flex items-center justify-center text-white font-black text-xl shadow-xl shadow-slate-200">
+                              {test.type === 'prescription' ? 'RX' : 'LB'}
+                           </div>
+                           <div>
+                              <h3 className="text-2xl font-black text-slate-900 tracking-tighter">
+                                {test.type === 'prescription' ? test.name : `Protocol #${test.orderNumber}`}
+                              </h3>
+                              <div className="flex flex-wrap gap-3 mt-3">
+                                 <div className="px-3 py-1 bg-slate-900 rounded-full text-[9px] font-black text-white uppercase tracking-[0.2em]">
+                                    {formatStatus(test.status)}
+                                 </div>
+                                 <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border ${
+                                    test.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
+                                 }`}>
+                                    Payment: {formatStatus(test.paymentStatus || 'not_paid')}
+                                 </div>
+                                 {test.sampleId && (
+                                    <div className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">
+                                       ID: {test.sampleId}
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
                         </div>
 
                         <div className="text-right">
-                          <div className="text-sm font-medium text-gray-600 mb-1">Total Amount</div>
-                          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Valuation</p>
+                          <p className="text-3xl font-black text-slate-900 tracking-tight">
                             {formatCurrency(totalAmount)}
-                          </div>
+                          </p>
                         </div>
                       </div>
-                    </div>
 
-                  {/* Content */}
-                  <div className="px-6 py-5">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Test Details */}
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-1 h-5 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
-                          {test.type === 'prescription' ? 'Test Details' : 'Tests Included'}
-                        </h4>
-                        {test.type === 'prescription' ? (
-                          <div className="space-y-3">
-                            <div className="group">
-                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</span>
-                              <p className="text-sm text-gray-900 font-medium mt-1">{test.name}</p>
-                            </div>
-                            {test.description && (
-                              <div className="group">
-                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</span>
-                                <p className="text-sm text-gray-900 font-medium mt-1">{test.description}</p>
-                              </div>
+                      {/* CARD CONTENT BODY */}
+                      <div className="p-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                          
+                          {/* TEST SCHEMA */}
+                          <div className="lg:col-span-2 space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
+                               <DocumentTextIcon className="h-4 w-4" /> Diagnostic Schema
+                            </h4>
+                            {test.type === 'prescription' ? (
+                               <div className="space-y-6">
+                                  <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 group-hover:border-indigo-100 transition-colors">
+                                     <p className="text-sm font-bold text-slate-900 mb-2">{test.name}</p>
+                                     <p className="text-xs text-slate-500 leading-relaxed">{test.description || 'No additional diagnostic notes.'}</p>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Clinician</p>
+                                        <p className="text-xs font-bold text-slate-900">{test.doctorName}</p>
+                                     </div>
+                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Protocol Date</p>
+                                        <p className="text-xs font-bold text-slate-900">{new Date(test.appointmentDate).toLocaleDateString()}</p>
+                                     </div>
+                                  </div>
+                               </div>
+                            ) : (
+                               <div className="grid grid-cols-1 gap-3">
+                                  {test.testDetails?.map((testDetail: any, i: number) => (
+                                     <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-100 transition-all">
+                                        <div className="flex items-center gap-3">
+                                           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-slate-100">
+                                              <BeakerIcon className="h-4 w-4 text-indigo-500" />
+                                           </div>
+                                           <div>
+                                              <p className="text-xs font-bold text-slate-900">{testDetail.name}</p>
+                                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{testDetail.category}</p>
+                                           </div>
+                                        </div>
+                                        <span className="text-xs font-black text-slate-900">{formatCurrency(testDetail.price)}</span>
+                                     </div>
+                                  ))}
+                               </div>
                             )}
-                            <div className="group">
-                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Doctor</span>
-                              <p className="text-sm text-gray-900 font-medium mt-1">{test.doctorName}</p>
-                            </div>
-                            <div className="group">
-                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</span>
-                              <p className="text-sm text-gray-900 font-medium mt-1">
-                                {new Date(test.appointmentDate).toLocaleDateString()}
-                              </p>
-                            </div>
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {test.testDetails?.map((testDetail: any, index: number) => (
-                              <div key={index} className="relative group/item">
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity"></div>
-                                <div className="relative bg-white/50 backdrop-blur-sm p-3 rounded-xl border border-white/40 hover:border-purple-200/60 transition-all duration-300">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <p className="font-semibold text-gray-900">{testDetail.name}</p>
-                                      <p className="text-xs text-gray-600 mt-0.5">{testDetail.category}</p>
-                                    </div>
-                                    <span className="text-sm font-bold text-green-600">
-                                      {formatCurrency(testDetail.price)}
-                                    </span>
+
+                          {/* FINANCIAL OVERVIEW */}
+                          <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
+                               <BanknotesIcon className="h-4 w-4" /> Financial Matrix
+                            </h4>
+                            <div className="space-y-4">
+                               <div className="flex justify-between py-1">
+                                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gross Total</span>
+                                  <span className="text-xs font-black text-slate-900">{formatCurrency(totalAmount)}</span>
+                               </div>
+                               <div className="flex justify-between py-1">
+                                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Synced Payments</span>
+                                  <span className="text-xs font-black text-emerald-500">{formatCurrency(paidAmount)}</span>
+                               </div>
+                               <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Outstanding</span>
+                                  <span className={`text-xl font-black ${remainingAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                     {formatCurrency(remainingAmount)}
+                                  </span>
+                               </div>
+                               {remainingAmount > 0 && (
+                                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-600 leading-tight">
+                                     Finalizing the remaining balance will accelerate your diagnostic results.
                                   </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Payment Information */}
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-1 h-5 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
-                          Payment Information
-                        </h4>
-                        <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/40 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-600">Total Amount</span>
-                            <span className="text-sm font-bold text-gray-900">{formatCurrency(totalAmount)}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-600">Paid Amount</span>
-                            <span className="text-sm font-bold text-green-600">{formatCurrency(paidAmount)}</span>
-                          </div>
-                          <div className="flex justify-between items-center pt-3 border-t border-white/40">
-                            <span className="text-sm font-bold text-gray-900">Remaining</span>
-                            <span className={`text-base font-bold ${remainingAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                              {formatCurrency(remainingAmount)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-1 h-5 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
-                          Actions
-                        </h4>
-                        <div className="space-y-3">
-                          {canPay && remainingAmount > 0 && (
-                            <button
-                              onClick={() => test.type === 'prescription' ? handlePrescriptionPayment(test) : handlePayment(test)}
-                              className="group relative w-full overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg animate-pulse"
-                            >
-                              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                              <BanknotesIcon className="h-5 w-5 relative z-10" />
-                              <span className="relative z-10">
-                                {paidAmount > 0 ? 'Pay Remaining' : 'Pay Now'}
-                              </span>
-                            </button>
-                          )}
-
-                          {test.type === 'prescription' && test.status === 'ordered' && (
-                            <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-xl p-4 text-center backdrop-blur-sm">
-                              <div className="flex items-center justify-center gap-2 text-amber-800">
-                                <ClockIcon className="h-5 w-5 animate-pulse" />
-                                <span className="text-sm font-bold">Waiting for Admin Approval</span>
-                              </div>
-                              <p className="text-xs text-amber-700 mt-2 font-medium">
-                                Payment will be available once approved by admin
-                              </p>
+                               )}
                             </div>
-                          )}
-                          
-                          {/* Show download buttons for prescription tests with reports */}
-                          {test.type === 'prescription' && canDownloadReports(test) && (
-                            <div className="space-y-2">
-                              {test.status === 'confirmed' && (
-                                <div className="w-full bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-xl p-3 text-center backdrop-blur-sm">
-                                  <div className="flex items-center justify-center gap-2 text-emerald-800">
-                                    <CheckCircleIcon className="h-5 w-5" />
-                                    <span className="text-sm font-bold">Reports Finalized & Sent</span>
-                                  </div>
-                                </div>
-                              )}
-                              {test.testReports.map((report: any, index: number) => (
-                                <a
-                                  key={index}
-                                  href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
-                                >
-                                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                  <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
-                                  <span className="relative z-10">Download {report.originalName || `Report ${index + 1}`}</span>
-                                </a>
-                              ))}
-                            </div>
-                          )}
+                          </div>
 
-                          <button
-                            onClick={() => handleDownloadInvoice(test)}
-                            className="group relative w-full overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
-                          >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                            <DocumentDuplicateIcon className="h-5 w-5 relative z-10" />
-                            <span className="relative z-10">Download Invoice</span>
-                          </button>
-                          
-                          {/* Show download buttons for regular lab orders with reports */}
-                          {test.type === 'ordered' && canDownloadReports(test) && (
-                            <div className="space-y-2">
-                              {test.status === 'confirmed' && (
-                                <div className="w-full bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-xl p-3 text-center backdrop-blur-sm">
-                                  <div className="flex items-center justify-center gap-2 text-emerald-800">
-                                    <CheckCircleIcon className="h-5 w-5" />
-                                    <span className="text-sm font-bold">Reports Finalized & Sent</span>
-                                  </div>
-                                </div>
-                              )}
-                              {/* Handle multiple files stored in testReports */}
-                              {test.testReports && test.testReports.length > 0 ? (
-                                test.testReports.map((report: any, index: number) => (
-                                  <a
-                                    key={index}
-                                    href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg"
+                          {/* ACTIONS COMMAND CENTER */}
+                          <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
+                               <PlayIcon className="h-4 w-4" /> Command Hub
+                            </h4>
+                            <div className="grid grid-cols-1 gap-3">
+                               {canPay && remainingAmount > 0 && (
+                                  <MagneticButton
+                                    onClick={() => test.type === 'prescription' ? handlePrescriptionPayment(test) : handlePayment(test)}
+                                    className="w-full h-14 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
                                   >
-                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                    <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
-                                    <span className="relative z-10">Download {report.originalName || `Report ${index + 1}`}</span>
-                                  </a>
-                                ))
-                              ) : test.resultUrl && (
-                                <a
-                                  href={test.resultUrl && (test.resultUrl.startsWith('http') || test.resultUrl.startsWith('https')) ? test.resultUrl : (test.resultUrl.startsWith('/') ? test.resultUrl : `/${test.resultUrl}`)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="group relative w-full overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-500 hover:shadow-lg"
-                                >
-                                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                  <ArrowDownTrayIcon className="h-5 w-5 relative z-10" />
-                                  <span className="relative z-10">Download Report</span>
-                                </a>
-                              )}
+                                    <BanknotesIcon className="h-5 w-5" /> Execute Payment
+                                  </MagneticButton>
+                               )}
+
+                               {test.type === 'prescription' && test.status === 'ordered' && (
+                                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 text-center">
+                                     <ClockIcon className="h-5 w-5 text-amber-600 mx-auto mb-2 animate-pulse" />
+                                     <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">Protocol Sync Pending</p>
+                                     <p className="text-[9px] text-amber-600 mt-1 font-bold">Waiting for registry approval.</p>
+                                  </div>
+                               )}
+
+                               {canDownloadReports(test) && (
+                                  <div className="space-y-2">
+                                     {(test.type === 'prescription' ? test.testReports : (test.testReports || (test.resultUrl ? [{path: test.resultUrl, originalName: 'Diagnostic Report'}] : []))).map((report: any, i: number) => (
+                                        <a
+                                          key={i}
+                                          href={report.path && (report.path.startsWith('http') || report.path.startsWith('https')) ? report.path : `/${report.path}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full h-14 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                                        >
+                                          <ArrowDownTrayIcon className="h-5 w-5" /> Access Report {i > 0 ? i + 1 : ''}
+                                        </a>
+                                     ))}
+                                  </div>
+                               )}
+
+                               <button 
+                                 onClick={() => handleDownloadInvoice(test)}
+                                 className="w-full h-14 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 border border-slate-100 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                               >
+                                 <DocumentDuplicateIcon className="h-4 w-4" /> Export Invoice
+                               </button>
                             </div>
-                          )}
+                          </div>
+
                         </div>
                       </div>
                     </div>
-                  </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  </Reveal>
+                );
+              })
+            )}
+          </AnimatePresence>
+        </div>
+}
 
-        {/* Payment Modal for Regular Lab Orders */}
-        {showPaymentModal && selectedOrder && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="relative max-w-md w-full">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30"></div>
-              <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 overflow-y-auto max-h-[95vh]">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
-                  Make Payment - Order #{selectedOrder.orderNumber}
-                </h3>
-              
-              <div className="space-y-5">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-5 rounded-2xl border border-purple-100/50">
-                  <div className="flex justify-between mb-3">
-                    <span className="text-sm font-semibold text-gray-700">Total Amount</span>
-                    <span className="font-bold text-gray-900">{formatCurrency(selectedOrder.totalAmount)}</span>
-                  </div>
-                  <div className="flex justify-between mb-3">
-                    <span className="text-sm font-semibold text-gray-700">Paid Amount</span>
-                    <span className="font-bold text-green-600">{formatCurrency(selectedOrder.paidAmount)}</span>
-                  </div>
-                  <div className="flex justify-between pt-3 border-t border-purple-200">
-                    <span className="text-sm font-bold text-gray-900">Remaining</span>
-                    <span className="font-bold text-red-600 text-lg">{formatCurrency(selectedOrder.dueAmount)}</span>
-                  </div>
-                </div>
-            
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Payment Amount
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    max={selectedOrder.dueAmount}
-                    value={paymentForm.amount}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:bg-white/70 hover:shadow-md"
-                    placeholder="Enter payment amount"
-                  />
-                  <p className="text-xs text-gray-600 mt-2 font-medium">
-                    Maximum: {formatCurrency(selectedOrder.dueAmount)}
-                  </p>
-                  {paymentForm.paymentMethod === 'cash' ? (
-                    <p className="text-xs text-blue-600 mt-2 font-medium">
-                      💡 Cash payment will be processed by admin after you pay at the counter
-                    </p>
-                  ) : (
-                    <p className="text-xs text-orange-600 mt-2 font-medium">
-                      Minimum 50% required for sample processing: {formatCurrency(selectedOrder.totalAmount * 0.5)}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Payment Method
-                  </label>
-                  <select
-                    value={paymentForm.paymentMethod}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value, transactionId: '' })}
-                    className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:bg-white/70 hover:shadow-md cursor-pointer"
-                  >
-                    <option value="cash">Cash (Pay at Counter)</option>
-                    <option value="bkash">Online Payment (bKash)</option>
-                    <option value="bank_card">Online Payment (Bank Card)</option>
-                  </select>
-                </div>
-
-                {(paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-900 mb-2">
-                      Transaction ID *
-                    </label>
-                    <input
-                      type="text"
-                      value={paymentForm.transactionId}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, transactionId: e.target.value })}
-                      className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      placeholder="Enter transaction ID"
-                      required
-                    />
-                    <p className="text-xs text-gray-600 mt-2 font-medium">
-                      Required for online payments. Please provide the transaction ID from your payment confirmation.
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    value={paymentForm.notes}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                    className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                    rows={3}
-                    placeholder="Add any notes..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processPayment}
-                  disabled={paymentMutation.isPending ||
-                           !paymentForm.amount ||
-                           ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
-                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg animate-pulse"
-                >
-                  {paymentMutation.isPending ? 'Processing...' : 'Make Payment'}
-                </button>
-              </div>
-            </div>
-          </div>
-          </div>
-        )}
-
-        {/* Payment Modal for Prescription Lab Tests */}
-        {showPrescriptionPaymentModal && selectedPrescriptionTest && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="relative max-w-md w-full">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30"></div>
-              <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 overflow-y-auto max-h-[95vh]">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
-                  Make Payment - {selectedPrescriptionTest.name}
-                </h3>
+        <AnimatePresence>
+          {showPaymentModal && selectedOrder && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl" 
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-xl bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500" />
                 
-                <div className="space-y-5">
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-5 rounded-2xl border border-purple-100/50">
-                    <div className="flex justify-between mb-3">
-                      <span className="text-sm font-semibold text-gray-700">Total Amount</span>
-                      <span className="font-bold text-gray-900">{formatCurrency(getTotalAmount(selectedPrescriptionTest))}</span>
+                <div className="p-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Execute Payment</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Syncing Protocol #{selectedOrder.orderNumber}</p>
                     </div>
-                    <div className="flex justify-between mb-3">
-                      <span className="text-sm font-semibold text-gray-700">Paid Amount</span>
-                      <span className="font-bold text-green-600">{formatCurrency(getPaidAmount(selectedPrescriptionTest))}</span>
+                    <button onClick={() => setShowPaymentModal(false)} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+                      <Bars3Icon className="h-5 w-5 rotate-45" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                       <div className="p-6 rounded-3xl bg-slate-900 text-white relative overflow-hidden group">
+                          <div className="absolute top-[-20%] right-[-10%] w-20 h-20 bg-indigo-500/20 rounded-full blur-2xl" />
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-4">Outstanding Balance</p>
+                          <p className="text-3xl font-black">{formatCurrency(selectedOrder.dueAmount)}</p>
+                          <div className="mt-4 flex flex-col gap-1">
+                             <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                                <span>Total Price</span>
+                                <span>{formatCurrency(selectedOrder.totalAmount)}</span>
+                             </div>
+                             <div className="flex justify-between text-[10px] font-bold text-emerald-400">
+                                <span>Already Paid</span>
+                                <span>{formatCurrency(selectedOrder.paidAmount)}</span>
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="space-y-4">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Method</label>
+                          <div className="grid grid-cols-1 gap-2">
+                             {['cash', 'bkash', 'bank_card'].map((method) => (
+                                <button
+                                  key={method}
+                                  onClick={() => setPaymentForm({ ...paymentForm, paymentMethod: method })}
+                                  className={`w-full h-12 px-5 rounded-2xl border text-xs font-black uppercase tracking-widest transition-all text-left flex items-center justify-between ${
+                                    paymentForm.paymentMethod === method ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-100'
+                                  }`}
+                                >
+                                  {method === 'cash' ? 'Pay at Counter' : method === 'bkash' ? 'bKash Online' : 'Bank Card'}
+                                  {paymentForm.paymentMethod === method && <CheckCircleIcon className="h-4 w-4" />}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
                     </div>
-                    <div className="flex justify-between pt-3 border-t border-purple-200">
-                      <span className="text-sm font-bold text-gray-900">Remaining</span>
-                      <span className="font-bold text-red-600 text-lg">{formatCurrency(getRemainingAmount(selectedPrescriptionTest))}</span>
+
+                    <div className="space-y-6">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quantum Amount</label>
+                          <input
+                            type="number"
+                            value={paymentForm.amount}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                            className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                            placeholder="Enter amount..."
+                          />
+                       </div>
+
+                       {(paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && (
+                          <div className="space-y-3">
+                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Transaction ID</label>
+                             <input
+                               type="text"
+                               value={paymentForm.transactionId}
+                               onChange={(e) => setPaymentForm({ ...paymentForm, transactionId: e.target.value })}
+                               className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                               placeholder="e.g. TRANKX10293..."
+                             />
+                          </div>
+                       )}
+
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Diagnostic Notes</label>
+                          <textarea
+                            value={paymentForm.notes}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                            className="w-full h-24 p-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                            placeholder="Optional notes..."
+                          />
+                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-gray-900 mb-2">
-                      Payment Amount
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      max={getRemainingAmount(selectedPrescriptionTest)}
-                      value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                      className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      placeholder="Enter payment amount"
-                    />
-                    <p className="text-xs text-gray-600 mt-2 font-medium">
-                      Maximum: {formatCurrency(getRemainingAmount(selectedPrescriptionTest))}
-                    </p>
-                    {paymentForm.paymentMethod === 'cash' ? (
-                      <p className="text-xs text-blue-600 mt-2 font-medium">
-                        💡 Cash payment will be processed by admin after you pay at the counter
-                      </p>
-                    ) : (
-                      <p className="text-xs text-orange-600 mt-2 font-medium">
-                        Minimum 50% required for sample processing: {formatCurrency(getTotalAmount(selectedPrescriptionTest) * 0.5)}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-900 mb-2">
-                      Payment Method
-                    </label>
-                    <select
-                      value={paymentForm.paymentMethod}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value, transactionId: '' })}
-                      className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all cursor-pointer"
+                  <div className="mt-10 flex gap-4">
+                    <button 
+                      onClick={() => setShowPaymentModal(false)}
+                      className="flex-1 h-14 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all"
                     >
-                      <option value="cash">Cash (Pay at Counter)</option>
-                      <option value="bkash">Online Payment (bKash)</option>
-                      <option value="bank_card">Online Payment (Bank Card)</option>
-                    </select>
+                      Abort
+                    </button>
+                    <MagneticButton
+                      onClick={processPayment}
+                      disabled={paymentMutation.isPending || !paymentForm.amount || ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
+                      className="flex-[2] h-14 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:shadow-2xl hover:shadow-indigo-500/20 disabled:opacity-50"
+                    >
+                      {paymentMutation.isPending ? 'Syncing...' : 'Finalize Payment'}
+                    </MagneticButton>
                   </div>
-                    
-                {(paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-900 mb-2">
-                      Transaction ID *
-                    </label>
-                    <input
-                      type="text"
-                      value={paymentForm.transactionId}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, transactionId: e.target.value })}
-                      className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      placeholder="Enter transaction ID"
-                      required
-                    />
-                    <p className="text-xs text-gray-600 mt-2 font-medium">
-                      Required for online payments. Please provide the transaction ID from your payment confirmation.
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    value={paymentForm.notes}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                    className="w-full px-4 py-3 border border-purple-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                    rows={3}
-                    placeholder="Add any notes..."
-                  />
                 </div>
-              </div>
-              
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setShowPrescriptionPaymentModal(false)}
-                  className="flex-1 px-5 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processPrescriptionPayment}
-                  disabled={prescriptionPaymentMutation.isPending ||
-                           !paymentForm.amount ||
-                           ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
-                  className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg animate-pulse"
-                >
-                  {prescriptionPaymentMutation.isPending ? 'Processing...' : 'Make Payment'}
-                </button>
-              </div>
+              </motion.div>
             </div>
-          </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showPrescriptionPaymentModal && selectedPrescriptionTest && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowPrescriptionPaymentModal(false)}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl" 
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-xl bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500" />
+                
+                <div className="p-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Diagnostic Sync</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Syncing Protocol {selectedPrescriptionTest.name}</p>
+                    </div>
+                    <button onClick={() => setShowPrescriptionPaymentModal(false)} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+                      <Bars3Icon className="h-5 w-5 rotate-45" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                       <div className="p-6 rounded-3xl bg-slate-900 text-white relative overflow-hidden group">
+                          <div className="absolute top-[-20%] right-[-10%] w-20 h-20 bg-indigo-500/20 rounded-full blur-2xl" />
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-4">Required Balance</p>
+                          <p className="text-3xl font-black">{formatCurrency(getRemainingAmount(selectedPrescriptionTest))}</p>
+                          <div className="mt-4 flex flex-col gap-1">
+                             <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                                <span>Total Price</span>
+                                <span>{formatCurrency(getTotalAmount(selectedPrescriptionTest))}</span>
+                             </div>
+                             <div className="flex justify-between text-[10px] font-bold text-emerald-400">
+                                <span>Paid Amount</span>
+                                <span>{formatCurrency(getPaidAmount(selectedPrescriptionTest))}</span>
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="space-y-4">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Channel</label>
+                          <div className="grid grid-cols-1 gap-2">
+                             {['cash', 'bkash', 'bank_card'].map((method) => (
+                                <button
+                                  key={method}
+                                  onClick={() => setPaymentForm({ ...paymentForm, paymentMethod: method })}
+                                  className={`w-full h-12 px-5 rounded-2xl border text-xs font-black uppercase tracking-widest transition-all text-left flex items-center justify-between ${
+                                    paymentForm.paymentMethod === method ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-100'
+                                  }`}
+                                >
+                                  {method === 'cash' ? 'Pay at Counter' : method === 'bkash' ? 'bKash Online' : 'Bank Card'}
+                                  {paymentForm.paymentMethod === method && <CheckCircleIcon className="h-4 w-4" />}
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="space-y-6">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quantum Amount</label>
+                          <input
+                            type="number"
+                            value={paymentForm.amount}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                            className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                            placeholder="Enter amount..."
+                          />
+                       </div>
+
+                       {(paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && (
+                          <div className="space-y-3">
+                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Transaction Identity</label>
+                             <input
+                               type="text"
+                               value={paymentForm.transactionId}
+                               onChange={(e) => setPaymentForm({ ...paymentForm, transactionId: e.target.value })}
+                               className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                               placeholder="e.g. TRANKX10293..."
+                             />
+                          </div>
+                       )}
+
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Diagnostic Registry Notes</label>
+                          <textarea
+                            value={paymentForm.notes}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                            className="w-full h-24 p-6 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                            placeholder="Clinical notes..."
+                          />
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-10 flex gap-4">
+                    <button 
+                      onClick={() => setShowPrescriptionPaymentModal(false)}
+                      className="flex-1 h-14 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all"
+                    >
+                      Abort Sync
+                    </button>
+                    <MagneticButton
+                      onClick={processPrescriptionPayment}
+                      disabled={prescriptionPaymentMutation.isPending || !paymentForm.amount || ((paymentForm.paymentMethod === 'bkash' || paymentForm.paymentMethod === 'bank_card') && !paymentForm.transactionId)}
+                      className="flex-[2] h-14 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:shadow-2xl hover:shadow-indigo-500/20 disabled:opacity-50"
+                    >
+                      {prescriptionPaymentMutation.isPending ? 'Syncing...' : 'Finalize Sync'}
+                    </MagneticButton>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+}
       </div>
     </div>
   );
